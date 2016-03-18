@@ -6,12 +6,8 @@
 typedef struct
 {
 	float image_width;
-	float image_height;
-	float image_dim_ratio;
-	float camera_tan_half_fov;
 	float camera_focus_plane;
-	float camera_width;
-	float camera_height;
+	float camera_pixel_size;
 	float camera_left;
 	float camera_top;
 } 
@@ -23,7 +19,7 @@ static const float PI = 3.14159265358979323846;
 extern "C" {
 #endif
 
-void call_kernel(Bitmap* bitmap);
+void render_scene(Bitmap* bitmap, int samples);
 
 #ifdef __cplusplus
 }

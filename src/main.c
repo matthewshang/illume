@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv)
 {
-	Bitmap* image = bitmap_new(512, 512);
+	Bitmap* image = bitmap_new(720, 540);
 	if (!image)
 	{
 		goto exit;
@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	struct timespec tend = {0, 0};
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
 
-	call_kernel(image);
+	render_scene(image, 10);
 
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 	printf("%f seconds\n", 
