@@ -84,6 +84,7 @@ static void init_render_info(RenderInfo* i, int width, int height, float fov, fl
 
 void render_scene(Bitmap* bitmap, int samples)
 {
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 128 * 1024 * 1024);
 	int N = bitmap->width * bitmap->height;
 	int threads_per_block = 256;
 	int blocks_amount = (N + threads_per_block - 1) / threads_per_block;
@@ -94,26 +95,40 @@ void render_scene(Bitmap* bitmap, int samples)
 	cudaMalloc(&d_info, sizeof(RenderInfo));
 	cudaMemcpy(d_info, &info, sizeof(RenderInfo), cudaMemcpyHostToDevice);
 
+	// printf("RenderInfo initialized\n");
+
 	curandState* d_states;
 	cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount);
 	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, N);
+
+	// printf("curand_states initialized\n");
 
 	Sphere* sphere = sphere_new(1, vector3_create(0, 0, 5));
 	Sphere* d_sphere;
 	cudaMalloc(&d_sphere, sizeof(Sphere));
 	cudaMemcpy(d_sphere, sphere, sizeof(Sphere), cudaMemcpyHostToDevice);
 
-	Vector3 h_colors[N];
+	// printf("sphere initialized\n");
+
+	Vector3* h_colors = (Vector3 *) malloc(sizeof(Vector3) * N);
 	for (int i = 0; i < N; i++)
 	{
 		h_colors[i] = vector3_create(0, 0, 0);
 	}
+
+	// printf("h_colors done\n");
 	Vector3* d_colors;
 	cudaMalloc(&d_colors, N * sizeof(Vector3));
-	cudaMemcpy(d_colors, &h_colors, N * sizeof(Vector3), cudaMemcpyHostToDevice);
+
+	// printf("d_colors malloc\n");
+	cudaMemcpy(d_colors, h_colors, N * sizeof(Vector3), cudaMemcpyHostToDevice);
+
+	// printf("colors initialized\n");
 
 	Ray* d_rays;
 	cudaMalloc(&d_rays, sizeof(Ray) * N);
+
+	// printf("rays initialized\n");
 
 	for (int i = 0; i < samples; i++)
 	{
@@ -121,21 +136,28 @@ void render_scene(Bitmap* bitmap, int samples)
 		pathtrace_kernel<<<blocks_amount, threads_per_block>>>(d_colors, d_rays, d_sphere, d_states, N);		
 	}
 
+	// printf("tracing done\n");
+
+	cudaFree(d_states);
+	cudaFree(d_sphere);
+	sphere_free(sphere);
+	cudaFree(d_rays);
+	cudaFree(d_info);
+
+
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
 	cudaMalloc(&d_pixels, sizeof(Pixel) * N);
 	cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * N, cudaMemcpyHostToDevice);
 
-	set_bitmap<<<blocks_amount, threads_per_block>>>(d_colors, d_pixels, (float) samples, N);
+	// printf("pixels initialized\n");
 
+	set_bitmap<<<blocks_amount, threads_per_block>>>(d_colors, d_pixels, (float) samples, N);
 	cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * N, cudaMemcpyDeviceToHost);
 
-	cudaFree(d_colors);
-	cudaFree(d_states);
-	cudaFree(d_sphere);
-	cudaFree(d_rays);
-	cudaFree(d_info);
-	cudaFree(d_pixels);
+	// printf("bitmap done\n");
 
-	sphere_free(sphere);
+	cudaFree(d_colors);
+	free(h_colors);
+	cudaFree(d_pixels);
 }
