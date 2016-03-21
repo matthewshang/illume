@@ -29,12 +29,12 @@ Intersection sphere_ray_intersection(Sphere* sphere, Ray* ray)
 	 float rs = sphere->r * sphere->r;
 	 if (s < 0 && ls > rs)
 	 {
-	 	return intersection_create(0);
+	 	return intersection_create_no_intersect();
 	 }
 	 float ms = ls - s * s;
 	 if (ms > rs)
 	 {
-	 	return intersection_create(0);
+	 	return intersection_create_no_intersect();
 	 }
 	 float q = sqrtf(rs - ms);
 	 float t = s;
@@ -46,5 +46,8 @@ Intersection sphere_ray_intersection(Sphere* sphere, Ray* ray)
 	 {
 	 	t += q;
 	 }
-	 return intersection_create(1);
+	 Vector3 pos = ray_position_along(ray, t);
+	 Vector3 normal = vector3_sub(&pos, &sphere->center);
+	 vector3_normalize(&normal);
+	 return intersection_create(1, t, normal);
 }

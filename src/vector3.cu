@@ -71,6 +71,56 @@ float vector3_length(Vector3* v)
 }
 
 __device__ __host__
+Vector3 vector3_cross(Vector3* a, Vector3* b)
+{
+	if (a && b)
+	{
+		return vector3_create(a->y * b->z - a->z * b->y,
+							  a->z * b->x - a->x * b->z,
+							  a->x * b->y - a->y * b->x);
+	}
+
+	return vector3_create(0, 0, 0);
+}
+
+__device__ __host__
+float vector3_dot(Vector3* a, Vector3* b)
+{
+	if (a && b)
+	{
+		return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
+	}
+
+	return 0;
+}
+
+__device__ __host__
+Vector3 vector3_to_basis(Vector3* v, Vector3* normal)
+{
+	if (v && normal)
+	{
+		Vector3 tangent;
+		if (normal->x == 0)
+		{
+			vector3_set(&tangent, 1, 0, 0);
+		}
+		else
+		{
+			vector3_set(&tangent, 0, -1 * normal->z, normal->y);
+		}
+		vector3_normalize(&tangent);
+		Vector3 bittangent = vector3_cross(&tangent, normal);
+		Vector3 x = vector3_mul(&tangent, v->x);
+		Vector3 y = vector3_mul(normal, v->y);
+		Vector3 z = vector3_mul(&bittangent, v->z);
+		vector3_add_to(&y, &z);
+		return vector3_add(&x, &y);
+	}
+
+	return vector3_create(0, 0, 0);
+}
+
+__device__ __host__
 Vector3 vector3_add(Vector3* a, Vector3* b)
 {
 	if (a && b)
@@ -104,17 +154,6 @@ Vector3 vector3_sub(Vector3* a, Vector3* b)
 }
 
 __device__ __host__
-float vector3_dot(Vector3* a, Vector3* b)
-{
-	if (a && b)
-	{
-		return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
-	}
-
-	return 0;
-}
-
-__device__ __host__
 Vector3 vector3_mul(Vector3* v, float m)
 {
 	if (v)
@@ -123,4 +162,24 @@ Vector3 vector3_mul(Vector3* v, float m)
 	}
 	
 	return vector3_create(0, 0, 0);
+}
+
+__device__ __host__
+Vector3 vector3_mul_vector(Vector3* a, Vector3* b)
+{
+	if (a && b)
+	{
+		return vector3_create(a->x * b->x, a->y * b->y, a->z * b->z);
+	}
+
+	return vector3_create(0, 0, 0);
+}
+
+__device__ __host__
+void vector3_mul_vector_to(Vector3* a, Vector3* b)
+{
+	if (a && b)
+	{
+		vector3_set(a, a->x * b->x, a->y * b->y, a->z * b->z);
+	}
 }

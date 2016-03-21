@@ -17,7 +17,7 @@ int main(int argc, char** argv)
 	struct timespec tend = {0, 0};
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
 
-	render_scene(image, 10);
+	render_scene(image, 256);
 
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 	printf("%f seconds\n", 
