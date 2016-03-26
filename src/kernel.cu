@@ -1,15 +1,15 @@
-#include <stdlib.h>
-#include <stdio.h>
+// Header files that include cuda code here to avoid C compiler issues
 
 #include <curand.h>
 #include <curand_kernel.h>
 
 #include "kernel.h"
-#include "bitmap.h"
+
 #include "vector3.h"
 #include "ray.h"
 #include "sphere.h"
 #include "sample.h"
+#include "scene.h"
 
 __global__ 
 void init_curand_states(curandState* states, int N)
@@ -44,24 +44,35 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 }
 
 __global__
-void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vector3* ray_colors, Sphere* sphere, curandState* states, int N)
+void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, 
+					  Vector3* ray_colors, Scene* scene, curandState* states, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
 	if (index < N && ray_index != -1)
 	{
-		Intersection inter = sphere_ray_intersection(sphere, &rays[ray_index]);
-		if (inter.is_intersect == 1)
+		Intersection min = intersection_create_no_intersect();
+		min.d = FLT_MAX;
+		for (int i = 0; i < scene->sphere_amount; i++)
+		{
+			Intersection inter = sphere_ray_intersection(&scene->spheres[i], &rays[ray_index]);
+
+			if (inter.is_intersect == 1 && inter.d < min.d)
+			{
+				min = inter;
+			}
+		}
+		if (min.is_intersect == 1)
 		{
 			Vector3 red = vector3_create(255, 0, 0);
 			vector3_mul_vector_to(&ray_colors[ray_index], &red);
-			Vector3 new_origin = ray_position_along(&rays[ray_index], inter.d);
-			Vector3 bias = vector3_mul(&inter.normal, 0.00001);
+			Vector3 new_origin = ray_position_along(&rays[ray_index], min.d);
+			Vector3 bias = vector3_mul(&min.normal, 0.00001);
 			vector3_add_to(&new_origin, &bias);
 			float u1 = curand_uniform(&states[ray_index]);
 			float u2 = curand_uniform(&states[ray_index]);
 			Vector3 sample = sample_hemisphere_cosine(u1, u2);
-			Vector3 new_direction = vector3_to_basis(&sample, &inter.normal);
+			Vector3 new_direction = vector3_to_basis(&sample, &min.normal);
 			ray_set(&rays[ray_index], new_origin, new_direction);
 		}
 		else
@@ -99,7 +110,15 @@ static void init_render_info(RenderInfo* i, int width, int height, float fov, fl
 
 void render_scene(Bitmap* bitmap, int samples)
 {
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 128 * 1024 * 1024);
+	struct timespec tstart = {0, 0};
+	struct timespec tend = {0, 0};
+	clock_gettime(CLOCK_MONOTONIC, &tstart);
+
+	Scene* scene = scene_new(2);
+	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 4));
+	scene->spheres[1] = sphere_create(1, vector3_create(2, 0, 4));
+
+	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
 	int N = bitmap->width * bitmap->height;
 	int threads_per_block = 256;
 	int blocks_amount = (N + threads_per_block - 1) / threads_per_block;
@@ -113,11 +132,6 @@ void render_scene(Bitmap* bitmap, int samples)
 	curandState* d_states;
 	cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount);
 	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, N);
-
-	Sphere* sphere = (Sphere *) malloc(sizeof(Sphere) * 2);
-	Sphere* d_sphere;
-	cudaMalloc(&d_sphere, sizeof(Sphere));
-	cudaMemcpy(d_sphere, sphere, sizeof(Sphere), cudaMemcpyHostToDevice);
 
 	Vector3* h_final_colors = (Vector3 *) malloc(sizeof(Vector3) * N);
 	for (int i = 0; i < N; i++)
@@ -137,23 +151,47 @@ void render_scene(Bitmap* bitmap, int samples)
 	Ray* d_rays;
 	cudaMalloc(&d_rays, sizeof(Ray) * N);
 
+	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
+	Scene* d_scene;
+	cudaMalloc(&d_scene, sizeof(Scene));
+	Sphere* d_spheres;
+	cudaMalloc(&d_spheres, spheres_size);
+	Sphere* h_spheres = scene->spheres;
+	scene->spheres = d_spheres;
+	cudaMemcpy(d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice);
+	scene->spheres = h_spheres;
+
+	cudaMemcpy(d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice);
+
+	struct timespec tstart_render = {0, 0};
+	struct timespec tend_render = {0, 0};
+	clock_gettime(CLOCK_MONOTONIC, &tstart_render);
+
 	for (int i = 0; i < samples; i++)
 	{
 		init_rays<<<blocks_amount, threads_per_block>>>(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, N);
 
 		for (int j = 0; j < 5; j++)
 		{
-			pathtrace_kernel<<<blocks_amount, threads_per_block>>>(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_sphere, d_states, N);		
+			pathtrace_kernel<<<blocks_amount, threads_per_block>>>(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_scene, d_states, N);		
 		}
 	}
 
+	clock_gettime(CLOCK_MONOTONIC, &tend_render);
+	printf("Render Time: %f seconds\n", 
+		    ((double) tend_render.tv_sec + 1.0e-9 * tend_render.tv_nsec) -
+		    ((double) tstart_render.tv_sec + 1.0e-9 * tstart_render.tv_nsec));
+
+
 	cudaFree(d_states);
-	cudaFree(d_sphere);
-	sphere_free(sphere);
 	cudaFree(d_rays);
 	cudaFree(d_info);
 	cudaFree(d_ray_statuses);
 	cudaFree(d_ray_colors);
+	cudaFree(d_spheres);
+	cudaFree(d_scene);
+	scene_free(scene);
+
 
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
@@ -166,4 +204,11 @@ void render_scene(Bitmap* bitmap, int samples)
 	cudaFree(d_final_colors);
 	free(h_final_colors);
 	cudaFree(d_pixels);
+
+
+	clock_gettime(CLOCK_MONOTONIC, &tend);
+	printf("Total Time: %f seconds\n", 
+		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
+		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
+
 }

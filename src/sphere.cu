@@ -12,6 +12,14 @@ Sphere* sphere_new(float r, Vector3 center)
 	return sphere;
 }
 
+Sphere sphere_create(float r, Vector3 center)
+{
+	Sphere sphere;
+	sphere.r = r;
+	sphere.center = center;
+	return sphere;
+}
+
 void sphere_free(Sphere* sphere)
 {
 	if (sphere)

@@ -5,32 +5,31 @@
 #include "kernel.h"
 #include "bitmap.h"
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	Bitmap* image = bitmap_new(720, 540);
 	if (!image)
 	{
-		goto exit;
+		goto exit_bitmap;
 	}
 
-	struct timespec tstart = {0, 0};
-	struct timespec tend = {0, 0};
-	clock_gettime(CLOCK_MONOTONIC, &tstart);
+	// Scene* scene = scene_new(2);
+	// if (!scene)
+	// {
+	// 	goto exit_scene;
+	// }
 
-	render_scene(image, 256);
-
-	clock_gettime(CLOCK_MONOTONIC, &tend);
-	printf("%f seconds\n", 
-		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
-		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
+	render_scene(image, 128);
 
 	if (argc > 1)
 	{
 		bitmap_save_to_png(image, argv[1]);
 	}
 
+	// scene_free(scene);
+
+// exit_scene:
 	bitmap_free(image);
-	
-exit:
+exit_bitmap:
 	return 0;
 }

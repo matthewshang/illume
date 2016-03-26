@@ -1,6 +1,11 @@
 #ifndef _KERNEL_
 #define _KERNEL_
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <float.h>
+#include <time.h>
+
 #include "bitmap.h"
 
 typedef struct
