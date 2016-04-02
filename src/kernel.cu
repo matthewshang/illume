@@ -21,6 +21,16 @@ void init_curand_states(curandState* states, int N)
 	}
 }
 
+typedef struct
+{
+	float image_width;
+	float camera_focus_plane;
+	float camera_pixel_size;
+	float camera_left;
+	float camera_top;
+} 
+RenderInfo;
+
 __global__
 void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* info, curandState* states, int N)
 {
@@ -43,6 +53,23 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 	}
 }
 
+__device__
+static Intersection get_min_intersection(Scene* scene, Ray* ray)
+{
+	Intersection min = intersection_create_no_intersect();
+	min.d = FLT_MAX;
+	for (int i = 0; i < scene->sphere_amount; i++)
+	{
+		Intersection inter = sphere_ray_intersection(&scene->spheres[i], ray);
+
+		if (inter.is_intersect == 1 && inter.d < min.d)
+		{
+			min = inter;
+		}
+	}
+	return min;
+}
+
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, 
 					  Vector3* ray_colors, Scene* scene, curandState* states, int N)
@@ -51,17 +78,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 	int ray_index = ray_statuses[index];
 	if (index < N && ray_index != -1)
 	{
-		Intersection min = intersection_create_no_intersect();
-		min.d = FLT_MAX;
-		for (int i = 0; i < scene->sphere_amount; i++)
-		{
-			Intersection inter = sphere_ray_intersection(&scene->spheres[i], &rays[ray_index]);
-
-			if (inter.is_intersect == 1 && inter.d < min.d)
-			{
-				min = inter;
-			}
-		}
+		Intersection min = get_min_intersection(scene, &rays[ray_index]);
 		if (min.is_intersect == 1)
 		{
 			Vector3 red = vector3_create(255, 0, 0);
@@ -77,7 +94,9 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 		}
 		else
 		{
-			Vector3 blue = vector3_create(135, 206, 235);
+			// Vector3 blue = vector3_create(135, 206, 235);
+			Vector3 blue = vector3_create(50, 50, 50);
+
 			vector3_mul_vector_to(&ray_colors[ray_index], &blue);
 			vector3_add_to(&final_colors[ray_index], &ray_colors[ray_index]);
 			ray_statuses[ray_index] = -1;
@@ -97,15 +116,61 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	}
 }
 
-static void init_render_info(RenderInfo* i, int width, int height, float fov, float plane)
+static RenderInfo* allocate_render_info_gpu(int width, int height, float fov, float plane)
 {
-	i->image_width = width;
+	RenderInfo i;
+	i.image_width = width;
 	float dim_ratio = (float) height / (float) width;
 	float tan_half_fov = tanf(PI * fov / 360);
-	i->camera_focus_plane = plane;	
-	i->camera_pixel_size = tan_half_fov * 2 / (float) width;
-	i->camera_left = -1 * plane * tan_half_fov;
-	i->camera_top = dim_ratio * plane * tan_half_fov;
+	i.camera_focus_plane = plane;	
+	i.camera_pixel_size = tan_half_fov * 2 / (float) width;
+	i.camera_left = -1 * plane * tan_half_fov;
+	i.camera_top = dim_ratio * plane * tan_half_fov;
+	RenderInfo *d_info;
+	cudaMalloc(&d_info, sizeof(RenderInfo));
+	cudaMemcpy(d_info, &i, sizeof(RenderInfo), cudaMemcpyHostToDevice);
+	return d_info;
+}
+
+static Vector3* allocate_final_colors_gpu(int pixels_amount)
+{
+	Vector3* h_final_colors = (Vector3 *) malloc(sizeof(Vector3) * pixels_amount);
+	for (int i = 0; i < pixels_amount; i++)
+	{
+		h_final_colors[i] = vector3_create(0, 0, 0);
+	}
+	Vector3* d_final_colors;
+	cudaMalloc(&d_final_colors, pixels_amount * sizeof(Vector3));
+	cudaMemcpy(d_final_colors, h_final_colors, pixels_amount * sizeof(Vector3), cudaMemcpyHostToDevice);
+	free(h_final_colors);
+	return d_final_colors;
+}
+
+typedef struct
+{
+	Scene* d_scene;
+	Sphere* d_spheres;
+} 
+SceneReference;
+
+static SceneReference allocate_scene_gpu(Scene* scene)
+{
+	SceneReference ref;
+	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
+	cudaMalloc(&ref.d_scene, sizeof(Scene));
+	cudaMalloc(&ref.d_spheres, spheres_size);
+	Sphere* h_spheres = scene->spheres;
+	scene->spheres = ref.d_spheres;
+	cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice);
+	scene->spheres = h_spheres;
+	cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice);
+	return ref;
+}
+
+static void free_scene_gpu(SceneReference ref)
+{
+	cudaFree(ref.d_spheres);
+	cudaFree(ref.d_scene);
 }
 
 void render_scene(Bitmap* bitmap, int samples)
@@ -119,49 +184,28 @@ void render_scene(Bitmap* bitmap, int samples)
 	scene->spheres[1] = sphere_create(1, vector3_create(2, 0, 4));
 
 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
-	int N = bitmap->width * bitmap->height;
+	int pixels_amount = bitmap->width * bitmap->height;
 	int threads_per_block = 256;
-	int blocks_amount = (N + threads_per_block - 1) / threads_per_block;
-
-	RenderInfo info;
-	init_render_info(&info, bitmap->width, bitmap->height, 90, 1);
-	RenderInfo* d_info;
-	cudaMalloc(&d_info, sizeof(RenderInfo));
-	cudaMemcpy(d_info, &info, sizeof(RenderInfo), cudaMemcpyHostToDevice);
+	int blocks_amount = (pixels_amount + threads_per_block - 1) / threads_per_block;
 
 	curandState* d_states;
 	cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount);
-	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, N);
+	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, pixels_amount);
 
-	Vector3* h_final_colors = (Vector3 *) malloc(sizeof(Vector3) * N);
-	for (int i = 0; i < N; i++)
-	{
-		h_final_colors[i] = vector3_create(0, 0, 0);
-	}
-	Vector3* d_final_colors;
-	cudaMalloc(&d_final_colors, N * sizeof(Vector3));
-	cudaMemcpy(d_final_colors, h_final_colors, N * sizeof(Vector3), cudaMemcpyHostToDevice);
+	RenderInfo* d_info = allocate_render_info_gpu(bitmap->width, bitmap->height, 90, 1);
+
+	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
 	Vector3* d_ray_colors;
-	cudaMalloc(&d_ray_colors, N * sizeof(Vector3));
+	cudaMalloc(&d_ray_colors, pixels_amount * sizeof(Vector3));
 
 	int* d_ray_statuses;
-	cudaMalloc(&d_ray_statuses, N * sizeof(int));
+	cudaMalloc(&d_ray_statuses, pixels_amount * sizeof(int));
 
 	Ray* d_rays;
-	cudaMalloc(&d_rays, sizeof(Ray) * N);
+	cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount);
 
-	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
-	Scene* d_scene;
-	cudaMalloc(&d_scene, sizeof(Scene));
-	Sphere* d_spheres;
-	cudaMalloc(&d_spheres, spheres_size);
-	Sphere* h_spheres = scene->spheres;
-	scene->spheres = d_spheres;
-	cudaMemcpy(d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice);
-	scene->spheres = h_spheres;
-
-	cudaMemcpy(d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice);
+	SceneReference ref = allocate_scene_gpu(scene);
 
 	struct timespec tstart_render = {0, 0};
 	struct timespec tend_render = {0, 0};
@@ -169,11 +213,14 @@ void render_scene(Bitmap* bitmap, int samples)
 
 	for (int i = 0; i < samples; i++)
 	{
-		init_rays<<<blocks_amount, threads_per_block>>>(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, N);
+		init_rays<<<blocks_amount, threads_per_block>>>
+			(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, pixels_amount);
 
 		for (int j = 0; j < 5; j++)
 		{
-			pathtrace_kernel<<<blocks_amount, threads_per_block>>>(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_scene, d_states, N);		
+			pathtrace_kernel<<<blocks_amount, threads_per_block>>>
+				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
+				 ref.d_scene, d_states, pixels_amount);		
 		}
 	}
 
@@ -182,33 +229,27 @@ void render_scene(Bitmap* bitmap, int samples)
 		    ((double) tend_render.tv_sec + 1.0e-9 * tend_render.tv_nsec) -
 		    ((double) tstart_render.tv_sec + 1.0e-9 * tstart_render.tv_nsec));
 
-
 	cudaFree(d_states);
 	cudaFree(d_rays);
 	cudaFree(d_info);
 	cudaFree(d_ray_statuses);
 	cudaFree(d_ray_colors);
-	cudaFree(d_spheres);
-	cudaFree(d_scene);
+	free_scene_gpu(ref);
 	scene_free(scene);
-
 
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
-	cudaMalloc(&d_pixels, sizeof(Pixel) * N);
-	cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * N, cudaMemcpyHostToDevice);
+	cudaMalloc(&d_pixels, sizeof(Pixel) * pixels_amount);
+	cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice);
 
-	set_bitmap<<<blocks_amount, threads_per_block>>>(d_final_colors, d_pixels, (float) samples, N);
-	cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * N, cudaMemcpyDeviceToHost);
+	set_bitmap<<<blocks_amount, threads_per_block>>>(d_final_colors, d_pixels, (float) samples, pixels_amount);
+	cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost);
 
 	cudaFree(d_final_colors);
-	free(h_final_colors);
 	cudaFree(d_pixels);
-
 
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 	printf("Total Time: %f seconds\n", 
 		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
 		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
-
 }
