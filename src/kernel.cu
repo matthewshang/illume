@@ -10,6 +10,7 @@
 #include "sphere.h"
 #include "sample.h"
 #include "scene.h"
+#include "material.h"
 
 __global__ 
 void init_curand_states(curandState* states, int N)
@@ -75,6 +76,7 @@ static Vector3 get_background_color(Vector3 direction)
 {
 	float grad = (direction.y + 4) / 5;
 	return vector3_create(grad, grad, grad);
+	// return vector3_create(0.8, 0.8, 0.8);
 }
 
 __global__
@@ -88,17 +90,24 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 		Intersection min = get_min_intersection(scene, &rays[ray_index]);
 		if (min.is_intersect == 1)
 		{
-			Vector3 red = vector3_create(1, 0, 0);
-
-			vector3_mul_vector_to(&ray_colors[ray_index], &red);
-			Vector3 new_origin = ray_position_along(&rays[ray_index], min.d);
-			Vector3 bias = vector3_mul(&min.normal, 10e-4);
-			vector3_add_to(&new_origin, &bias);
-			float u1 = curand_uniform(&states[ray_index]);
-			float u2 = curand_uniform(&states[ray_index]);
-			Vector3 sample = sample_hemisphere_cosine(u1, u2);
-			Vector3 new_direction = vector3_to_basis(&sample, &min.normal);
-			ray_set(&rays[ray_index], new_origin, new_direction);
+			if (vector3_length2(&min.m.e) > 0)
+			{
+				vector3_mul_vector_to(&ray_colors[ray_index], &min.m.e);
+				vector3_add_to(&final_colors[ray_index], &ray_colors[ray_index]);
+				ray_statuses[ray_index] = -1;
+			}
+			else
+			{
+				vector3_mul_vector_to(&ray_colors[ray_index], &min.m.d);
+				Vector3 new_origin = ray_position_along(&rays[ray_index], min.d);
+				Vector3 bias = vector3_mul(&min.normal, 10e-4);
+				vector3_add_to(&new_origin, &bias);
+				float u1 = curand_uniform(&states[ray_index]);
+				float u2 = curand_uniform(&states[ray_index]);
+				Vector3 sample = sample_hemisphere_cosine(u1, u2);
+				Vector3 new_direction = vector3_to_basis(&sample, &min.normal);
+				ray_set(&rays[ray_index], new_origin, new_direction);
+			}
 		}
 		else
 		{
@@ -185,9 +194,19 @@ void render_scene(Bitmap* bitmap, int samples)
 	struct timespec tend = {0, 0};
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
 
-	Scene* scene = scene_new(2);
-	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 8));
-	scene->spheres[1] = sphere_create(10, vector3_create(0, -11, 8));
+	Material white = material_diffuse(vector3_create(1, 1, 1));
+	Material white_light = material_emissive(vector3_create(1, 1, 1));
+	Material blue = material_diffuse(vector3_create(0, 0, 1));
+	Material red = material_diffuse(vector3_create(1, 0, 0));
+
+	Scene* scene = scene_new(5);
+	scene->spheres[0] = sphere_create(10, vector3_create(0, -11, 8), white);
+	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white);
+	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
+	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
+	scene->spheres[4] = sphere_create(0.75, vector3_create(0, 4, 8), white_light);
+
+
 
 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
 	int pixels_amount = bitmap->width * bitmap->height;

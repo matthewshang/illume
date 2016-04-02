@@ -1,31 +1,12 @@
 #include "sphere.h"
 
-Sphere* sphere_new(float r, Vector3 center)
-{
-	Sphere* sphere = (Sphere *) calloc(sizeof(Sphere), 1);
-	if (!sphere)
-	{
-		return NULL;
-	}
-	sphere->r = r;
-	sphere->center = center;
-	return sphere;
-}
-
-Sphere sphere_create(float r, Vector3 center)
+Sphere sphere_create(float r, Vector3 center, Material m)
 {
 	Sphere sphere;
 	sphere.r = r;
 	sphere.center = center;
+	sphere.m = m;
 	return sphere;
-}
-
-void sphere_free(Sphere* sphere)
-{
-	if (sphere)
-	{
-		free(sphere);
-	}
 }
 
 __device__
@@ -57,5 +38,5 @@ Intersection sphere_ray_intersection(Sphere* sphere, Ray* ray)
 	 Vector3 pos = ray_position_along(ray, t);
 	 Vector3 normal = vector3_sub(&pos, &sphere->center);
 	 vector3_normalize(&normal);
-	 return intersection_create(1, t, normal);
+	 return intersection_create(1, t, normal, sphere->m);
 }

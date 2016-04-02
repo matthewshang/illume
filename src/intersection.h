@@ -2,12 +2,14 @@
 #define _INTERSECTION_
 
 #include "vector3.h"
+#include "material.h"
 
 typedef struct
 {
 	int is_intersect;
 	float d;
 	Vector3 normal;
+	Material m;
 }
 Intersection;
 
@@ -15,7 +17,7 @@ Intersection;
 extern "C" {
 #endif
 
-__device__  Intersection  intersection_create               (int is_intersect, float d, Vector3 normal);
+__device__  Intersection  intersection_create              	(int is_intersect, float d, Vector3 normal, Material m);
 __device__  Intersection  intersection_create_no_intersect  ();
 
 #ifdef __cplusplus

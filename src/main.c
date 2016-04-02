@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 
 #include "kernel.h"
 #include "bitmap.h"
@@ -19,7 +18,7 @@ int main(int argc, char* argv[])
 	// 	goto exit_scene;
 	// }
 
-	render_scene(image, 128);
+	render_scene(image, 1024);
 
 	if (argc > 1)
 	{

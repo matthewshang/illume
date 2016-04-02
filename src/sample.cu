@@ -9,5 +9,5 @@ Vector3 sample_hemisphere_cosine(float u1, float u2)
 	float x = r * cosf(t);
 	float y = r * sinf(t);
 
-	return vector3_create(x, y, sqrtf(1 - u1));
+	return vector3_create(x, sqrtf(1 - u1), y);
 }

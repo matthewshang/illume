@@ -4,11 +4,13 @@
 #include "intersection.h"
 #include "vector3.h"
 #include "ray.h"
+#include "material.h"
 
 typedef struct
 {
 	float r;
 	Vector3 center;
+	Material m;
 } 
 Sphere;
 
@@ -16,9 +18,7 @@ Sphere;
 extern "C" {
 #endif
           
-            Sphere*       sphere_new               (float r, Vector3 center);
-            Sphere        sphere_create            (float r, Vector3 center);
-            void          sphere_free              (Sphere* sphere);
+            Sphere        sphere_create            (float r, Vector3 center, Material m);
 __device__  Intersection  sphere_ray_intersection  (Sphere* sphere, Ray* ray);
 
 #ifdef __cplusplus
