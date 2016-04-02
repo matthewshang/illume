@@ -70,6 +70,13 @@ static Intersection get_min_intersection(Scene* scene, Ray* ray)
 	return min;
 }
 
+__device__
+static Vector3 get_background_color(Vector3 direction)
+{
+	float grad = (direction.y + 4) / 5;
+	return vector3_create(grad, grad, grad);
+}
+
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, 
 					  Vector3* ray_colors, Scene* scene, curandState* states, int N)
@@ -81,10 +88,11 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 		Intersection min = get_min_intersection(scene, &rays[ray_index]);
 		if (min.is_intersect == 1)
 		{
-			Vector3 red = vector3_create(255, 0, 0);
+			Vector3 red = vector3_create(1, 0, 0);
+
 			vector3_mul_vector_to(&ray_colors[ray_index], &red);
 			Vector3 new_origin = ray_position_along(&rays[ray_index], min.d);
-			Vector3 bias = vector3_mul(&min.normal, 0.00001);
+			Vector3 bias = vector3_mul(&min.normal, 10e-4);
 			vector3_add_to(&new_origin, &bias);
 			float u1 = curand_uniform(&states[ray_index]);
 			float u2 = curand_uniform(&states[ray_index]);
@@ -94,10 +102,8 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 		}
 		else
 		{
-			// Vector3 blue = vector3_create(135, 206, 235);
-			Vector3 blue = vector3_create(50, 50, 50);
-
-			vector3_mul_vector_to(&ray_colors[ray_index], &blue);
+			Vector3 sky = get_background_color(rays[ray_index].d);
+			vector3_mul_vector_to(&ray_colors[ray_index], &sky);
 			vector3_add_to(&final_colors[ray_index], &ray_colors[ray_index]);
 			ray_statuses[ray_index] = -1;
 		}
@@ -110,9 +116,9 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	if (index < N)
 	{
-		pixels[index].red = (int) (final_colors[index].x / samples);
-		pixels[index].green = (int) (final_colors[index].y / samples);
-		pixels[index].blue = (int) (final_colors[index].z / samples);
+		pixels[index].red = (int) (255 * final_colors[index].x / samples);
+		pixels[index].green = (int) (255 * final_colors[index].y / samples);
+		pixels[index].blue = (int) (255 * final_colors[index].z / samples);
 	}
 }
 
@@ -180,8 +186,8 @@ void render_scene(Bitmap* bitmap, int samples)
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
 
 	Scene* scene = scene_new(2);
-	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 4));
-	scene->spheres[1] = sphere_create(1, vector3_create(2, 0, 4));
+	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 8));
+	scene->spheres[1] = sphere_create(10, vector3_create(0, -11, 8));
 
 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
 	int pixels_amount = bitmap->width * bitmap->height;
@@ -192,7 +198,7 @@ void render_scene(Bitmap* bitmap, int samples)
 	cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount);
 	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, pixels_amount);
 
-	RenderInfo* d_info = allocate_render_info_gpu(bitmap->width, bitmap->height, 90, 1);
+	RenderInfo* d_info = allocate_render_info_gpu(bitmap->width, bitmap->height, 70, 1);
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
