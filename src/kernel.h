@@ -14,7 +14,7 @@ static const float PI = 3.14159265358979323846;
 extern "C" {
 #endif
 
-void render_scene(Bitmap* bitmap, int samples);
+void render_scene(Bitmap* bitmap, int samples, int max_depth);
 
 #ifdef __cplusplus
 }

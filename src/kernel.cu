@@ -188,12 +188,8 @@ static void free_scene_gpu(SceneReference ref)
 	cudaFree(ref.d_scene);
 }
 
-void render_scene(Bitmap* bitmap, int samples)
+static Scene* init_scene()
 {
-	struct timespec tstart = {0, 0};
-	struct timespec tend = {0, 0};
-	clock_gettime(CLOCK_MONOTONIC, &tstart);
-
 	Material white = material_diffuse(vector3_create(1, 1, 1));
 	Material white_light = material_emissive(vector3_create(1, 1, 1));
 	Material blue = material_diffuse(vector3_create(0, 0, 1));
@@ -205,6 +201,16 @@ void render_scene(Bitmap* bitmap, int samples)
 	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
 	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
 	// scene->spheres[4] = sphere_create(0.75, vector3_create(0, 4, 8), white_light);
+	return scene;
+}
+
+void render_scene(Bitmap* bitmap, int samples, int max_depth)
+{
+	struct timespec tstart = {0, 0};
+	struct timespec tend = {0, 0};
+	clock_gettime(CLOCK_MONOTONIC, &tstart);
+
+	Scene* scene = init_scene();
 
 	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
 	int pixels_amount = bitmap->width * bitmap->height;
@@ -230,16 +236,17 @@ void render_scene(Bitmap* bitmap, int samples)
 
 	SceneReference ref = allocate_scene_gpu(scene);
 
-	struct timespec tstart_render = {0, 0};
-	struct timespec tend_render = {0, 0};
-	clock_gettime(CLOCK_MONOTONIC, &tstart_render);
+	clock_gettime(CLOCK_MONOTONIC, &tend);
+	printf("Setup Time: %f seconds\n", 
+		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
+		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
 
 	for (int i = 0; i < samples; i++)
 	{
 		init_rays<<<blocks_amount, threads_per_block>>>
 			(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, pixels_amount);
 
-		for (int j = 0; j < 5; j++)
+		for (int j = 0; j < max_depth; j++)
 		{
 			pathtrace_kernel<<<blocks_amount, threads_per_block>>>
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
@@ -247,10 +254,9 @@ void render_scene(Bitmap* bitmap, int samples)
 		}
 	}
 
-	clock_gettime(CLOCK_MONOTONIC, &tend_render);
-	printf("Render Time: %f seconds\n", 
-		    ((double) tend_render.tv_sec + 1.0e-9 * tend_render.tv_nsec) -
-		    ((double) tstart_render.tv_sec + 1.0e-9 * tstart_render.tv_nsec));
+	struct timespec tstart_finish = {0, 0};
+	struct timespec tend_finish = {0, 0};
+	clock_gettime(CLOCK_MONOTONIC, &tstart_finish);
 
 	cudaFree(d_states);
 	cudaFree(d_rays);
@@ -270,6 +276,11 @@ void render_scene(Bitmap* bitmap, int samples)
 
 	cudaFree(d_final_colors);
 	cudaFree(d_pixels);
+
+	clock_gettime(CLOCK_MONOTONIC, &tend_finish);
+	printf("Finish Time: %f seconds\n", 
+		    ((double) tend_finish.tv_sec + 1.0e-9 * tend_finish.tv_nsec) -
+		    ((double) tstart_finish.tv_sec + 1.0e-9 * tstart_finish.tv_nsec));
 
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 	printf("Total Time: %f seconds\n", 
