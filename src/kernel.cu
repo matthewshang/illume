@@ -55,7 +55,7 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 }
 
 __device__
-static Intersection get_min_intersection(Scene* scene, Ray* ray)
+static Intersection get_min_intersection(Scene* scene, Ray ray)
 {
 	Intersection min = intersection_create_no_intersect();
 	min.d = FLT_MAX;
@@ -87,7 +87,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 	int ray_index = ray_statuses[index];
 	if (index < N && ray_index != -1)
 	{
-		Intersection min = get_min_intersection(scene, &rays[ray_index]);
+		Intersection min = get_min_intersection(scene, rays[ray_index]);
 		if (min.is_intersect == 1)
 		{
 			if (vector3_length2(min.m.e) > 0)

@@ -16,7 +16,7 @@ extern "C" {
 
 __device__ __host__  Ray      ray_create          (Vector3 o, Vector3 d);
 __device__ __host__  void     ray_set             (Ray* ray, Vector3 o, Vector3 d);
-__device__ __host__  Vector3  ray_position_along  (Ray* ray, float d);
+__device__ __host__  Vector3  ray_position_along  (Ray ray, float d);
 
 #ifdef __cplusplus
 }

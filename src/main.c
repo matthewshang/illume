@@ -6,7 +6,17 @@
 
 int main(int argc, char* argv[])
 {
-	Bitmap* image = bitmap_new(960, 600);
+	if (argc < 5)
+	{
+		printf("illume: usage - <path> <width> <height> <spp>\n");
+		goto exit_bitmap;
+	}
+
+	int width = atoi(argv[2]);
+	int height = atoi(argv[3]);
+	int spp = atoi(argv[4]);
+
+	Bitmap* image = bitmap_new(width, height);
 	if (!image)
 	{
 		goto exit_bitmap;
@@ -18,12 +28,8 @@ int main(int argc, char* argv[])
 	// 	goto exit_scene;
 	// }
 
-	render_scene(image, 1024);
-
-	if (argc > 1)
-	{
-		bitmap_save_to_png(image, argv[1]);
-	}
+	render_scene(image, spp);
+	bitmap_save_to_png(image, argv[1]);
 
 	// scene_free(scene);
 
