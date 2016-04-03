@@ -8,7 +8,7 @@ Scene* scene_new(int sphere_amount)
 		return NULL;
 	}
 	scene->sphere_amount = sphere_amount;
-	scene->spheres = (Sphere *) calloc(sizeof(Sphere) * scene->sphere_amount, 1);
+	scene->spheres = (Sphere *) calloc(sizeof(Sphere), sphere_amount);
 	if (!scene->spheres)
 	{
 		free(scene);

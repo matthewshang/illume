@@ -22,13 +22,7 @@ void ray_set(Ray* ray, Vector3 o, Vector3 d)
 }
 
 __device__ __host__
-Vector3 ray_position_along(Ray* ray, float d)
+Vector3 ray_position_along(Ray ray, float d)
 {
-	if (ray)
-	{
-		Vector3 dmuld = vector3_mul(&ray->d, d);
-		return vector3_add(&ray->o, &dmuld);
-	}
-
-	return vector3_create(0, 0, 0); 
+	return vector3_add(ray.o, vector3_mul(ray.d, d));
 }

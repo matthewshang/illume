@@ -46,7 +46,7 @@ void vector3_normalize(Vector3* v)
 {
 	if (v)
 	{
-		float length = vector3_length(v);
+		float length = vector3_length(*v);
 		v->x /= length;
 		v->y /= length;
 		v->z /= length;
@@ -54,132 +54,99 @@ void vector3_normalize(Vector3* v)
 }
 
 __device__ __host__  
-float vector3_length2(Vector3* v)
+float vector3_length2(Vector3 v)
 {
-	return (v->x * v->x) + (v->y * v->y) + (v->z * v->z);
+	return (v.x * v.x) + (v.y * v.y) + (v.z * v.z);
 }
 
 __device__ __host__  
-float vector3_length(Vector3* v)
+float vector3_length(Vector3 v)
 {
-	if (v)
-	{
-		return sqrtf(vector3_length2(v));
-	}
-
-	return 0;
+	return sqrtf(vector3_length2(v));
 }
 
 __device__ __host__
-Vector3 vector3_cross(Vector3* a, Vector3* b)
+Vector3 vector3_cross(Vector3 a, Vector3 b)
 {
-	if (a && b)
-	{
-		return vector3_create(a->y * b->z - a->z * b->y,
-							  a->z * b->x - a->x * b->z,
-							  a->x * b->y - a->y * b->x);
-	}
-
-	return vector3_create(0, 0, 0);
+	return vector3_create(a.y * b.z - a.z * b.y,
+						  a.z * b.x - a.x * b.z,
+						  a.x * b.y - a.y * b.x);
 }
 
 __device__ __host__
-float vector3_dot(Vector3* a, Vector3* b)
+float vector3_dot(Vector3 a, Vector3 b)
 {
-	if (a && b)
-	{
-		return (a->x * b->x) + (a->y * b->y) + (a->z * b->z);
-	}
-
-	return 0;
+	return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
 __device__ __host__
-Vector3 vector3_to_basis(Vector3* v, Vector3* normal)
+Vector3 vector3_to_basis(Vector3 v, Vector3 normal)
 {
-	if (v && normal)
+	Vector3 tangent;
+	if (normal.x == 0)
 	{
-		Vector3 tangent;
-		if (normal->x == 0)
-		{
-			vector3_set(&tangent, 1, 0, 0);
-		}
-		else
-		{
-			vector3_set(&tangent, 0, -1 * normal->z, normal->y);
-		}
-		vector3_normalize(&tangent);
-		Vector3 bittangent = vector3_cross(&tangent, normal);
-		Vector3 x = vector3_mul(&tangent, v->x);
-		Vector3 y = vector3_mul(normal, v->y);
-		Vector3 z = vector3_mul(&bittangent, v->z);
-		vector3_add_to(&y, &z);
-		return vector3_add(&x, &y);
+		vector3_set(&tangent, 1, 0, 0);
 	}
-
-	return vector3_create(0, 0, 0);
+	else
+	{
+		vector3_set(&tangent, 0, -1 * normal.z, normal.y);
+	}
+	vector3_normalize(&tangent);
+	Vector3 bittangent = vector3_cross(tangent, normal);
+	Vector3 x = vector3_mul(tangent, v.x);
+	Vector3 y = vector3_mul(normal, v.y);
+	Vector3 z = vector3_mul(bittangent, v.z);
+	return vector3_add(x, vector3_add(y, z));
 }
 
 __device__ __host__
-Vector3 vector3_add(Vector3* a, Vector3* b)
+Vector3 vector3_add(Vector3 a, Vector3 b)
 {
-	if (a && b)
-	{
-		return vector3_create(a->x + b->x, a->y + b->y, a->z + b->z);		
-	}
-
-	return vector3_create(0, 0, 0);
+	return vector3_create(a.x + b.x, 
+						  a.y + b.y, 
+						  a.z + b.z);		
 }
 
 __device__ __host__
-void vector3_add_to(Vector3* a, Vector3* b)
+void vector3_add_to(Vector3* a, Vector3 b)
 {
-	if (a && b)
+	if (a)
 	{
-		a->x += b->x; 
-		a->y += b->y;
-		a->z += b->z;		
+		a->x += b.x; 
+		a->y += b.y;
+		a->z += b.z;		
 	}
 }
 
 __device__ __host__
-Vector3 vector3_sub(Vector3* a, Vector3* b)
+Vector3 vector3_sub(Vector3 a, Vector3 b)
 {
-	if (a && b)
-	{
-		return vector3_create(a->x - b->x, a->y - b->y, a->z - b->z);		
-	}
-
-	return vector3_create(0, 0, 0);
+	return vector3_create(a.x - b.x, 
+						  a.y - b.y, 
+						  a.z - b.z);		
 }
 
 __device__ __host__
-Vector3 vector3_mul(Vector3* v, float m)
+Vector3 vector3_mul(Vector3 v, float m)
 {
-	if (v)
-	{
-		return vector3_create(v->x * m, v->y * m, v->z * m);
-	}
-	
-	return vector3_create(0, 0, 0);
+	return vector3_create(v.x * m, 
+						  v.y * m, 
+						  v.z * m);
 }
 
 __device__ __host__
-Vector3 vector3_mul_vector(Vector3* a, Vector3* b)
+Vector3 vector3_mul_vector(Vector3 a, Vector3 b)
 {
-	if (a && b)
-	{
-		return vector3_create(a->x * b->x, a->y * b->y, a->z * b->z);
-	}
-
-	return vector3_create(0, 0, 0);
+	return vector3_create(a.x * b.x, 
+						  a.y * b.y, 
+						  a.z * b.z);
 }
 
 __device__ __host__
-void vector3_mul_vector_to(Vector3* a, Vector3* b)
+void vector3_mul_vector_to(Vector3* a, Vector3 b)
 {
-	if (a && b)
+	if (a)
 	{
-		vector3_set(a, a->x * b->x, a->y * b->y, a->z * b->z);
+		vector3_set(a, a->x * b.x, a->y * b.y, a->z * b.z);
 	}
 }

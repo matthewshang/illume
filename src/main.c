@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[])
 {
-	Bitmap* image = bitmap_new(720, 540);
+	Bitmap* image = bitmap_new(960, 600);
 	if (!image)
 	{
 		goto exit_bitmap;
