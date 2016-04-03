@@ -126,8 +126,14 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	if (index < N)
 	{
 		pixels[index].red = (int) (255 * final_colors[index].x / samples);
+		pixels[index].red = fminf(pixels[index].red, 255);
+		pixels[index].red = fmaxf(pixels[index].red, 0);
 		pixels[index].green = (int) (255 * final_colors[index].y / samples);
+		pixels[index].green = fminf(pixels[index].green, 255);
+		pixels[index].green = fmaxf(pixels[index].green, 0);
 		pixels[index].blue = (int) (255 * final_colors[index].z / samples);
+		pixels[index].blue = fminf(pixels[index].blue, 255);
+		pixels[index].blue = fmaxf(pixels[index].blue, 0);
 	}
 }
 
@@ -190,14 +196,14 @@ static void free_scene_gpu(SceneReference ref)
 
 static Scene* init_scene()
 {
-	Material white = material_diffuse(vector3_create(1, 1, 1));
-	Material white_light = material_emissive(vector3_create(1, 1, 1));
-	Material blue = material_diffuse(vector3_create(0, 0, 1));
-	Material red = material_diffuse(vector3_create(1, 0, 0));
+	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
+	Material white_light = material_emissive(vector3_create(5, 5, 5));
+	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
+	Material red = material_diffuse(vector3_create(0.95, 0, 0));
 
 	Scene* scene = scene_new(4);
 	scene->spheres[0] = sphere_create(10, vector3_create(0, -11, 8), white);
-	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white);
+	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white_light);
 	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
 	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
 	// scene->spheres[4] = sphere_create(0.75, vector3_create(0, 4, 8), white_light);
