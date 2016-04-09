@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "kernel.h"
 #include "bitmap.h"
+
+static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
 int main(int argc, char* argv[])
 {
@@ -22,10 +25,14 @@ int main(int argc, char* argv[])
 	{
 		goto exit_bitmap;
 	}
-
-	render_scene(image, spp, max_depth);
-	bitmap_save_to_png(image, argv[1]);
-	bitmap_free(image);
+	{
+		render_scene(image, spp, max_depth);
+		char name[snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5])];
+		sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);
+		printf("Saving to: %s\n", name);
+		bitmap_save_to_png(image, name);
+		bitmap_free(image);
+	}
 exit_bitmap:
 	return 0;
 }

@@ -197,13 +197,13 @@ static void free_scene_gpu(SceneReference ref)
 static Scene* init_scene()
 {
 	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
-	Material white_light = material_emissive(vector3_create(5, 5, 5));
-	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
-	Material red = material_diffuse(vector3_create(0.95, 0, 0));
+	Material white_light = material_emissive(vector3_create(2, 2, 2));
+	Material blue = material_diffuse(vector3_create(0, 0, 0.85));
+	Material red = material_diffuse(vector3_create(0.85, 0, 0));
 
 	Scene* scene = scene_new(4);
 	scene->spheres[0] = sphere_create(10, vector3_create(0, -11, 8), white);
-	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white_light);
+	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white);
 	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
 	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
 	// scene->spheres[4] = sphere_create(0.75, vector3_create(0, 4, 8), white_light);
