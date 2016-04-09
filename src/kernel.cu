@@ -1,17 +1,4 @@
-// Header files that include cuda code here to avoid C compiler issues
-
-#include <curand.h>
-#include <curand_kernel.h>
-
 #include "kernel.h"
-
-#include "vector3.h"
-#include "ray.h"
-#include "sphere.h"
-#include "sample.h"
-#include "scene.h"
-#include "material.h"
-#include "error_check.h"
 
 __global__ 
 void init_curand_states(curandState* states, int N)
@@ -209,29 +196,16 @@ static void end_timer(cudaEvent_t* start, cudaEvent_t* stop, float* time)
 	HANDLE_ERROR( cudaEventElapsedTime(time, *start, *stop) );
 }
 
-static Scene* init_scene()
+void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 {
-	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
-	Material white_light = material_emissive(vector3_create(2, 2, 2));
-	Material blue = material_diffuse(vector3_create(0, 0, 0.85));
-	Material red = material_diffuse(vector3_create(0.85, 0, 0));
+	if (!scene)
+	{
+		return;
+	}
 
-	Scene* scene = scene_new(4);
-	scene->spheres[0] = sphere_create(10, vector3_create(0, -11, 8), white);
-	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white);
-	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
-	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
-	// scene->spheres[4] = sphere_create(0.75, vector3_create(0, 4, 8), white_light);
-	return scene;
-}
-
-void render_scene(Bitmap* bitmap, int samples, int max_depth)
-{
 	cudaEvent_t render_start;
 	cudaEvent_t render_stop;
 	start_timer(&render_start, &render_stop);
-
-	Scene* scene = init_scene();
 
 	HANDLE_ERROR( cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024) );
 	int pixels_amount = bitmap->width * bitmap->height;
@@ -256,8 +230,6 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
 
 	SceneReference ref = allocate_scene_gpu(scene);
-
-
 
 	cudaEvent_t calc_start;
 	cudaEvent_t calc_stop;
@@ -285,7 +257,6 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaFree(d_ray_statuses) );
 	HANDLE_ERROR( cudaFree(d_ray_colors) );
 	free_scene_gpu(ref);
-	scene_free(scene);
 
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
