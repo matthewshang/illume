@@ -11,6 +11,7 @@
 #include "sample.h"
 #include "scene.h"
 #include "material.h"
+#include "error_check.h"
 
 __global__ 
 void init_curand_states(curandState* states, int N)
@@ -148,8 +149,8 @@ static RenderInfo* allocate_render_info_gpu(int width, int height, float fov, fl
 	i.camera_left = -1 * plane * tan_half_fov;
 	i.camera_top = dim_ratio * plane * tan_half_fov;
 	RenderInfo *d_info;
-	cudaMalloc(&d_info, sizeof(RenderInfo));
-	cudaMemcpy(d_info, &i, sizeof(RenderInfo), cudaMemcpyHostToDevice);
+	HANDLE_ERROR( cudaMalloc(&d_info, sizeof(RenderInfo)) );
+	HANDLE_ERROR( cudaMemcpy(d_info, &i, sizeof(RenderInfo), cudaMemcpyHostToDevice) );
 	return d_info;
 }
 
@@ -161,8 +162,8 @@ static Vector3* allocate_final_colors_gpu(int pixels_amount)
 		h_final_colors[i] = vector3_create(0, 0, 0);
 	}
 	Vector3* d_final_colors;
-	cudaMalloc(&d_final_colors, pixels_amount * sizeof(Vector3));
-	cudaMemcpy(d_final_colors, h_final_colors, pixels_amount * sizeof(Vector3), cudaMemcpyHostToDevice);
+	HANDLE_ERROR( cudaMalloc(&d_final_colors, pixels_amount * sizeof(Vector3)) );
+	HANDLE_ERROR( cudaMemcpy(d_final_colors, h_final_colors, pixels_amount * sizeof(Vector3), cudaMemcpyHostToDevice) );
 	free(h_final_colors);
 	return d_final_colors;
 }
@@ -178,20 +179,20 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 {
 	SceneReference ref;
 	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
-	cudaMalloc(&ref.d_scene, sizeof(Scene));
-	cudaMalloc(&ref.d_spheres, spheres_size);
+	HANDLE_ERROR( cudaMalloc(&ref.d_scene, sizeof(Scene)) );
+	HANDLE_ERROR( cudaMalloc(&ref.d_spheres, spheres_size) );
 	Sphere* h_spheres = scene->spheres;
 	scene->spheres = ref.d_spheres;
-	cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice);
+	HANDLE_ERROR( cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice) );
 	scene->spheres = h_spheres;
-	cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice);
+	HANDLE_ERROR( cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice) );
 	return ref;
 }
 
 static void free_scene_gpu(SceneReference ref)
 {
-	cudaFree(ref.d_spheres);
-	cudaFree(ref.d_scene);
+	HANDLE_ERROR( cudaFree(ref.d_spheres) );
+	HANDLE_ERROR( cudaFree(ref.d_scene) );
 }
 
 static Scene* init_scene()
@@ -218,13 +219,13 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 
 	Scene* scene = init_scene();
 
-	cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024);
+	HANDLE_ERROR( cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024) );
 	int pixels_amount = bitmap->width * bitmap->height;
 	int threads_per_block = 256;
 	int blocks_amount = (pixels_amount + threads_per_block - 1) / threads_per_block;
 
 	curandState* d_states;
-	cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount);
+	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, pixels_amount);
 
 	RenderInfo* d_info = allocate_render_info_gpu(bitmap->width, bitmap->height, 70, 1);
@@ -232,13 +233,13 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
 	Vector3* d_ray_colors;
-	cudaMalloc(&d_ray_colors, pixels_amount * sizeof(Vector3));
+	HANDLE_ERROR( cudaMalloc(&d_ray_colors, pixels_amount * sizeof(Vector3)) );
 
 	int* d_ray_statuses;
-	cudaMalloc(&d_ray_statuses, pixels_amount * sizeof(int));
+	HANDLE_ERROR( cudaMalloc(&d_ray_statuses, pixels_amount * sizeof(int)) );
 
 	Ray* d_rays;
-	cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount);
+	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
 
 	SceneReference ref = allocate_scene_gpu(scene);
 
@@ -264,24 +265,24 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 	struct timespec tend_finish = {0, 0};
 	clock_gettime(CLOCK_MONOTONIC, &tstart_finish);
 
-	cudaFree(d_states);
-	cudaFree(d_rays);
-	cudaFree(d_info);
-	cudaFree(d_ray_statuses);
-	cudaFree(d_ray_colors);
+	HANDLE_ERROR( cudaFree(d_states) );
+	HANDLE_ERROR( cudaFree(d_rays) );
+	HANDLE_ERROR( cudaFree(d_info) );
+	HANDLE_ERROR( cudaFree(d_ray_statuses) );
+	HANDLE_ERROR( cudaFree(d_ray_colors) );
 	free_scene_gpu(ref);
 	scene_free(scene);
 
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
-	cudaMalloc(&d_pixels, sizeof(Pixel) * pixels_amount);
-	cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice);
+	HANDLE_ERROR( cudaMalloc(&d_pixels, sizeof(Pixel) * pixels_amount) );
+	HANDLE_ERROR( cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice) );
 
 	set_bitmap<<<blocks_amount, threads_per_block>>>(d_final_colors, d_pixels, (float) samples, pixels_amount);
-	cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost);
+	HANDLE_ERROR( cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost) );
 
-	cudaFree(d_final_colors);
-	cudaFree(d_pixels);
+	HANDLE_ERROR( cudaFree(d_final_colors) );
+	HANDLE_ERROR( cudaFree(d_pixels) );
 
 	clock_gettime(CLOCK_MONOTONIC, &tend_finish);
 	printf("Finish Time: %f seconds\n", 
