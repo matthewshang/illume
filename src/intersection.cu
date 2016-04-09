@@ -1,10 +1,10 @@
 #include "intersection.h"
 
 __device__
-Intersection intersection_create(int is_intersect, float d, Vector3 normal, Material m)
+Intersection intersection_create(float d, Vector3 normal, Material m)
 {
 	Intersection inter;
-	inter.is_intersect = is_intersect;
+	inter.is_intersect = 1;
 	inter.d = d;
 	inter.normal = normal;
 	inter.m = m;

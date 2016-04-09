@@ -16,6 +16,7 @@
 #include "scene.h"
 #include "material.h"
 #include "error_check.h"
+#include "plane.h"
 
 static const float PI = 3.14159265358979323846;
 

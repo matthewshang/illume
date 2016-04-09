@@ -49,13 +49,24 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 	min.d = FLT_MAX;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
-		Intersection inter = sphere_ray_intersection(scene->spheres[i], ray);
+		Intersection inter = sphere_ray_intersect(scene->spheres[i], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
 			min = inter;
 		}
 	}
+	
+	for (int i = 0; i < scene->plane_amount; i++)
+	{
+		Intersection inter = plane_ray_intersect(scene->planes[i], ray);
+
+		if (inter.is_intersect == 1 && inter.d < min.d)
+		{
+			min = inter;
+		}
+	}
+
 	return min;
 }
 
@@ -156,6 +167,7 @@ typedef struct
 {
 	Scene* d_scene;
 	Sphere* d_spheres;
+	Plane* d_planes;
 } 
 SceneReference;
 
@@ -163,13 +175,21 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 {
 	SceneReference ref;
 	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
+	int planes_size = sizeof(Plane) * scene->plane_amount;
+
 	HANDLE_ERROR( cudaMalloc(&ref.d_scene, sizeof(Scene)) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_spheres, spheres_size) );
+	HANDLE_ERROR( cudaMalloc(&ref.d_planes, planes_size) );
 	Sphere* h_spheres = scene->spheres;
+	Plane* h_planes = scene->planes;
 	scene->spheres = ref.d_spheres;
+	scene->planes = ref.d_planes;
 	HANDLE_ERROR( cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice) );
 	scene->spheres = h_spheres;
+	scene->planes = h_planes;
 	HANDLE_ERROR( cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice) );
+	HANDLE_ERROR( cudaMemcpy(ref.d_planes, scene->planes, planes_size, cudaMemcpyHostToDevice) );
+	
 	return ref;
 }
 
@@ -177,6 +197,7 @@ static void free_scene_gpu(SceneReference ref)
 {
 	HANDLE_ERROR( cudaFree(ref.d_spheres) );
 	HANDLE_ERROR( cudaFree(ref.d_scene) );
+	HANDLE_ERROR( cudaFree(ref.d_planes) );
 }
 
 static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)

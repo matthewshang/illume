@@ -17,11 +17,12 @@ static Scene* init_scene()
 	Material blue = material_diffuse(vector3_create(0, 0, 0.85));
 	Material red = material_diffuse(vector3_create(0.85, 0, 0));
 
-	Scene* scene = scene_new(4);
-	scene->spheres[0] = sphere_create(10, vector3_create(0, -11, 8), white);
-	scene->spheres[1] = sphere_create(1, vector3_create(0, 0, 8), white);
-	scene->spheres[2] = sphere_create(0.5, vector3_create(-2, -0.75, 7), red);
-	scene->spheres[3] = sphere_create(0.5, vector3_create(2, -0.75, 7), blue);
+	Scene* scene = scene_new(3, 1);
+	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 8), white);
+	scene->spheres[1] = sphere_create(0.5, vector3_create(-2, -0.5, 7), red);
+	scene->spheres[2] = sphere_create(0.5, vector3_create(2, -0.5, 7), blue);
+
+	scene->planes[0] = plane_create(vector3_create(0, -1, 0), vector3_create(0, 1, 0), white);
 	return scene;
 }
 
