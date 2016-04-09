@@ -49,7 +49,7 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 	min.d = FLT_MAX;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
-		Intersection inter = sphere_ray_intersection(&scene->spheres[i], ray);
+		Intersection inter = sphere_ray_intersection(scene->spheres[i], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
@@ -64,7 +64,6 @@ static Vector3 get_background_color(Vector3 direction)
 {
 	float grad = (direction.x + 1) / 2;
 	return vector3_create(grad, grad, grad);
-	// return vector3_create(0.5294117, 0.7686274, 0.9803921);
 }
 
 __global__
@@ -88,7 +87,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			{
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.d);
 				Vector3 new_origin = ray_position_along(rays[ray_index], min.d);
-				Vector3 bias = vector3_mul(min.normal, 10e-4);
+				Vector3 bias = vector3_mul(min.normal, 10e-6);
 				vector3_add_to(&new_origin, bias);
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
