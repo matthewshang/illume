@@ -99,6 +99,24 @@ Vector3 vector3_to_basis(Vector3 v, Vector3 normal)
 	return vector3_add(x, vector3_add(y, z));
 }
 
+__device__ __host__ 
+Vector3 vector3_min(Vector3 v, float m)
+{
+	return vector3_create(fminf(v.x, m), fminf(v.y, m), fminf(v.z, m));
+}
+
+__device__ __host__ 
+Vector3 vector3_max(Vector3 v, float m)
+{
+	return vector3_create(fmaxf(v.x, m), fmaxf(v.y, m), fmaxf(v.z, m));
+}
+
+__device__ __host__
+Vector3 vector3_pow(Vector3 v, float p)
+{
+	return vector3_create(powf(v.x, p), powf(v.y, p), powf(v.z, p));
+}
+
 __device__ __host__
 Vector3 vector3_add(Vector3 a, Vector3 b)
 {

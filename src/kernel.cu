@@ -62,9 +62,9 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	float grad = (direction.x + 2) / 3;
+	float grad = (direction.x + 1) / 2;
 	return vector3_create(grad, grad, grad);
-	// return vector3_create(0.8, 0.8, 0.8);
+	// return vector3_create(0.5294117, 0.7686274, 0.9803921);
 }
 
 __global__
@@ -113,15 +113,13 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	if (index < N)
 	{
-		pixels[index].red = (int) (255 * final_colors[index].x / samples);
-		pixels[index].red = fminf(pixels[index].red, 255);
-		pixels[index].red = fmaxf(pixels[index].red, 0);
-		pixels[index].green = (int) (255 * final_colors[index].y / samples);
-		pixels[index].green = fminf(pixels[index].green, 255);
-		pixels[index].green = fmaxf(pixels[index].green, 0);
-		pixels[index].blue = (int) (255 * final_colors[index].z / samples);
-		pixels[index].blue = fminf(pixels[index].blue, 255);
-		pixels[index].blue = fmaxf(pixels[index].blue, 0);
+		float gamma = 1 / 2.2;
+		Vector3 corrected = vector3_mul(final_colors[index], 1 / samples);
+		corrected = vector3_max(vector3_min(corrected, 1), 0);
+		corrected = vector3_pow(corrected, gamma);
+		pixels[index].red = (int) (255 * corrected.x);
+		pixels[index].green = (int) (255 * corrected.y);
+		pixels[index].blue = (int) (255 * corrected.z);
 	}
 }
 
