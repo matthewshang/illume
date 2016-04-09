@@ -29,8 +29,8 @@ int main(int argc, char* argv[])
 		render_scene(image, spp, max_depth);
 		char name[snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5])];
 		sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);
-		printf("Saving to: %s\n", name);
 		bitmap_save_to_png(image, name);
+		printf("Saved to: %s\n", name);
 		bitmap_free(image);
 	}
 exit_bitmap:

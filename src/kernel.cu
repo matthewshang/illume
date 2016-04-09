@@ -19,7 +19,7 @@ void init_curand_states(curandState* states, int N)
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	if (index < N)
 	{
-		curand_init(666420691337, index, 0, &states[index]);
+		curand_init((666420691337 << 20) + index, 0, 0, &states[index]);
 	}
 }
 
@@ -195,6 +195,20 @@ static void free_scene_gpu(SceneReference ref)
 	HANDLE_ERROR( cudaFree(ref.d_scene) );
 }
 
+static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)
+{
+	HANDLE_ERROR( cudaEventCreate(start) );
+	HANDLE_ERROR( cudaEventCreate(stop) );
+	HANDLE_ERROR( cudaEventRecord(*start, 0) );
+}
+
+static void end_timer(cudaEvent_t* start, cudaEvent_t* stop, float* time)
+{
+	HANDLE_ERROR( cudaEventRecord(*stop, 0) );
+	HANDLE_ERROR( cudaEventSynchronize(*stop) );
+	HANDLE_ERROR( cudaEventElapsedTime(time, *start, *stop) );
+}
+
 static Scene* init_scene()
 {
 	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
@@ -213,9 +227,9 @@ static Scene* init_scene()
 
 void render_scene(Bitmap* bitmap, int samples, int max_depth)
 {
-	struct timespec tstart = {0, 0};
-	struct timespec tend = {0, 0};
-	clock_gettime(CLOCK_MONOTONIC, &tstart);
+	cudaEvent_t render_start;
+	cudaEvent_t render_stop;
+	start_timer(&render_start, &render_stop);
 
 	Scene* scene = init_scene();
 
@@ -243,10 +257,11 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 
 	SceneReference ref = allocate_scene_gpu(scene);
 
-	clock_gettime(CLOCK_MONOTONIC, &tend);
-	printf("Setup Time: %f seconds\n", 
-		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
-		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
+
+
+	cudaEvent_t calc_start;
+	cudaEvent_t calc_stop;
+	start_timer(&calc_start, &calc_stop);
 
 	for (int i = 0; i < samples; i++)
 	{
@@ -261,9 +276,8 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 		}
 	}
 
-	struct timespec tstart_finish = {0, 0};
-	struct timespec tend_finish = {0, 0};
-	clock_gettime(CLOCK_MONOTONIC, &tstart_finish);
+	float calc_time;
+	end_timer(&calc_start, &calc_stop, &calc_time);
 
 	HANDLE_ERROR( cudaFree(d_states) );
 	HANDLE_ERROR( cudaFree(d_rays) );
@@ -284,13 +298,9 @@ void render_scene(Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaFree(d_final_colors) );
 	HANDLE_ERROR( cudaFree(d_pixels) );
 
-	clock_gettime(CLOCK_MONOTONIC, &tend_finish);
-	printf("Finish Time: %f seconds\n", 
-		    ((double) tend_finish.tv_sec + 1.0e-9 * tend_finish.tv_nsec) -
-		    ((double) tstart_finish.tv_sec + 1.0e-9 * tstart_finish.tv_nsec));
+	float render_time;
+	end_timer(&render_start, &render_stop, &render_time);
 
-	clock_gettime(CLOCK_MONOTONIC, &tend);
-	printf("Total Time: %f seconds\n", 
-		    ((double) tend.tv_sec + 1.0e-9 * tend.tv_nsec) -
-		    ((double) tstart.tv_sec + 1.0e-9 * tstart.tv_nsec));
+	printf("Calculation time: %f seconds\n", 1e-3 * (double) calc_time);
+	printf("Render time: %f seconds\n", 1e-3 * (double) render_time);
 }
