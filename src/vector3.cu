@@ -118,6 +118,12 @@ Vector3 vector3_pow(Vector3 v, float p)
 }
 
 __device__ __host__
+Vector3 vector3_reflect(Vector3 v, Vector3 n)
+{
+	return vector3_sub(v, vector3_mul(vector3_mul(n, vector3_dot(v, n)), 2));
+}
+
+__device__ __host__
 Vector3 vector3_add(Vector3 a, Vector3 b)
 {
 	return vector3_create(a.x + b.x, 

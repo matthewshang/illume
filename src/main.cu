@@ -14,13 +14,16 @@ static char format[] = "%s-%sx%s-%sspp-%smd.png";
 static Scene* init_scene()
 {
 	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
-	Material blue = material_diffuse(vector3_create(0, 0, 0.85));
-	Material red = material_diffuse(vector3_create(0.85, 0, 0));
+	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
+	Material red = material_diffuse(vector3_create(0.95, 0, 0));
+	Material green = material_diffuse(vector3_create(0, 0.95, 0));
+	Material mirror = material_specular(vector3_create(0.9, 0.9, 0.9));
 
-	Scene* scene = scene_new(3, 1);
-	scene->spheres[0] = sphere_create(1, vector3_create(0, 0, 8), white);
-	scene->spheres[1] = sphere_create(0.5, vector3_create(-2, -0.5, 7), red);
-	scene->spheres[2] = sphere_create(0.5, vector3_create(2, -0.5, 7), blue);
+	Scene* scene = scene_new(4, 1);
+	scene->spheres[0] = sphere_create(0.75, vector3_create(0, -0.25, 7), mirror);
+	scene->spheres[1] = sphere_create(0.35, vector3_create(1.5, -0.65, 5.5), red);
+	scene->spheres[2] = sphere_create(0.25, vector3_create(-1, -0.75, 6), green);
+	scene->spheres[3] = sphere_create(0.4, vector3_create(-1.5, -0.6, 5), blue);
 
 	scene->planes[0] = plane_create(vector3_create(0, -1, 0), vector3_create(0, 1, 0), white);
 	return scene;
