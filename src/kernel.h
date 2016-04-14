@@ -17,14 +17,14 @@
 #include "material.h"
 #include "error_check.h"
 #include "plane.h"
-
-static const float PI = 3.14159265358979323846;
+#include "camera.h"
+#include "constants.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth);
+void  render_scene  (Scene* scene, Bitmap* bitmap, Camera camera, int samples, int max_depth);
 
 #ifdef __cplusplus
 }

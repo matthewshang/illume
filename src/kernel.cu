@@ -13,7 +13,9 @@ void init_curand_states(curandState* states, int N)
 typedef struct
 {
 	float image_width;
-	float camera_focus_plane;
+	float camera_dof;
+	float camera_aperture;
+	Vector3 camera_pos;
 	float camera_pixel_size;
 	float camera_left;
 	float camera_top;
@@ -26,17 +28,30 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	if (index < N)
 	{
-		int x = index % (int) info->image_width;
-		int y = index / (int) info->image_width;
-		float left_edge = info->camera_left + info->camera_pixel_size * (float) x;
-		float right_edge = left_edge + info->camera_pixel_size;
-		float top_edge = info->camera_top - info->camera_pixel_size * (float) y;
-		float bottom_edge = top_edge + info->camera_pixel_size;
+		RenderInfo i = *info;
+		int x = index % (int) i.image_width;
+		int y = index / (int) i.image_width;
+		float left_edge = i.camera_left + i.camera_pixel_size * (float) x;
+		float right_edge = left_edge + i.camera_pixel_size;
+		float top_edge = i.camera_top - i.camera_pixel_size * (float) y;
+		float bottom_edge = top_edge + i.camera_pixel_size;
 
 		float r_x = left_edge + (right_edge - left_edge) * curand_uniform(&states[index]);
 		float r_y = bottom_edge + (top_edge - bottom_edge) * curand_uniform(&states[index]);
 
-		rays[index] = ray_create(vector3_create(0, 0, 0), vector3_create(r_x, r_y, info->camera_focus_plane));
+		Vector3 pos;
+		if (i.camera_aperture == 0)
+		{
+			pos = i.camera_pos;
+		}
+		else
+		{
+			float u1 = curand_uniform(&states[index]);
+			float u2 = curand_uniform(&states[index]);
+			pos = 
+				vector3_add(vector3_mul(sample_circle(u1, u2), i.camera_aperture), i.camera_pos);
+		}
+		rays[index] = ray_create(pos, vector3_sub(vector3_create(r_x, r_y, i.camera_dof), pos));
 		ray_statuses[index] = index;
 		ray_colors[index] = vector3_create(1, 1, 1);
 	}
@@ -144,16 +159,19 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	}
 }
 
-static RenderInfo* allocate_render_info_gpu(int width, int height, float fov, float plane)
+static RenderInfo* allocate_render_info_gpu(int width, int height, Camera camera)
 {
 	RenderInfo i;
 	i.image_width = width;
 	float dim_ratio = (float) height / (float) width;
-	float tan_half_fov = tanf(PI * fov / 360);
-	i.camera_focus_plane = plane;	
-	i.camera_pixel_size = tan_half_fov * 2 / (float) width;
-	i.camera_left = -1 * plane * tan_half_fov;
-	i.camera_top = dim_ratio * plane * tan_half_fov;
+	float tan_half_fov = tanf(PI * camera.fov / 360);
+	i.camera_dof = camera.dof;	
+	i.camera_aperture = camera.aperture;
+	i.camera_pos = camera.pos;
+	float dofmfov = i.camera_dof * tan_half_fov;
+	i.camera_pixel_size = dofmfov * 2 / (float) width;
+	i.camera_left = -1 * dofmfov;
+	i.camera_top = dim_ratio * dofmfov;
 	RenderInfo *d_info;
 	HANDLE_ERROR( cudaMalloc(&d_info, sizeof(RenderInfo)) );
 	HANDLE_ERROR( cudaMemcpy(d_info, &i, sizeof(RenderInfo), cudaMemcpyHostToDevice) );
@@ -225,7 +243,7 @@ static void end_timer(cudaEvent_t* start, cudaEvent_t* stop, float* time)
 	HANDLE_ERROR( cudaEventElapsedTime(time, *start, *stop) );
 }
 
-void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
+void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int max_depth)
 {
 	if (!scene)
 	{
@@ -245,7 +263,8 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, pixels_amount);
 
-	RenderInfo* d_info = allocate_render_info_gpu(bitmap->width, bitmap->height, 70, 1);
+	RenderInfo* d_info = 
+		allocate_render_info_gpu(bitmap->width, bitmap->height, camera);
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
