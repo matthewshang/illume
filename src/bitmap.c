@@ -8,7 +8,7 @@
 
 Bitmap* bitmap_new(size_t width, size_t height)
 {
-	Bitmap* bitmap = (Bitmap *) calloc(sizeof(Bitmap), 1);
+	Bitmap* bitmap = (Bitmap *) calloc(1, sizeof(Bitmap));
     if (!bitmap)
     {
         return NULL;
@@ -16,7 +16,7 @@ Bitmap* bitmap_new(size_t width, size_t height)
 	bitmap->width = width;
 	bitmap->height = height;
 	bitmap->pixels = 
-        (Pixel *) calloc(sizeof(Pixel), width * height);
+        (Pixel *) calloc(width * height, sizeof(Pixel));
     if (!bitmap->pixels)
     {
         return NULL;

@@ -2,7 +2,7 @@
 
 Vector3* vector3_new(float x, float y, float z)
 {
-	Vector3* vector = (Vector3 *) calloc(sizeof(Vector3), 1);
+	Vector3* vector = (Vector3 *) calloc(1, sizeof(Vector3));
 	if (!vector)
 	{
 		return NULL;
