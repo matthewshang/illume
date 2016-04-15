@@ -1,7 +1,7 @@
 #ifndef _CAMERA_
 #define _CAMERA_
 
-#include "vector3.h"
+#include "math/vector3.h"
 
 typedef struct
 {

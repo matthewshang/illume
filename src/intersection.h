@@ -1,7 +1,7 @@
 #ifndef _INTERSECTION_
 #define _INTERSECTION_
 
-#include "vector3.h"
+#include "math/vector3.h"
 #include "material.h"
 
 typedef struct

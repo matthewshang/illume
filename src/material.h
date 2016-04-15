@@ -1,7 +1,7 @@
 #ifndef _MATERIAL_
 #define _MATERIAL_
 
-#include "vector3.h"
+#include "math/vector3.h"
 
 const int MATERIAL_EMISSIVE = 0;
 const int MATERIAL_DIFFUSE = 1;

@@ -1,10 +1,10 @@
 #ifndef _SPHERE_
 #define _SPHERE_
 
-#include "intersection.h"
-#include "vector3.h"
-#include "ray.h"
-#include "material.h"
+#include "../math/vector3.h"
+#include "../math/ray.h"
+#include "../intersection.h"
+#include "../material.h"
 
 typedef struct
 {

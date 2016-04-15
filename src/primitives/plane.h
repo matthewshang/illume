@@ -1,10 +1,10 @@
 #ifndef _PLANE_
 #define _PLANE_
 
-#include "vector3.h"
-#include "material.h"
-#include "ray.h"
-#include "intersection.h"
+#include "../math/vector3.h"
+#include "../math/ray.h"
+#include "../material.h"
+#include "../intersection.h"
 
 typedef struct
 {

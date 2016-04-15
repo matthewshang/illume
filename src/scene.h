@@ -1,8 +1,8 @@
 #ifndef _SCENE_
 #define _SCENE_
 
-#include "sphere.h"
-#include "plane.h"
+#include "primitives/sphere.h"
+#include "primitives/plane.h"
 
 typedef struct
 {

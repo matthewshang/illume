@@ -5,9 +5,10 @@
 #include "kernel.h"
 #include "bitmap.h"
 #include "scene.h"
-#include "vector3.h"
 #include "material.h"
-#include "sphere.h"
+#include "math/vector3.h"
+#include "primitives/sphere.h"
+#include "primitives/plane.h"
 
 static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
