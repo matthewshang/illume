@@ -9,11 +9,15 @@
 #include "math/vector3.h"
 #include "primitives/sphere.h"
 #include "primitives/plane.h"
+#include "primitives/mesh.h"
 
 static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
 static Scene* init_scene()
 {
+	Mesh mesh = mesh_new();
+	mesh_load_obj(&mesh, "res/quad.obj");
+	mesh_free(&mesh);
 	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
 	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
 	Material red = material_diffuse(vector3_create(0.95, 0, 0));
