@@ -16,24 +16,28 @@ static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
 static Scene* init_scene()
 {
-	Mesh mesh = mesh_new();
-	mesh_load_obj(&mesh, "res/quad.obj");
-	mesh_free(&mesh);
-	SceneBuilder* builder = scenebuilder_new();
 	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
 	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
 	Material red = material_diffuse(vector3_create(0.95, 0, 0));
 	Material green = material_diffuse(vector3_create(0, 0.95, 0));
 	Material mirror = material_specular(vector3_create(0.9, 0.9, 0.9));
 
+	SceneBuilder* builder = scenebuilder_new();
+
+	Mesh* quad = mesh_new();
+	mesh_load_obj(quad, "res/quad.obj");
+	scenebuilder_add_mesh(builder, quad);
+	
 	scenebuilder_add_sphere(builder, sphere_new(0.75, vector3_create(0, -0.25, 7), mirror));
 	scenebuilder_add_sphere(builder, sphere_new(0.35, vector3_create(1.5, -0.65, 5.5), red));
 	scenebuilder_add_sphere(builder, sphere_new(0.25, vector3_create(-1, -0.75, 6), green));
 	scenebuilder_add_sphere(builder, sphere_new(0.4, vector3_create(-1.5, -0.6, 5), blue));
 	scenebuilder_add_sphere(builder, sphere_new(0.25, vector3_create(2, -0.75, 4), mirror));
-
 	scenebuilder_add_plane(builder, plane_new(vector3_create(0, -1, 0), vector3_create(0, 1, 0), white));
-	return scene_new(builder);
+	
+	Scene* scene = scene_new(builder);
+	scenebuilder_free(builder);
+	return scene;
 }
 
 int main(int argc, char* argv[])

@@ -1,12 +1,14 @@
 #include "mesh.h"
 
-Mesh mesh_new()
+Mesh* mesh_new()
 {
-	printf("here");
-	
-	Mesh mesh;
-	mesh.triangle_amount = 0;
-	mesh.triangles = NULL;
+	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
+	if (!mesh)
+	{
+		return NULL;
+	}
+	mesh->triangle_amount = 0;
+	mesh->triangles = NULL;
 	return mesh;
 }
 

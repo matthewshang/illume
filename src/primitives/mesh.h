@@ -26,9 +26,9 @@ extern "C" {
 #endif
 
 
-Mesh  mesh_new       ();
-void  mesh_load_obj  (Mesh* mesh, const char* path);
-void  mesh_free      (Mesh* mesh);
+Mesh*  mesh_new       ();
+void   mesh_load_obj  (Mesh* mesh, const char* path);
+void   mesh_free      (Mesh* mesh);
 
 #ifdef __cplusplus
 }
