@@ -2,6 +2,8 @@
 
 Mesh mesh_new()
 {
+	printf("here");
+	
 	Mesh mesh;
 	mesh.triangle_amount = 0;
 	mesh.triangles = NULL;

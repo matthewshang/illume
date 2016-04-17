@@ -15,7 +15,7 @@
 #include "primitives/plane.h"
 #include "primitives/sphere.h"
 #include "bitmap.h"
-#include "scene.h"
+#include "scene/scene.h"
 #include "material.h"
 #include "error_check.h"
 #include "camera.h"

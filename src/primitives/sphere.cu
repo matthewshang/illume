@@ -1,5 +1,24 @@
 #include "sphere.h"
 
+Sphere* sphere_new(float r, Vector3 center, Material m)
+{
+	Sphere* sphere = (Sphere *) calloc(1, sizeof(Sphere));
+	if (!sphere)
+	{
+		return NULL;
+	}
+	*sphere = sphere_create(r, center, m);
+	return sphere;
+}
+
+void sphere_free(Sphere* sphere)
+{
+	if (sphere)
+	{
+		free(sphere);
+	}
+}
+
 Sphere sphere_create(float r, Vector3 center, Material m)
 {
 	Sphere sphere;
