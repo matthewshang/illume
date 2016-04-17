@@ -6,6 +6,7 @@
 
 #include "triangle.h"
 #include "../arraylist.h"
+#include "../math/vector3.h"
 
 static const int OBJ_TOKENS = 4;
 static const int VERTEX_COMPONENTS = 4;
@@ -20,8 +21,17 @@ typedef struct
 }
 Mesh;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 Mesh  mesh_new       ();
 void  mesh_load_obj  (Mesh* mesh, const char* path);
 void  mesh_free      (Mesh* mesh);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

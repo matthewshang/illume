@@ -1,12 +1,29 @@
 #include "arraylist.h"
 
-ArrayList arraylist_new(int start_size)
+ArrayList* arraylist_new(int start_size)
 {
-	ArrayList array;
-	array.length = 0;
-	array.size = start_size;
-	array.data = calloc(start_size, sizeof(void *));
+	ArrayList* array = (ArrayList *) calloc(1, sizeof(ArrayList));
+	if (!array)
+	{
+		return NULL;
+	}
+	array->length = 0;
+	array->size = start_size;
+	array->data = calloc(start_size, sizeof(void *));
 	return array;
+}
+
+void arraylist_free(ArrayList* array)
+{
+	if (array)
+	{
+		if (array->data)
+		{
+			free(array->data);
+		}
+		
+		free(array);
+	}
 }
 
 static void arraylist_resize(ArrayList* array)
@@ -34,12 +51,14 @@ void arraylist_add(ArrayList* array, void* item)
 	}
 }
 
-void arraylist_free(ArrayList* array)
+void* arraylist_get(ArrayList* array, int index)
 {
-	if (array)
+	if (array && index < array->length)
 	{
-		free(array->data);
-		array->size = 0;
-		array->length = 0;
+		return array->data[index];
+	}
+	else
+	{
+		return NULL;
 	}
 }
