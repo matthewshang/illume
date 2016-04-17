@@ -43,10 +43,10 @@ int main(int argc, char* argv[])
 		goto exit_bitmap;
 	}
 	{
-		int width = atoi(argv[2]);
-		int height = atoi(argv[3]);
-		int spp = atoi(argv[4]);
-		int max_depth = atoi(argv[5]);
+		int width = strtol(argv[2], NULL, 10);
+		int height = strtol(argv[3], NULL, 10);
+		int spp = strtol(argv[4], NULL, 10);
+		int max_depth = strtol(argv[5], NULL, 10);
 
 		Bitmap* image = bitmap_new(width, height);
 		if (!image)
