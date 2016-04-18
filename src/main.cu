@@ -24,11 +24,15 @@ static Scene* init_scene()
 
 	SceneBuilder* builder = scenebuilder_new();
 
-	Mesh* quad = mesh_new();
+	Mesh* quad = mesh_new(material_diffuse(vector3_create(0.95, 0.95, 0.95)));
 	mesh_load_obj(quad, "res/quad.obj");
 	scenebuilder_add_mesh(builder, quad);
+
+	// scenebuilder_add_sphere(builder, sphere_new(0.75, vector3_create(0, -0.25, 7), mirror));
+	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(0, -0.25, 10), mirror));
+	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(4, -0.25, 7), mirror));
+	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(-4, -0.25, 7), mirror));
 	
-	scenebuilder_add_sphere(builder, sphere_new(0.75, vector3_create(0, -0.25, 7), mirror));
 	scenebuilder_add_sphere(builder, sphere_new(0.35, vector3_create(1.5, -0.65, 5.5), red));
 	scenebuilder_add_sphere(builder, sphere_new(0.25, vector3_create(-1, -0.75, 6), green));
 	scenebuilder_add_sphere(builder, sphere_new(0.4, vector3_create(-1.5, -0.6, 5), blue));
@@ -64,7 +68,9 @@ int main(int argc, char* argv[])
 			{
 				goto exit_scene;
 			}
-			Camera camera = camera_create(vector3_create(0, 0, 0), 70, 5.5, 0.2);
+			// Camera camera = camera_create(vector3_create(0, 0, 0), 70, 5.5, 0.2);
+			Camera camera = camera_create(vector3_create(0, 0, 0), 70, 1, 0);
+
 			render_scene(scene, image, camera, spp, max_depth);
 			char name[snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5])];
 			sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);

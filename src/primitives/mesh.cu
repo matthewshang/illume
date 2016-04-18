@@ -1,6 +1,6 @@
 #include "mesh.h"
 
-Mesh* mesh_new()
+Mesh* mesh_new(Material m)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
 	if (!mesh)
@@ -9,6 +9,7 @@ Mesh* mesh_new()
 	}
 	mesh->triangle_amount = 0;
 	mesh->triangles = NULL;
+	mesh->m = m;
 	return mesh;
 }
 
@@ -90,7 +91,7 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 			split_string(line, " ", VERTEX_COMPONENTS, tokens);
 			arraylist_add(vertices, vector3_new(strtof(tokens[1], NULL),
 												strtof(tokens[2], NULL),
-											    strtof(tokens[3], NULL)));
+											    strtof(tokens[3], NULL) + 5));
 			split_string_finish(tokens, VERTEX_COMPONENTS);
 		}
 		else if (strcmp(token, TOKEN_FACE) == 0)
@@ -102,6 +103,7 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 			Vector3* v0 = (Vector3 *) arraylist_get(vertices, i0);
 			Vector3* v1 = (Vector3 *) arraylist_get(vertices, i1);
 			Vector3* v2 = (Vector3 *) arraylist_get(vertices, i2);
+
 			arraylist_add(triangles, triangle_new(*v0, *v1, *v2));
 			split_string_finish(tokens, FACE_COMPONENTS);
 		}
@@ -140,4 +142,69 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 	{ 
 		free(tokens);
 	}
+}
+
+__device__
+static float tri_area_times_two(float ax, float ay, float bx, float by, float cx, float cy)
+{
+	return fabsf(ax * by + bx * cy + cx * ay - ay * bx - by * cx - cy * ax);
+}
+
+__device__
+static int point_in_triangle(float bx, float by, float cx, float cy, float px, float py)
+{
+	float ABC = tri_area_times_two(0, 0, bx, by, cx, cy);
+	float ABP = tri_area_times_two(0, 0, bx, by, px, py);
+	float BCP = tri_area_times_two(bx, by, cx, cy, px, py);
+	float CAP = tri_area_times_two(cx, cy, 0, 0, px, py);
+	return (ABP + BCP + CAP < ABC + 1e-4);
+}
+
+__device__
+static float triangle_ray_intersect(Triangle tri, Ray ray)
+{
+	float d = vector3_dot(tri.n, vector3_sub(tri.v0, ray.o)) / vector3_dot(tri.n, ray.d);
+	if (d < 0)
+	{
+		return -1;
+	}
+	Vector3 point = ray_position_along(ray, d);
+	Vector3 p0 = vector3_sub(point, tri.v0);
+	Vector3 ex = tri.e10;
+	vector3_normalize(&ex);
+	Vector3 ey = vector3_cross(ex, tri.n);
+
+	// one point of triangle is at origin 
+	if (point_in_triangle(vector3_dot(tri.e10, ex), vector3_dot(tri.e10, ey),
+						  vector3_dot(tri.e20, ex), vector3_dot(tri.e20, ey),
+						  vector3_dot(p0, ex), vector3_dot(p0, ey)))
+	{
+		return d;
+	}
+
+	return -1;
+}
+
+__device__
+Intersection mesh_ray_intersect(Mesh mesh, Ray ray)
+{
+	Intersection min = intersection_create_no_intersect();
+	min.d = FLT_MAX;
+	for (int i = 0; i < mesh.triangle_amount; i++)
+	{
+		Triangle tri = mesh.triangles[i];
+		float inter_d = triangle_ray_intersect(tri, ray);
+
+		if (inter_d > 0 && inter_d < min.d)
+		{
+			min.d = inter_d;
+			min.normal = tri.n;
+			min.is_intersect = 1;
+		}
+	}
+	if (min.is_intersect)
+	{
+		min.m = mesh.m;
+	}
+	return min;
 }

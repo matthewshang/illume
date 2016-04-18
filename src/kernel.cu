@@ -82,6 +82,16 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 		}
 	}
 
+	for (int i = 0; i < scene->mesh_amount; i++)
+	{
+		Intersection inter = mesh_ray_intersect(scene->meshes[i], ray);
+
+		if (inter.is_intersect == 1 && inter.d < min.d)
+		{
+			min = inter;
+		}
+	}
+
 	return min;
 }
 
