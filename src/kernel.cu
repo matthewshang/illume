@@ -197,6 +197,9 @@ typedef struct
 	Scene* d_scene;
 	Sphere* d_spheres;
 	Plane* d_planes;
+	Mesh* d_meshes;
+	int mesh_amount;
+	Triangle** d_triangle_pointers;
 } 
 SceneReference;
 
@@ -205,28 +208,61 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	SceneReference ref;
 	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
 	int planes_size = sizeof(Plane) * scene->plane_amount;
+	int meshes_size = sizeof(Mesh) * scene->mesh_amount;
+	ref.mesh_amount = scene->mesh_amount;
 
 	HANDLE_ERROR( cudaMalloc(&ref.d_scene, sizeof(Scene)) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_spheres, spheres_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_planes, planes_size) );
+	HANDLE_ERROR( cudaMalloc(&ref.d_meshes, meshes_size) );
+	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
+	for (int i = 0; i < scene->mesh_amount; i++)
+	{
+		int triangles_size = scene->meshes[i].triangle_amount * sizeof(Triangle);
+		HANDLE_ERROR( cudaMalloc(&ref.d_triangle_pointers[i], triangles_size) );
+		HANDLE_ERROR( cudaMemcpy(
+			ref.d_triangle_pointers[i], scene->meshes[i].triangles, triangles_size, cudaMemcpyHostToDevice) );
+	}
+
+	Triangle** h_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
+	for (int i = 0; i < scene->mesh_amount; i++)
+	{
+		h_triangle_pointers[i] = scene->meshes[i].triangles;
+		scene->meshes[i].triangles = ref.d_triangle_pointers[i];	
+	}
+
 	Sphere* h_spheres = scene->spheres;
 	Plane* h_planes = scene->planes;
+	Mesh* h_meshes = scene->meshes;
 	scene->spheres = ref.d_spheres;
 	scene->planes = ref.d_planes;
+	scene->meshes = ref.d_meshes;
 	HANDLE_ERROR( cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice) );
 	scene->spheres = h_spheres;
 	scene->planes = h_planes;
+	scene->meshes = h_meshes;
 	HANDLE_ERROR( cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice) );
 	HANDLE_ERROR( cudaMemcpy(ref.d_planes, scene->planes, planes_size, cudaMemcpyHostToDevice) );
-	
+	HANDLE_ERROR( cudaMemcpy(ref.d_meshes, scene->meshes, meshes_size, cudaMemcpyHostToDevice) );
+	for (int i = 0; i < scene->mesh_amount; i++)
+	{
+		scene->meshes[i].triangles = h_triangle_pointers[i];
+	}
+	free(h_triangle_pointers);
 	return ref;
 }
 
 static void free_scene_gpu(SceneReference ref)
 {
 	HANDLE_ERROR( cudaFree(ref.d_spheres) );
-	HANDLE_ERROR( cudaFree(ref.d_scene) );
 	HANDLE_ERROR( cudaFree(ref.d_planes) );
+	HANDLE_ERROR( cudaFree(ref.d_meshes) );
+	HANDLE_ERROR( cudaFree(ref.d_scene) );
+	for (int i = 0; i < ref.mesh_amount; i++)
+	{
+		HANDLE_ERROR( cudaFree(ref.d_triangle_pointers[i]) );
+	}
+	free(ref.d_triangle_pointers);
 }
 
 static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)

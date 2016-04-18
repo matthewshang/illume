@@ -63,6 +63,13 @@ void scene_free(Scene* scene)
 
 		if (scene->meshes)
 		{
+			for (int i = 0; i < scene->mesh_amount; i++)
+			{
+				if (scene->meshes[i].triangles)
+				{
+					free(scene->meshes[i].triangles);
+				}
+			}
 			free(scene->meshes);
 		}
 

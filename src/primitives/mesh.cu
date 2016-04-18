@@ -12,6 +12,19 @@ Mesh* mesh_new()
 	return mesh;
 }
 
+
+void mesh_free(Mesh* mesh)
+{
+	if (mesh)
+	{
+		if (mesh->triangles)
+		{
+			free(mesh->triangles);
+		}
+		free(mesh);
+	}
+}
+
 static void obj_get_token(char* line, char** ret)
 {
 	if (!line) 
@@ -126,13 +139,5 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 	if (tokens)
 	{ 
 		free(tokens);
-	}
-}
-
-void mesh_free(Mesh* mesh)
-{
-	if (mesh)
-	{
-		free(mesh->triangles);
 	}
 }

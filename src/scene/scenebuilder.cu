@@ -42,7 +42,11 @@ void scenebuilder_free(SceneBuilder* builder)
 		}
 		for (int i = 0; i < builder->meshes->length; i++)
 		{
-			mesh_free((Mesh *) arraylist_get(builder->meshes, i));
+			Mesh* mesh = (Mesh *) arraylist_get(builder->meshes, i);
+			if (mesh)
+			{
+				free(mesh);
+			}
 		}
 
 		arraylist_free(builder->spheres);
