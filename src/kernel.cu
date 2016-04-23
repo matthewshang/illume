@@ -120,7 +120,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			{
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
 				vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
-				ray_statuses[ray_index] = -1;
+				ray_statuses[index] = -1;
 			}
 			else if (min.m.type == MATERIAL_DIFFUSE)
 			{
@@ -148,9 +148,38 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			Vector3 sky = get_background_color(rays[ray_index].d);
 			vector3_mul_vector_to(&ray_colors[ray_index], sky);
 			vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
-			ray_statuses[ray_index] = -1;
+			ray_statuses[index] = -1;
 		}
 	}
+}
+
+static void compact_pixels(int* d_ray_statuses, int* h_ray_statuses, int* active_pixels)
+{
+	int pixels = *active_pixels;
+	int size = pixels * sizeof(int); 
+	HANDLE_ERROR( cudaMemcpy(h_ray_statuses, d_ray_statuses, size, cudaMemcpyDeviceToHost) );
+	
+	int left = 0;
+	int right = pixels - 1;
+	while (left < right)
+	{
+		while (h_ray_statuses[left] != -1 && left < pixels)
+		{
+			left++;
+		}
+		while (h_ray_statuses[right] == -1 && right >= 0)
+		{
+			right--;
+		}
+		if (left < right)
+		{
+			h_ray_statuses[left] = h_ray_statuses[right];
+			h_ray_statuses[right] = -1;
+			*active_pixels = left;
+		}
+	}
+
+	HANDLE_ERROR( cudaMemcpy(d_ray_statuses, h_ray_statuses, size, cudaMemcpyHostToDevice) );
 }
 
 __global__
@@ -325,6 +354,8 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 	SceneReference ref = allocate_scene_gpu(scene);
 
+	int* h_ray_statuses = (int *) calloc(pixels_amount, sizeof(int));
+
 	cudaEvent_t calc_start;
 	cudaEvent_t calc_stop;
 	start_timer(&calc_start, &calc_stop);
@@ -334,11 +365,17 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 		init_rays<<<blocks_amount, threads_per_block>>>
 			(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, pixels_amount);
 
+		int active_pixels = pixels_amount;
+		int blocks = blocks_amount;
+
 		for (int j = 0; j < max_depth; j++)
 		{
-			pathtrace_kernel<<<blocks_amount, threads_per_block>>>
+			pathtrace_kernel<<<blocks, threads_per_block>>>
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
-				 ref.d_scene, d_states, pixels_amount);		
+				 ref.d_scene, d_states, active_pixels);		
+
+			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
+			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
 	}
 
@@ -351,6 +388,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	HANDLE_ERROR( cudaFree(d_ray_statuses) );
 	HANDLE_ERROR( cudaFree(d_ray_colors) );
 	free_scene_gpu(ref);
+	free(h_ray_statuses);
 
 	Pixel* h_pixels = bitmap->pixels;
 	Pixel* d_pixels;
