@@ -25,10 +25,10 @@ static Scene* init_scene()
 	SceneBuilder* builder = scenebuilder_new();
 
 	Mesh* quad = mesh_new(material_diffuse(vector3_create(0.95, 0.95, 0.95)));
-	mesh_load_obj(quad, "res/quad.obj");
+	mesh_load_obj(quad, "res/cube.obj");
 	scenebuilder_add_mesh(builder, quad);
 
-	// scenebuilder_add_sphere(builder, sphere_new(0.75, vector3_create(0, -0.25, 7), mirror));
+	// scenebuilder_add_sphere(builder, sphere_new(1.75, vector3_create(-1, -0.25, 7), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(0, -0.25, 10), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(4, -0.25, 7), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(-4, -0.25, 7), mirror));

@@ -111,9 +111,12 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
+
 	if (index < N && ray_index != -1)
 	{
+
 		Intersection min = get_min_intersection(scene, rays[ray_index]);
+
 		if (min.is_intersect == 1)
 		{
 			if (min.m.type == MATERIAL_EMISSIVE)
@@ -133,7 +136,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 				Vector3 new_direction = vector3_to_basis(sample, min.normal);
 				ray_set(&rays[ray_index], new_origin, new_direction);
 			}
-			else
+			else if (min.m.type == MATERIAL_SPECULAR)
 			{
 				Ray r = rays[ray_index];
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
@@ -150,6 +153,8 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 			ray_statuses[index] = -1;
 		}
+
+
 	}
 }
 
@@ -158,7 +163,7 @@ static void compact_pixels(int* d_ray_statuses, int* h_ray_statuses, int* active
 	int pixels = *active_pixels;
 	int size = pixels * sizeof(int); 
 	HANDLE_ERROR( cudaMemcpy(h_ray_statuses, d_ray_statuses, size, cudaMemcpyDeviceToHost) );
-	
+
 	int left = 0;
 	int right = pixels - 1;
 	while (left < right)
@@ -171,13 +176,20 @@ static void compact_pixels(int* d_ray_statuses, int* h_ray_statuses, int* active
 		{
 			right--;
 		}
+
 		if (left < right)
 		{
 			h_ray_statuses[left] = h_ray_statuses[right];
 			h_ray_statuses[right] = -1;
-			*active_pixels = left;
 		}
 	}
+
+	left = 0;
+	while (left < pixels && h_ray_statuses[left] != -1)
+	{
+		left++;
+	}
+	*active_pixels = left;
 
 	HANDLE_ERROR( cudaMemcpy(d_ray_statuses, h_ray_statuses, size, cudaMemcpyHostToDevice) );
 }

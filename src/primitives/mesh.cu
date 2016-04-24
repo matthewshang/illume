@@ -206,5 +206,6 @@ Intersection mesh_ray_intersect(Mesh mesh, Ray ray)
 	{
 		min.m = mesh.m;
 	}
+
 	return min;
 }
