@@ -135,6 +135,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 				Vector3 sample = sample_hemisphere_cosine(u1, u2);
 				Vector3 new_direction = vector3_to_basis(sample, min.normal);
 				ray_set(&rays[ray_index], new_origin, new_direction);
+
 			}
 			else if (min.m.type == MATERIAL_SPECULAR)
 			{
@@ -382,10 +383,10 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 		for (int j = 0; j < max_depth; j++)
 		{
+
 			pathtrace_kernel<<<blocks, threads_per_block>>>
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
 				 ref.d_scene, d_states, active_pixels);		
-
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}

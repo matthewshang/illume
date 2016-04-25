@@ -87,6 +87,14 @@ Vector3 vector3_to_basis(Vector3 v, Vector3 normal)
 	{
 		vector3_set(&tangent, 1, 0, 0);
 	}
+	else if (normal.y == 0)
+	{
+		vector3_set(&tangent, 0, 1, 0);
+	}
+	else if (normal.z == 0)
+	{
+		vector3_set(&tangent, 0, 0, 1);
+	}
 	else
 	{
 		vector3_set(&tangent, 0, -1 * normal.z, normal.y);

@@ -90,7 +90,7 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 		{
 			split_string(line, " ", VERTEX_COMPONENTS, tokens);
 			arraylist_add(vertices, vector3_new(strtof(tokens[1], NULL),
-												strtof(tokens[2], NULL),
+												strtof(tokens[2], NULL) - 0.15,
 											    strtof(tokens[3], NULL) + 5));
 			split_string_finish(tokens, VERTEX_COMPONENTS);
 		}
