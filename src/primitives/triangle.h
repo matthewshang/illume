@@ -7,8 +7,13 @@ typedef struct
 {
 	Vector3 n;
 	Vector3 v0;
-	Vector3 e10;
-	Vector3 e20;
+	Vector3 ex;
+	Vector3 ey;
+	float t1x;
+	float t1y;
+	float t2x;
+	float t2y;
+	float area;
 }
 Triangle;
 
@@ -19,6 +24,9 @@ extern "C" {
 Triangle*  triangle_new     (Vector3 v0, Vector3 v1, Vector3 v2);
 void       triangle_free    (Triangle* triangle);
 Triangle   triangle_create  (Vector3 v0, Vector3 v1, Vector3 v2);
+
+__device__ __host__
+float      tri_area_times_two  (float ax, float ay, float bx, float by, float cx, float cy);
 
 #ifdef __cplusplus
 }

@@ -24,7 +24,7 @@ static Scene* init_scene()
 
 	SceneBuilder* builder = scenebuilder_new();
 
-	Mesh* quad = mesh_new(material_diffuse(vector3_create(0, 0.95, 0.95)));
+	Mesh* quad = mesh_new(material_diffuse(vector3_create(0.99, 0.4, 0)));
 	mesh_load_obj(quad, "res/icosahedron.obj");
 	scenebuilder_add_mesh(builder, quad);
 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 			{
 				goto exit_scene;
 			}
-			Camera camera = camera_create(vector3_create(0, 0, 0), 70, 5, 0.2);
+			Camera camera = camera_create(vector3_create(0, 0, 0), 70, 4.5, 0.085);
 			// Camera camera = camera_create(vector3_create(0, 0, 0), 70, 1, 0);
 
 			render_scene(scene, image, camera, spp, max_depth);

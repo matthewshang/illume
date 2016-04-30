@@ -145,19 +145,12 @@ void mesh_load_obj(Mesh* mesh, const char* path)
 }
 
 __device__
-static float tri_area_times_two(float ax, float ay, float bx, float by, float cx, float cy)
+static int point_in_triangle(float bx, float by, float cx, float cy, float px, float py, float area)
 {
-	return fabsf(ax * by + bx * cy + cx * ay - ay * bx - by * cx - cy * ax);
-}
-
-__device__
-static int point_in_triangle(float bx, float by, float cx, float cy, float px, float py)
-{
-	float ABC = tri_area_times_two(0, 0, bx, by, cx, cy);
 	float ABP = tri_area_times_two(0, 0, bx, by, px, py);
 	float BCP = tri_area_times_two(bx, by, cx, cy, px, py);
 	float CAP = tri_area_times_two(cx, cy, 0, 0, px, py);
-	return (ABP + BCP + CAP < ABC + 1e-4);
+	return (ABP + BCP + CAP < area);
 }
 
 __device__
@@ -170,14 +163,10 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 	}
 	Vector3 point = ray_position_along(ray, d);
 	Vector3 p0 = vector3_sub(point, tri.v0);
-	Vector3 ex = tri.e10;
-	vector3_normalize(&ex);
-	Vector3 ey = vector3_cross(ex, tri.n);
 
 	// one point of triangle is at origin 
-	if (point_in_triangle(vector3_dot(tri.e10, ex), vector3_dot(tri.e10, ey),
-						  vector3_dot(tri.e20, ex), vector3_dot(tri.e20, ey),
-						  vector3_dot(p0, ex), vector3_dot(p0, ey)))
+	if (point_in_triangle(tri.t1x, tri.t1y, tri.t2x, tri.t2y,
+						  vector3_dot(p0, tri.ex), vector3_dot(p0, tri.ey), tri.area))
 	{
 		return d;
 	}
