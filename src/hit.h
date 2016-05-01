@@ -11,14 +11,14 @@ typedef struct
 	Vector3 normal;
 	Material m;
 }
-Intersection;
+Hit;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-__device__  Intersection  intersection_create              	(float d, Vector3 normal, Material m);
-__device__  Intersection  intersection_create_no_intersect  ();
+__device__  Hit  hit_create               (float d, Vector3 normal, Material m);
+__device__  Hit  hit_create_no_intersect  ();
 
 #ifdef __cplusplus
 }

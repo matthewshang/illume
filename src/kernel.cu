@@ -58,13 +58,13 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 }
 
 __device__
-static Intersection get_min_intersection(Scene* scene, Ray ray)
+static Hit get_min_hit(Scene* scene, Ray ray)
 {
-	Intersection min = intersection_create_no_intersect();
+	Hit min = hit_create_no_intersect();
 	min.d = FLT_MAX;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
-		Intersection inter = sphere_ray_intersect(scene->spheres[i], ray);
+		Hit inter = sphere_ray_intersect(scene->spheres[i], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
@@ -74,7 +74,7 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 
 	for (int i = 0; i < scene->plane_amount; i++)
 	{
-		Intersection inter = plane_ray_intersect(scene->planes[i], ray);
+		Hit inter = plane_ray_intersect(scene->planes[i], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
@@ -85,7 +85,7 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 	for (int i = 0; i < scene->instance_amount; i++)
 	{
 		int mesh_index = scene->instances[i].mesh_index;
-		Intersection inter = 
+		Hit inter = 
 			mesh_instance_ray_intersect(scene->instances[i], scene->meshes[mesh_index], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
@@ -117,7 +117,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 	if (index < N && ray_index != -1)
 	{
 
-		Intersection min = get_min_intersection(scene, rays[ray_index]);
+		Hit min = get_min_hit(scene, rays[ray_index]);
 
 		if (min.is_intersect == 1)
 		{

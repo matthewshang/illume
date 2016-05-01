@@ -176,9 +176,9 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 }
 
 __device__
-Intersection mesh_ray_intersect(Mesh mesh, Ray ray)
+Hit mesh_ray_intersect(Mesh mesh, Ray ray)
 {
-	Intersection min = intersection_create_no_intersect();
+	Hit min = hit_create_no_intersect();
 	min.d = FLT_MAX;
 	for (int i = 0; i < mesh.triangle_amount; i++)
 	{

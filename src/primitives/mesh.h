@@ -9,7 +9,7 @@
 #include "../arraylist.h"
 #include "../math/vector3.h"
 #include "../math/ray.h"
-#include "../intersection.h"
+#include "../hit.h"
 
 static const int OBJ_TOKENS = 4;
 static const int VERTEX_COMPONENTS = 4;
@@ -29,9 +29,9 @@ extern "C" {
 #endif
 
 
-            Mesh*         mesh_new            (const char* path);
-            void          mesh_free           (Mesh* mesh);
-__device__  Intersection  mesh_ray_intersect  (Mesh mesh, Ray ray);
+            Mesh*  mesh_new            (const char* path);
+            void   mesh_free           (Mesh* mesh);
+__device__  Hit    mesh_ray_intersect  (Mesh mesh, Ray ray);
 
 #ifdef __cplusplus
 }
