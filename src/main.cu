@@ -9,6 +9,7 @@
 #include "primitives/sphere.h"
 #include "primitives/plane.h"
 #include "primitives/mesh.h"
+#include "primitives/mesh_instance.h"
 #include "scene/scenebuilder.h"
 #include "scene/scene.h"
 
@@ -27,6 +28,8 @@ static Scene* init_scene()
 	Mesh* quad = mesh_new(material_diffuse(vector3_create(0.99, 0.4, 0)));
 	mesh_load_obj(quad, "res/icosahedron.obj");
 	scenebuilder_add_mesh(builder, quad);
+
+	scenebuilder_add_mesh_instance(builder, mesh_instance_new(0, vector3_create(0.5, -0.15, 5)));
 
 	// scenebuilder_add_sphere(builder, sphere_new(1.75, vector3_create(-1, -0.25, 7), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(0, -0.25, 10), mirror));

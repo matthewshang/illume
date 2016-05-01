@@ -22,6 +22,11 @@ SceneBuilder* scenebuilder_new()
 	{
 		goto exit;
 	}
+	builder->instances = arraylist_new(1);
+	if (!builder->instances)
+	{
+		goto exit;
+	}
 	return builder;
 exit:
 	scenebuilder_free(builder);
@@ -40,6 +45,10 @@ void scenebuilder_free(SceneBuilder* builder)
 		{
 			plane_free((Plane *) arraylist_get(builder->planes, i));
 		}
+		for (int i = 0; i < builder->instances->length; i++)
+		{
+			mesh_instance_free((MeshInstance *) arraylist_get(builder->instances, i));
+		}
 		for (int i = 0; i < builder->meshes->length; i++)
 		{
 			Mesh* mesh = (Mesh *) arraylist_get(builder->meshes, i);
@@ -52,6 +61,7 @@ void scenebuilder_free(SceneBuilder* builder)
 		arraylist_free(builder->spheres);
 		arraylist_free(builder->planes);
 		arraylist_free(builder->meshes);
+		arraylist_free(builder->instances);
 		free(builder);
 	}
 }
@@ -77,5 +87,13 @@ void scenebuilder_add_mesh(SceneBuilder* builder, Mesh* mesh)
 	if (builder && mesh)
 	{
 		arraylist_add(builder->meshes, mesh);
+	}
+}
+
+void scenebuilder_add_mesh_instance(SceneBuilder* builder, MeshInstance* instance)
+{
+	if (builder && instance)
+	{
+		arraylist_add(builder->instances, instance);
 	}
 }

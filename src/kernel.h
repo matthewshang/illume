@@ -14,6 +14,8 @@
 #include "math/sample.h"
 #include "primitives/plane.h"
 #include "primitives/sphere.h"
+#include "primitives/mesh.h"
+#include "primitives/mesh_instance.h"
 #include "bitmap.h"
 #include "scene/scene.h"
 #include "material.h"

@@ -10,6 +10,7 @@ Scene* scene_new(SceneBuilder* builder)
 	int sphere_amount = builder->spheres->length;
 	int plane_amount = builder->planes->length;
 	int mesh_amount = builder->meshes->length;
+	int instance_amount = builder->instances->length;
 
 	scene->sphere_amount = sphere_amount;
 	scene->spheres = (Sphere *) calloc(sphere_amount, sizeof(Sphere));
@@ -32,6 +33,13 @@ Scene* scene_new(SceneBuilder* builder)
 		scene_free(scene);
 		return NULL;
 	}
+	scene->instance_amount = instance_amount;
+	scene->instances = (MeshInstance *) calloc(instance_amount, sizeof(MeshInstance));
+	if (!scene->instances)
+	{
+		scene_free(scene);
+		return NULL;
+	}
 	for (int i = 0; i < sphere_amount; i++)
 	{
 		scene->spheres[i] = *((Sphere *) arraylist_get(builder->spheres, i));
@@ -43,6 +51,10 @@ Scene* scene_new(SceneBuilder* builder)
 	for (int i = 0; i < mesh_amount; i++)
 	{
 		scene->meshes[i] = *((Mesh *) arraylist_get(builder->meshes, i));
+	}
+	for (int i = 0; i < instance_amount; i++)
+	{
+		scene->instances[i] = *((MeshInstance *) arraylist_get(builder->instances, i));
 	}
 	return scene;
 }
@@ -59,6 +71,11 @@ void scene_free(Scene* scene)
 		if (scene->planes)
 		{
 			free(scene->planes);
+		}
+
+		if (scene->instances)
+		{
+			free(scene->instances);
 		}
 
 		if (scene->meshes)

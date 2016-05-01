@@ -82,9 +82,11 @@ static Intersection get_min_intersection(Scene* scene, Ray ray)
 		}
 	}
 
-	for (int i = 0; i < scene->mesh_amount; i++)
+	for (int i = 0; i < scene->instance_amount; i++)
 	{
-		Intersection inter = mesh_ray_intersect(scene->meshes[i], ray);
+		int mesh_index = scene->instances[i].mesh_index;
+		Intersection inter = 
+			mesh_instance_ray_intersect(scene->instances[i], scene->meshes[mesh_index], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
@@ -252,6 +254,7 @@ typedef struct
 	Mesh* d_meshes;
 	int mesh_amount;
 	Triangle** d_triangle_pointers;
+	MeshInstance* d_instances;
 } 
 SceneReference;
 
@@ -261,11 +264,13 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
 	int planes_size = sizeof(Plane) * scene->plane_amount;
 	int meshes_size = sizeof(Mesh) * scene->mesh_amount;
+	int instances_size = sizeof(MeshInstance) * scene->instance_amount;
 	ref.mesh_amount = scene->mesh_amount;
 
 	HANDLE_ERROR( cudaMalloc(&ref.d_scene, sizeof(Scene)) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_spheres, spheres_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_planes, planes_size) );
+	HANDLE_ERROR( cudaMalloc(&ref.d_instances, instances_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_meshes, meshes_size) );
 	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
 	for (int i = 0; i < scene->mesh_amount; i++)
@@ -286,15 +291,19 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	Sphere* h_spheres = scene->spheres;
 	Plane* h_planes = scene->planes;
 	Mesh* h_meshes = scene->meshes;
+	MeshInstance* h_instances = scene->instances;
 	scene->spheres = ref.d_spheres;
 	scene->planes = ref.d_planes;
 	scene->meshes = ref.d_meshes;
+	scene->instances = ref.d_instances;
 	HANDLE_ERROR( cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice) );
 	scene->spheres = h_spheres;
 	scene->planes = h_planes;
 	scene->meshes = h_meshes;
+	scene->instances = h_instances;
 	HANDLE_ERROR( cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice) );
 	HANDLE_ERROR( cudaMemcpy(ref.d_planes, scene->planes, planes_size, cudaMemcpyHostToDevice) );
+	HANDLE_ERROR( cudaMemcpy(ref.d_instances, scene->instances, instances_size, cudaMemcpyHostToDevice) );
 	HANDLE_ERROR( cudaMemcpy(ref.d_meshes, scene->meshes, meshes_size, cudaMemcpyHostToDevice) );
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
@@ -308,6 +317,7 @@ static void free_scene_gpu(SceneReference ref)
 {
 	HANDLE_ERROR( cudaFree(ref.d_spheres) );
 	HANDLE_ERROR( cudaFree(ref.d_planes) );
+	HANDLE_ERROR( cudaFree(ref.d_instances) );
 	HANDLE_ERROR( cudaFree(ref.d_meshes) );
 	HANDLE_ERROR( cudaFree(ref.d_scene) );
 	for (int i = 0; i < ref.mesh_amount; i++)
