@@ -25,12 +25,16 @@ static Scene* init_scene()
 
 	SceneBuilder* builder = scenebuilder_new();
 
-	Mesh* quad = mesh_new(material_diffuse(vector3_create(0.99, 0.4, 0)));
-	mesh_load_obj(quad, "res/icosahedron.obj");
-	scenebuilder_add_mesh(builder, quad);
+	scenebuilder_add_mesh(builder, mesh_new("res/icosahedron.obj"));
+	scenebuilder_add_mesh(builder, mesh_new("res/cube.obj"));
 
-	scenebuilder_add_mesh_instance(builder, mesh_instance_new(0, vector3_create(0.5, -0.15, 5)));
+	scenebuilder_add_mesh_instance(builder, 
+		mesh_instance_new(0, vector3_create(0, -0.15, 5), 
+			material_diffuse(vector3_create(0.99, 0.8, 0))));
 
+	scenebuilder_add_mesh_instance(builder, 
+		mesh_instance_new(1, vector3_create(-2.5, -0.5, 4), 
+			material_emissive(vector3_create(0.99 * 1.75, 0.4 * 1.75, 0))));
 	// scenebuilder_add_sphere(builder, sphere_new(1.75, vector3_create(-1, -0.25, 7), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(0, -0.25, 10), mirror));
 	// scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(2, -0.25, 8), mirror));

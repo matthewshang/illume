@@ -6,7 +6,6 @@
 #include <float.h>
 
 #include "triangle.h"
-#include "../material.h"
 #include "../arraylist.h"
 #include "../math/vector3.h"
 #include "../math/ray.h"
@@ -20,7 +19,6 @@ static const char* TOKEN_FACE = "f";
 
 typedef struct
 {
-	Material m;
 	int triangle_amount;
 	Triangle* triangles;
 }
@@ -31,9 +29,8 @@ extern "C" {
 #endif
 
 
-            Mesh*         mesh_new            (Material m);
+            Mesh*         mesh_new            (const char* path);
             void          mesh_free           (Mesh* mesh);
-            void          mesh_load_obj       (Mesh* mesh, const char* path);
 __device__  Intersection  mesh_ray_intersect  (Mesh mesh, Ray ray);
 
 #ifdef __cplusplus

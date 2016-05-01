@@ -1,6 +1,8 @@
 #include "mesh.h"
 
-Mesh* mesh_new(Material m)
+static void load_obj(Mesh* mesh, const char* path);
+
+Mesh* mesh_new(const char* path)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
 	if (!mesh)
@@ -9,10 +11,9 @@ Mesh* mesh_new(Material m)
 	}
 	mesh->triangle_amount = 0;
 	mesh->triangles = NULL;
-	mesh->m = m;
+	load_obj(mesh, path);
 	return mesh;
 }
-
 
 void mesh_free(Mesh* mesh)
 {
@@ -66,7 +67,7 @@ static void split_string_finish(char** tokens, int amount)
 	}
 }
 
-void mesh_load_obj(Mesh* mesh, const char* path)
+static void load_obj(Mesh* mesh, const char* path)
 {
 	FILE* file;
 	file = fopen(path, "rt");
@@ -190,10 +191,6 @@ Intersection mesh_ray_intersect(Mesh mesh, Ray ray)
 			min.normal = tri.n;
 			min.is_intersect = 1;
 		}
-	}
-	if (min.is_intersect)
-	{
-		min.m = mesh.m;
 	}
 
 	return min;
