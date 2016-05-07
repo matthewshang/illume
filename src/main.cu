@@ -17,7 +17,7 @@ static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
 static Scene* init_scene()
 {
-	Material white = material_diffuse(vector3_create(0.95, 0.95, 0.95));
+	Material white = material_diffuse(vector3_create(0.75, 0.75, 0.75));
 	Material blue = material_diffuse(vector3_create(0, 0, 0.95));
 	Material red = material_diffuse(vector3_create(0.95, 0, 0));
 	Material green = material_diffuse(vector3_create(0, 0.95, 0));

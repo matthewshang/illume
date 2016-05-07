@@ -100,11 +100,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	Vector3 sun = vector3_create(1, 1, -1);
-	vector3_normalize(&sun);
-	float grad = (vector3_dot(direction, sun) + 1) / 2;
-	return vector3_add(vector3_mul(vector3_create(0.2, 0.2, 0.2), 1 - grad), 
-					   vector3_mul(vector3_create(0.8, 0.8, 0.8), grad));
+	return vector3_create(1, 1, 1);
 }
 
 __global__
