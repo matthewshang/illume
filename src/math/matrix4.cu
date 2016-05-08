@@ -23,14 +23,33 @@ Matrix4 matrix4_create()
 	return m;
 }
 
-void matrix4_set_scale(Matrix4* m, Vector3 scale)
+Matrix4 matrix4_from_axis_angle(Vector3 axis, float angle)
 {
-	if (m)
-	{
-		m->m[0][0] = scale.x;
-		m->m[1][1] = scale.y;
-		m->m[2][2] = scale.z;
-	}
+	Vector3 v = axis;
+	vector3_normalize(&axis);
+	v = vector3_mul(axis, sinf(angle / 2));
+	float w = cosf(angle / 2);
+
+	Matrix4 m = matrix4_create();
+	m.m[0][0] = 1 - 2 * (v.y * v.y + v.z * v.z);
+	m.m[1][0] = 2 * (v.x * v.y + w * v.z);
+	m.m[2][0] = 2 * (v.x * v.z - w * v.y);
+	m.m[0][1] = 2 * (v.x * v.y - w * v.z);
+	m.m[1][1] = 1 - 2 * (v.x * v.x + v.z * v.z);
+	m.m[2][1] = 2 * (v.y * v.z + w * v.x);
+	m.m[0][2] = 2 * (v.x * v.z + w * v.y);
+	m.m[1][2] = 2 * (v.y * v.z - w * v.x);
+	m.m[2][2] = 1 - 2 * (v.x * v.x + v.y * v.y);
+	return m;
+}
+
+Matrix4 matrix4_from_scale(Vector3 scale)
+{
+	Matrix4 m = matrix4_create();
+	m.m[0][0] = scale.x;
+	m.m[1][1] = scale.y;
+	m.m[2][2] = scale.z;
+	return m;
 }
 
 void matrix4_set_translate(Matrix4* m, Vector3 translation)

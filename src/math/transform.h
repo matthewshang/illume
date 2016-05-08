@@ -17,7 +17,7 @@ Transform;
 extern "C" {
 #endif
 
-Transform  transform_create  (Vector3 translation, Vector3 scale);
+Transform  transform_create  (Vector3 translation, Vector3 scale, Matrix4 rotation);
 
 #ifdef __cplusplus
 }

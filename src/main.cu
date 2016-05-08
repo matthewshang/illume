@@ -7,6 +7,7 @@
 #include "material.h"
 #include "math/vector3.h"
 #include "math/transform.h"
+#include "math/matrix4.h"
 #include "primitives/sphere.h"
 #include "primitives/plane.h"
 #include "primitives/mesh.h"
@@ -30,11 +31,14 @@ static Scene* init_scene()
 	scenebuilder_add_mesh(builder, mesh_new("res/cube.obj"));
 
 	scenebuilder_add_mesh_instance(builder, mesh_instance_new(0, white, 
-			transform_create(vector3_create(0, -0.15, 5), vector3_create(1, 1, 1))));
+			transform_create(
+				vector3_create(0, -0.15, 5), vector3_create(1, 1, 1), matrix4_create())));
 
 	scenebuilder_add_mesh_instance(builder, 
 		mesh_instance_new(1, material_emissive(vector3_create(0.99 * 1.75, 0.4 * 1.75, 0)),
-			transform_create(vector3_create(-2.5, -0.5, 4), vector3_create(1, 1, 1))));
+			transform_create(
+				vector3_create(-2.5, -0.5, 4), vector3_create(1, 1, 1), 
+					matrix4_from_axis_angle(vector3_create(0, 1, 0), PI / 4))));
 
 	scenebuilder_add_sphere(builder, sphere_new(0.35, vector3_create(1.5, -0.65, 5.5), red));
 	scenebuilder_add_sphere(builder, sphere_new(0.25, vector3_create(-1, -0.75, 6), green));
