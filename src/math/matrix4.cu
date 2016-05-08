@@ -165,9 +165,9 @@ static float det(Matrix4 m)
 }
 
 __device__
-Vector3 matrix4_mul_vector3(Matrix4 m, Vector3 v, float w)
+Vector3 matrix4_mul_vector3(Matrix4* m, Vector3 v, float w)
 {
-	return vector3_create(m.m[0][0] * v.x + m.m[0][1] * v.y + m.m[0][2] * v.z + m.m[0][3] * w, 
-						  m.m[1][0] * v.x + m.m[1][1] * v.y + m.m[1][2] * v.z + m.m[1][3] * w,
-						  m.m[2][0] * v.x + m.m[2][1] * v.y + m.m[2][2] * v.z + m.m[2][3] * w);
+	return vector3_create(m->m[0][0] * v.x + m->m[0][1] * v.y + m->m[0][2] * v.z + m->m[0][3] * w, 
+						  m->m[1][0] * v.x + m->m[1][1] * v.y + m->m[1][2] * v.z + m->m[1][3] * w,
+						  m->m[2][0] * v.x + m->m[2][1] * v.y + m->m[2][2] * v.z + m->m[2][3] * w);
 }

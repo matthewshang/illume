@@ -86,7 +86,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 	{
 		int mesh_index = scene->instances[i].mesh_index;
 		Hit inter = 
-			mesh_instance_ray_intersect(scene->instances[i], scene->meshes[mesh_index], ray);
+			mesh_instance_ray_intersect(scene->instances + i, scene->meshes[mesh_index], ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
@@ -112,8 +112,8 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 
 	if (index < N && ray_index != -1)
 	{
-
-		Hit min = get_min_hit(scene, rays[ray_index]);
+		Scene local_scene = *scene;
+		Hit min = get_min_hit(&local_scene, rays[ray_index]);
 
 		if (min.is_intersect == 1)
 		{

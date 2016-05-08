@@ -6,6 +6,7 @@
 #include "bitmap.h"
 #include "material.h"
 #include "math/vector3.h"
+#include "math/transform.h"
 #include "primitives/sphere.h"
 #include "primitives/plane.h"
 #include "primitives/mesh.h"
@@ -28,18 +29,13 @@ static Scene* init_scene()
 	scenebuilder_add_mesh(builder, mesh_new("res/icosahedron.obj"));
 	scenebuilder_add_mesh(builder, mesh_new("res/cube.obj"));
 
-	scenebuilder_add_mesh_instance(builder, 
-		mesh_instance_new(0, vector3_create(0, -0.15, 5), 
-			material_diffuse(vector3_create(0.99, 0.8, 0))));
+	scenebuilder_add_mesh_instance(builder, mesh_instance_new(0, white, 
+			transform_create(vector3_create(0, -0.15, 5), vector3_create(1, 1, 1))));
 
 	scenebuilder_add_mesh_instance(builder, 
-		mesh_instance_new(1, vector3_create(-2.5, -0.5, 4), 
-			material_emissive(vector3_create(0.99 * 1.75, 0.4 * 1.75, 0))));
-	// scenebuilder_add_sphere(builder, sphere_new(1.75, vector3_create(-1, -0.25, 7), mirror));
-	// scenebuilder_add_sphere(builder, sphere_new(2, vector3_create(0, -0.25, 10), mirror));
-	// scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(2, -0.25, 8), mirror));
-	// scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(-2, -0.25, 8), mirror));
-	
+		mesh_instance_new(1, material_emissive(vector3_create(0.99 * 1.75, 0.4 * 1.75, 0)),
+			transform_create(vector3_create(-2.5, -0.5, 4), vector3_create(1, 1, 1))));
+
 	scenebuilder_add_sphere(builder, sphere_new(0.35, vector3_create(1.5, -0.65, 5.5), red));
 	scenebuilder_add_sphere(builder, sphere_new(0.25, vector3_create(-1, -0.75, 6), green));
 	scenebuilder_add_sphere(builder, sphere_new(0.4, vector3_create(-1.5, -0.6, 5), blue));
