@@ -8,6 +8,7 @@
 #include "../arraylist.h"
 #include "../math/vector3.h"
 #include "../math/ray.h"
+#include "../math/aabb.h"
 #include "../math/constants.h"
 #include "../hit.h"
 
@@ -21,6 +22,7 @@ typedef struct
 {
 	int triangle_amount;
 	Triangle* triangles;
+	AABB aabb;
 }
 Mesh;
 

@@ -55,6 +55,7 @@ Scene* scene_new(SceneBuilder* builder)
 	for (int i = 0; i < instance_amount; i++)
 	{
 		scene->instances[i] = *((MeshInstance *) arraylist_get(builder->instances, i));
+		mesh_instance_build_aabb(&scene->instances[i], scene->meshes[scene->instances[i].mesh_index]);	
 	}
 	return scene;
 }

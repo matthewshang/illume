@@ -128,10 +128,14 @@ static void load_obj(Mesh* mesh, const char* path)
 		printf("mesh_load_obj: allocation of mesh tris failed");
 	}
 
+	mesh->aabb = aabb_create();
 	for (int i = 0; i < vertices->length; i++)
 	{
-		vector3_free((Vector3 *) arraylist_get(vertices, i));
+		Vector3* v = (Vector3 *) arraylist_get(vertices, i);
+		aabb_update(&mesh->aabb, *v); 
+		vector3_free(v);
 	}
+
 	arraylist_free(vertices);
 	for (int i = 0; i < triangles->length; i++)
 	{

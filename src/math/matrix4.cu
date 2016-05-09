@@ -183,7 +183,7 @@ static float det(Matrix4 m)
 		 - (m.m[0][3] * m.m[1][2] * m.m[2][0] * m.m[3][1]);
 }
 
-__device__
+__device__ __host__
 Vector3 matrix4_mul_vector3(Matrix4* m, Vector3 v, float w)
 {
 	return vector3_create(m->m[0][0] * v.x + m->m[0][1] * v.y + m->m[0][2] * v.z + m->m[0][3] * w, 

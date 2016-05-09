@@ -10,6 +10,7 @@ MeshInstance* mesh_instance_new(int mesh_index, Material m, Transform t)
 	instance->mesh_index = mesh_index;
 	instance->m = m;
 	instance->t = t;
+	instance->aabb = aabb_create();
 	return instance;
 }
 
@@ -21,9 +22,27 @@ void mesh_instance_free(MeshInstance* instance)
 	}
 }
 
+void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
+{
+	if (instance)
+	{
+		Vector3 aabb_vertices[8];
+		aabb_get_vertices(mesh.aabb, aabb_vertices);
+		for (int i = 0; i < 8; i++)
+		{
+			aabb_update(&instance->aabb, matrix4_mul_vector3(&instance->t.mat, aabb_vertices[i], 1));
+		}
+	}
+}
+
 __device__  
 Hit mesh_instance_ray_intersect(MeshInstance* instance, Mesh mesh, Ray ray)
 {
+	if (aabb_ray_intersect(instance->aabb, ray) == -1)
+	{
+		return hit_create_no_intersect();
+	}
+
 	Vector3 new_origin = matrix4_mul_vector3(&instance->t.inv, ray.o, 1);
 	Vector3 new_dir = matrix4_mul_vector3(&instance->t.trans, ray.d, 0);
 	Ray new_ray = ray_create(new_origin, new_dir);
