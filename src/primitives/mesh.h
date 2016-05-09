@@ -3,12 +3,12 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <float.h>
 
 #include "triangle.h"
 #include "../arraylist.h"
 #include "../math/vector3.h"
 #include "../math/ray.h"
+#include "../math/constants.h"
 #include "../hit.h"
 
 static const int OBJ_TOKENS = 4;

@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <float.h>
 
 #include <curand.h>
 #include <curand_kernel.h>

@@ -179,7 +179,7 @@ __device__
 Hit mesh_ray_intersect(Mesh mesh, Ray ray)
 {
 	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
+	min.d = FLOAT_MAX;
 	for (int i = 0; i < mesh.triangle_amount; i++)
 	{
 		Triangle tri = mesh.triangles[i];

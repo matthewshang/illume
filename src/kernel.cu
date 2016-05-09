@@ -61,7 +61,7 @@ __device__
 static Hit get_min_hit(Scene* scene, Ray ray)
 {
 	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
+	min.d = FLOAT_MAX;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
 		Hit inter = sphere_ray_intersect(scene->spheres[i], ray);
