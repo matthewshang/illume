@@ -8,6 +8,14 @@ AABB aabb_create()
 	return aabb;
 }
 
+AABB aabb_from_vertices(Vector3 min, Vector3 max)
+{
+	AABB aabb;
+	aabb.min = min;
+	aabb.max = max;
+	return aabb;
+}
+
 void aabb_update(AABB* aabb, Vector3 p)
 {
 	if (aabb)
@@ -72,4 +80,11 @@ float aabb_ray_intersect(AABB aabb, Ray ray)
 		return tmin;
 	}
 	return -1;
+}
+
+int aabb_aabb_intersect(AABB u, AABB v)
+{
+	return !(u.min.x > v.max.x || u.max.x < v.min.x ||
+			 u.min.y > v.max.y || u.max.y < v.min.y ||
+			 u.min.z > v.max.z || u.max.z < v.min.z);
 }

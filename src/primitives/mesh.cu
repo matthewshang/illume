@@ -23,6 +23,7 @@ void mesh_free(Mesh* mesh)
 		{
 			free(mesh->triangles);
 		}
+		kdtree_free(&mesh->tree);
 		free(mesh);
 	}
 }
@@ -82,6 +83,7 @@ static void load_obj(Mesh* mesh, const char* path)
 	char** tokens = (char **) calloc(OBJ_TOKENS, sizeof(char *));
 	ArrayList* vertices = arraylist_new(3);
 	ArrayList* triangles = arraylist_new(1);
+	ArrayList* aabbs = arraylist_new(1);
 
 	while(fgets(line, 100, file))
 	{
@@ -101,11 +103,16 @@ static void load_obj(Mesh* mesh, const char* path)
 			int i0 = strtol(tokens[1], NULL, 10) - 1;
 			int i1 = strtol(tokens[2], NULL, 10) - 1;
 			int i2 = strtol(tokens[3], NULL, 10) - 1;
-			Vector3* v0 = (Vector3 *) arraylist_get(vertices, i0);
-			Vector3* v1 = (Vector3 *) arraylist_get(vertices, i1);
-			Vector3* v2 = (Vector3 *) arraylist_get(vertices, i2);
-
-			arraylist_add(triangles, triangle_new(*v0, *v1, *v2));
+			Vector3 v0 = *((Vector3 *) arraylist_get(vertices, i0));
+			Vector3 v1 = *((Vector3 *) arraylist_get(vertices, i1));
+			Vector3 v2 = *((Vector3 *) arraylist_get(vertices, i2));
+			AABB* aabb = (AABB *) calloc(1, sizeof(AABB));
+			*aabb = aabb_create();
+			aabb_update(aabb, v0);
+			aabb_update(aabb, v1);
+			aabb_update(aabb, v2);
+			arraylist_add(aabbs, aabb);
+			arraylist_add(triangles, triangle_new(v0, v1, v2));
 			split_string_finish(tokens, FACE_COMPONENTS);
 		}
 
@@ -135,13 +142,19 @@ static void load_obj(Mesh* mesh, const char* path)
 		aabb_update(&mesh->aabb, *v); 
 		vector3_free(v);
 	}
-
 	arraylist_free(vertices);
+	AABB* final_aabbs = (AABB *) calloc(aabbs->length, sizeof(AABB));
 	for (int i = 0; i < triangles->length; i++)
 	{
 		triangle_free((Triangle *) arraylist_get(triangles, i));
+		AABB* current = (AABB *) arraylist_get(aabbs, i);
+		final_aabbs[i] = *current;
+		free(current);
 	}
 	arraylist_free(triangles);
+	mesh->tree = kdtree_build(final_aabbs, aabbs->length, mesh->aabb, 5, 5);
+	arraylist_free(aabbs);
+	free(final_aabbs);
 	fclose(file);
 	if (tokens)
 	{ 
@@ -180,13 +193,13 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 }
 
 __device__
-Hit mesh_ray_intersect(Mesh mesh, Ray ray)
+Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
 {
 	Hit min = hit_create_no_intersect();
 	min.d = FLOAT_MAX;
-	for (int i = 0; i < mesh.triangle_amount; i++)
+	for (int i = 0; i < mesh->triangle_amount; i++)
 	{
-		Triangle tri = mesh.triangles[i];
+		Triangle tri = mesh->triangles[i];
 		float inter_d = triangle_ray_intersect(tri, ray);
 
 		if (inter_d > 0 && inter_d < min.d)

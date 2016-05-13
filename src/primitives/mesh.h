@@ -11,6 +11,7 @@
 #include "../math/aabb.h"
 #include "../math/constants.h"
 #include "../hit.h"
+#include "../accel/kdtree.h"
 
 static const int OBJ_TOKENS = 4;
 static const int VERTEX_COMPONENTS = 4;
@@ -23,6 +24,7 @@ typedef struct
 	int triangle_amount;
 	Triangle* triangles;
 	AABB aabb;
+	KDTree tree;
 }
 Mesh;
 
@@ -33,7 +35,7 @@ extern "C" {
 
             Mesh*  mesh_new            (const char* path);
             void   mesh_free           (Mesh* mesh);
-__device__  Hit    mesh_ray_intersect  (Mesh mesh, Ray ray);
+__device__  Hit    mesh_ray_intersect  (Mesh* mesh, Ray ray);
 
 #ifdef __cplusplus
 }

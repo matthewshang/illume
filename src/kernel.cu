@@ -86,7 +86,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 	{
 		int mesh_index = scene->instances[i].mesh_index;
 		Hit inter = 
-			mesh_instance_ray_intersect(scene->instances + i, scene->meshes[mesh_index], ray);
+			mesh_instance_ray_intersect(scene->instances + i, scene->meshes + mesh_index, ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
 		{
