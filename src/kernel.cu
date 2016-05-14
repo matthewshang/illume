@@ -368,14 +368,14 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	{
 		return;
 	}
-	// KDTree tree = scene->meshes[0].tree;
-	// for (int i = 0; i < tree.node_amount; i++)
-	// {
-	// 	printf("%d :: %d %d\n", i, tree.nodes[i].left_index, tree.nodes[i].right_index);
+	KDTree tree = scene->meshes[0].tree;
+	for (int i = 0; i < tree.node_amount; i++)
+	{
+		printf("%d :: %d %d\n", i, tree.nodes[i].left_index, tree.nodes[i].right_index);
 	// 	printf("%d %d %d %f\n", tree.nodes[i].prim_start, tree.nodes[i].prim_amount, tree.nodes[i].split_axis, tree.nodes[i].split_value);
-	// 	for (int j = 0; j < 6; j++)	printf("%d ", tree.nodes[i].ropes[j]);
-	// 	printf("\n");
-	// }
+		for (int j = 0; j < 6; j++)	printf("%d ", tree.nodes[i].ropes[j]);
+		printf("\n\n");
+	}
 	cudaEvent_t render_start;
 	cudaEvent_t render_stop;
 	start_timer(&render_start, &render_stop);

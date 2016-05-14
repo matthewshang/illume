@@ -141,43 +141,20 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 		while (!node_is_leaf(rope_node))
 		{
 			rope_node = &nodes[ropes[i]];
-			if (rope_node->split_axis == X_AXIS)
+			if (i == LEFT_S || i == RIGHT_S)
 			{
-				if (i == LEFT_S)
+				if (rope_node->split_axis == X_AXIS)
 				{
-					ropes[i] = rope_node->right_index;
-				}
-				else if (i == RIGHT_S)
-				{
-					ropes[i] = rope_node->left_index;
-				}
-				else
-				{
-					if (rope_node->split_value > bounds.min.x - EPS)
+					if (i == LEFT_S)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.x + EPS)
+					else
 					{
 						ropes[i] = rope_node->left_index;
 					}
-					else
-					{
-						break;
-					}
 				}
-			}
-			else if (rope_node->split_axis == Y_AXIS)
-			{
-				if (i == BOTTOM_S)
-				{
-					ropes[i] = rope_node->right_index;
-				}
-				else if (i == TOP_S)
-				{
-					ropes[i] = rope_node->left_index;
-				}
-				else
+				else if (rope_node->split_axis == Y_AXIS)
 				{
 					if (rope_node->split_value > bounds.min.y - EPS)
 					{
@@ -192,18 +169,7 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 						break;
 					}
 				}
-			}
-			else
-			{
-				if (i == BACK_S)
-				{
-					ropes[i] = rope_node->right_index;
-				}
-				else if (i == FRONT_S)
-				{
-					ropes[i] = rope_node->left_index;
-				}
-				else
+				else if (rope_node->split_axis == Z_AXIS)
 				{
 					if (rope_node->split_value > bounds.min.z - EPS)
 					{
@@ -216,6 +182,94 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 					else
 					{
 						break;
+					}
+				}
+			}
+			else if (i == BOTTOM_S || i == TOP_S)
+			{
+				if (rope_node->split_axis == X_AXIS)
+				{
+					if (rope_node->split_value > bounds.min.x - EPS)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else if (rope_node->split_value < bounds.max.x + EPS)
+					{
+						ropes[i] = rope_node->left_index;
+					}
+					else
+					{
+						break;
+					}	
+				}
+				else if (rope_node->split_axis == Y_AXIS)
+				{
+					if (i == BOTTOM_S)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else
+					{
+						ropes[i] = rope_node->left_index;
+					}
+				}
+				else if (rope_node->split_axis == Z_AXIS)
+				{
+					if (rope_node->split_value > bounds.min.z - EPS)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else if (rope_node->split_value < bounds.max.z + EPS)
+					{
+						ropes[i] = rope_node->left_index;
+					}
+					else
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				if (rope_node->split_axis == X_AXIS)
+				{
+					if (rope_node->split_value > bounds.min.x - EPS)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else if (rope_node->split_value < bounds.max.x + EPS)
+					{
+						ropes[i] = rope_node->left_index;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else if (rope_node->split_axis == Y_AXIS)
+				{
+					if (rope_node->split_value > bounds.min.y - EPS)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else if (rope_node->split_value < bounds.max.y + EPS)
+					{
+						ropes[i] = rope_node->left_index;
+					}
+					else
+					{
+						break;
+					}
+				}
+				else if (rope_node->split_axis == Z_AXIS)
+				{
+					if (i == BACK_S)
+					{
+						ropes[i] = rope_node->right_index;
+					}
+					else
+					{
+						ropes[i] = rope_node->left_index;
 					}
 				}
 			}
