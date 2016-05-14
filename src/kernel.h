@@ -7,6 +7,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
+#include "accel/kdtree.h"
 #include "math/vector3.h"
 #include "math/ray.h"
 #include "math/constants.h"

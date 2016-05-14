@@ -250,6 +250,8 @@ typedef struct
 	Mesh* d_meshes;
 	int mesh_amount;
 	Triangle** d_triangle_pointers;
+	KDTreeNode** d_mesh_nodes;
+	int** d_mesh_prims;
 	MeshInstance* d_instances;
 } 
 SceneReference;
@@ -269,19 +271,34 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	HANDLE_ERROR( cudaMalloc(&ref.d_instances, instances_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_meshes, meshes_size) );
 	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
-	for (int i = 0; i < scene->mesh_amount; i++)
-	{
-		int triangles_size = scene->meshes[i].triangle_amount * sizeof(Triangle);
-		HANDLE_ERROR( cudaMalloc(&ref.d_triangle_pointers[i], triangles_size) );
-		HANDLE_ERROR( cudaMemcpy(
-			ref.d_triangle_pointers[i], scene->meshes[i].triangles, triangles_size, cudaMemcpyHostToDevice) );
-	}
-
 	Triangle** h_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
+	ref.d_mesh_nodes = (KDTreeNode **) calloc(scene->mesh_amount, sizeof(KDTreeNode *));
+	KDTreeNode** h_mesh_nodes = (KDTreeNode **) calloc(scene->mesh_amount, sizeof(KDTreeNode *));
+	ref.d_mesh_prims = (int **) calloc(scene->mesh_amount, sizeof(int *));
+	int** h_mesh_prims = (int **) calloc(scene->mesh_amount, sizeof(int *));
+
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
-		h_triangle_pointers[i] = scene->meshes[i].triangles;
-		scene->meshes[i].triangles = ref.d_triangle_pointers[i];	
+		Mesh* mesh_p = &scene->meshes[i];
+		Mesh mesh = *mesh_p;
+
+		int triangles_size = mesh.triangle_amount * sizeof(Triangle);
+		HANDLE_ERROR( cudaMalloc(&ref.d_triangle_pointers[i], triangles_size) );
+		HANDLE_ERROR( cudaMemcpy(ref.d_triangle_pointers[i], mesh.triangles, triangles_size, cudaMemcpyHostToDevice) );
+		h_triangle_pointers[i] = mesh.triangles;
+		mesh_p->triangles = ref.d_triangle_pointers[i];	
+
+		int nodes_size = mesh.tree.node_amount * sizeof(KDTreeNode);
+		HANDLE_ERROR( cudaMalloc(&ref.d_mesh_nodes[i], nodes_size));
+		HANDLE_ERROR( cudaMemcpy(ref.d_mesh_nodes[i], mesh.tree.nodes, nodes_size, cudaMemcpyHostToDevice) );
+		h_mesh_nodes[i] = mesh.tree.nodes;
+		mesh_p->tree.nodes = ref.d_mesh_nodes[i];
+
+		int prims_size = mesh.tree.total_prims * sizeof(int);
+		HANDLE_ERROR( cudaMalloc(&ref.d_mesh_prims[i], prims_size));
+		HANDLE_ERROR( cudaMemcpy(ref.d_mesh_prims[i], mesh.tree.node_prims, prims_size, cudaMemcpyHostToDevice) );
+		h_mesh_prims[i] = mesh.tree.node_prims;
+		mesh_p->tree.node_prims = ref.d_mesh_prims[i];
 	}
 
 	Sphere* h_spheres = scene->spheres;
@@ -304,8 +321,12 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
 		scene->meshes[i].triangles = h_triangle_pointers[i];
+		scene->meshes[i].tree.nodes = h_mesh_nodes[i];
+		scene->meshes[i].tree.node_prims = h_mesh_prims[i];
 	}
 	free(h_triangle_pointers);
+	free(h_mesh_nodes);
+	free(h_mesh_prims);
 	return ref;
 }
 
@@ -319,8 +340,12 @@ static void free_scene_gpu(SceneReference ref)
 	for (int i = 0; i < ref.mesh_amount; i++)
 	{
 		HANDLE_ERROR( cudaFree(ref.d_triangle_pointers[i]) );
+		HANDLE_ERROR( cudaFree(ref.d_mesh_nodes[i]) );
+		HANDLE_ERROR( cudaFree(ref.d_mesh_prims[i]) );
 	}
 	free(ref.d_triangle_pointers);
+	free(ref.d_mesh_nodes);
+	free(ref.d_mesh_prims);
 }
 
 static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)
@@ -343,7 +368,8 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	{
 		return;
 	}
-
+		KDTree tree = scene->meshes[0].tree;
+		printf("size: %lu\n", sizeof(tree.nodes[0]));
 	cudaEvent_t render_start;
 	cudaEvent_t render_stop;
 	start_timer(&render_start, &render_stop);

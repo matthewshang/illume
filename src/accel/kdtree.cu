@@ -1,26 +1,26 @@
 #include "kdtree.h"
 
-static KDTreeNode* new_node(AABB bounds)
+static KDTreeNode* new_leaf(int prim_amount)
 {
 	KDTreeNode* node = (KDTreeNode *) calloc(1, sizeof(KDTreeNode));
-	node->bounds = bounds;
-	return node;
-}
-
-static void init_leaf(KDTreeNode* node, int prim_amount)
-{
 	node->left_index = -1;
 	node->right_index = -1;
 	node->prim_start = -1;
 	node->prim_amount = prim_amount;
+	node->split_axis = -1;
+	node->split_value = 0;
+	return node;
 }
 
-static void init_node(KDTreeNode* node, int left_index, int right_index)
+static void init_node(KDTreeNode* node, int left_index, int right_index, 
+				      int split_axis, float split_value)
 {
 	node->left_index = left_index;
 	node->right_index = right_index;
 	node->prim_start = -1;
 	node->prim_amount = 0;
+	node->split_axis = split_axis;
+	node->split_value = split_value;
 }
 
 static int node_is_leaf(KDTreeNode* node)
@@ -42,27 +42,27 @@ static float get_bounds(AABB* left, AABB* right, int axis, AABB current)
 	else if (axis == Y_AXIS)
 	{
 		split_value = (min.y + max.y) / 2;
-		*left = aabb_from_vertices(min, vector3_create(split_value, max.y, max.z));
-		*right = aabb_from_vertices(vector3_create(split_value, min.y, min.z), max);
+		*left = aabb_from_vertices(min, vector3_create(max.x, split_value, max.z));
+		*right = aabb_from_vertices(vector3_create(min.x, split_value, min.z), max);
 	}
 	else
 	{
 		split_value = (min.z + max.z) / 2;
-		*left = aabb_from_vertices(min, vector3_create(split_value, max.y, max.z));
-		*right = aabb_from_vertices(vector3_create(split_value, min.y, min.z), max);
+		*left = aabb_from_vertices(min, vector3_create(max.x, max.y, split_value));
+		*right = aabb_from_vertices(vector3_create(min.x, min.y, split_value), max);
 	}
 	return split_value;
 }
 
 static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int depth, int max_prims, 
-				  ArrayList* nodes, ArrayList* node_prims, int axis)
+				  ArrayList* nodes, ArrayList* node_prims, int axis, AABB current_bounds)
 {
 	if (node->prim_amount > max_prims && depth != 0)
 	{
 		int split_axis = (axis + 1) % 3;
 		AABB left_bounds;
 		AABB right_bounds;
-		float split_value = get_bounds(&left_bounds, &right_bounds, split_axis, node->bounds);
+		float split_value = get_bounds(&left_bounds, &right_bounds, split_axis, current_bounds);
 
 		int* left_prims = (int *) calloc(node->prim_amount, sizeof(int));
 		int left_prims_amount = 0;
@@ -113,20 +113,18 @@ static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int
 		free(right_prims);
 
 		int left_index = nodes->length;
-		KDTreeNode* left = new_node(left_bounds);
-		init_leaf(left, left_prims_amount);
+		KDTreeNode* left = new_leaf(left_prims_amount);
 		arraylist_add(nodes, left);
 		arraylist_add(node_prims, new_left_prims);
-		build(left, left_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, axis);
+		build(left, left_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, split_axis, left_bounds);
 		
 		int right_index = nodes->length;
-		KDTreeNode* right = new_node(right_bounds);
-		init_leaf(right, right_prims_amount);
+		KDTreeNode* right = new_leaf(right_prims_amount);
 		arraylist_add(nodes, right);
 		arraylist_add(node_prims, new_right_prims);
-		build(right, right_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, axis);
+		build(right, right_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, split_axis, right_bounds);
 
-		init_node(node, left_index, right_index);
+		init_node(node, left_index, right_index, split_axis, split_value);
 	}
 }
 
@@ -134,8 +132,7 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 {
 	ArrayList* nodes = arraylist_new(1);
 	ArrayList* node_prims = arraylist_new(1);
-	KDTreeNode* root = new_node(bounds);
-	init_leaf(root, prim_amount);
+	KDTreeNode* root = new_leaf(prim_amount);
 	arraylist_add(nodes, root);
 	int* root_prims = (int *) calloc(prim_amount, sizeof(int));
 	for (int i = 0; i < prim_amount; i++)
@@ -143,25 +140,25 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 		root_prims[i] = i;
 	}
 	arraylist_add(node_prims, root_prims);
-	build(root, 0, prims, prim_amount, max_depth, max_prims, nodes, node_prims, -1);
+	build(root, 0, prims, prim_amount, max_depth, max_prims, nodes, node_prims, -1, bounds);
 
 	KDTree tree;
 	tree.node_amount = nodes->length;
 	tree.nodes = (KDTreeNode *) calloc(tree.node_amount, sizeof(KDTreeNode));
-	int total_prims = 0;
+	tree.total_prims = 0;
 	for (int i = 0; i < nodes->length; i++)
 	{
 		KDTreeNode* node = (KDTreeNode *) arraylist_get(nodes, i);
 		if (node_is_leaf(node))
 		{
-			node->prim_start = total_prims;
-			total_prims += node->prim_amount;
+			node->prim_start = tree.total_prims;
+			tree.total_prims += node->prim_amount;
 		}
 		tree.nodes[i] = *node;
 		free(node);
 	}
 	arraylist_free(nodes);
-	tree.node_prims = (int *) calloc(total_prims, sizeof(int));
+	tree.node_prims = (int *) calloc(tree.total_prims, sizeof(int));
 	for (int i = 0; i < tree.node_amount; i++)
 	{
 		KDTreeNode* node = &tree.nodes[i];

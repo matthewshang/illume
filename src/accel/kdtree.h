@@ -11,7 +11,8 @@ const int Z_AXIS = 2;
 
 typedef struct
 {
-	AABB bounds;
+	int split_axis;
+	float split_value;
 	int left_index;
 	int right_index;
 	int prim_start;
@@ -23,6 +24,7 @@ typedef struct
 {
 	int node_amount;
 	KDTreeNode* nodes;
+	int total_prims;
 	int* node_prims;
 }
 KDTree;

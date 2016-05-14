@@ -152,7 +152,7 @@ static void load_obj(Mesh* mesh, const char* path)
 		free(current);
 	}
 	arraylist_free(triangles);
-	mesh->tree = kdtree_build(final_aabbs, aabbs->length, mesh->aabb, 5, 5);
+	mesh->tree = kdtree_build(final_aabbs, aabbs->length, mesh->aabb, 5, 10);
 	arraylist_free(aabbs);
 	free(final_aabbs);
 	fclose(file);
