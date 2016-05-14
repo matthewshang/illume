@@ -2,12 +2,20 @@
 #define _KDTREE_
 
 #include "../math/aabb.h"
+#include "../math/constants.h"
 #include "../math/vector3.h"
 #include "../arraylist.h"
 
 const int X_AXIS = 0;
 const int Y_AXIS = 1;
 const int Z_AXIS = 2;
+
+const int LEFT_S = 0;
+const int RIGHT_S = 1;
+const int BOTTOM_S = 2;
+const int TOP_S = 3;
+const int BACK_S = 4;
+const int FRONT_S = 5;
 
 typedef struct
 {
@@ -17,6 +25,7 @@ typedef struct
 	int right_index;
 	int prim_start;
 	int prim_amount;
+	int ropes[6];
 }
 KDTreeNode;
 
