@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="res">
+      <UniqueIdentifier>{e14a79bf-0c7a-4ae2-b416-cf43d6d28fc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="renders">
+      <UniqueIdentifier>{569e4873-8534-4b30-b6b4-9e27e6d9ce6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{8b4ac388-24b8-47dd-b00a-22324d409d41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\accel">
+      <UniqueIdentifier>{ceeb9956-7d3f-4e5a-a4f8-e522d79509f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\math">
+      <UniqueIdentifier>{a788a034-9a40-4105-8e25-385b069c097f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\scene">
+      <UniqueIdentifier>{16eae5e8-dc9e-4550-bf9b-866e1aa56c04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\primitives">
+      <UniqueIdentifier>{c46f056f-a47b-49b2-80b3-64e9dda4e9a8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="res\cube.obj">
+      <Filter>res</Filter>
+    </Object>
+    <Object Include="res\icosahedron.obj">
+      <Filter>res</Filter>
+    </Object>
+    <Object Include="res\quad.obj">
+      <Filter>res</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="renders\dof1-960x600-2000spp-30md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\dof2-960x600-1000spp-30md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\dof3-960x600-1000spp-30md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\dof4-960x600-1000spp-30md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\ico5-1920x1200-40000spp-50md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\spheres2-960x600-1024spp-25md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\spheres3-1920x1200-4096spp-40md.png">
+      <Filter>renders</Filter>
+    </Image>
+    <Image Include="renders\spheres-1920x1200-1000spp-20md.png">
+      <Filter>renders</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\arraylist.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bitmap.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\arraylist.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bitmap.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\camera.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\error_check.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hit.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\kernel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\material.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\accel\kdtree.h">
+      <Filter>src\accel</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\aabb.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\constants.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\matrix4.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\ray.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\sample.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\transform.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\vector3.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene\scene.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scene\scenebuilder.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\mesh.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\mesh_instance.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\plane.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\sphere.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\triangle.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\camera.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\hit.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\kernel.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\main.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\material.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\accel\kdtree.cu">
+      <Filter>src\accel</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\aabb.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\matrix4.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\ray.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\sample.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\transform.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\math\vector3.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\scene\scene.cu">
+      <Filter>src\scene</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\scene\scenebuilder.cu">
+      <Filter>src\scene</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\primitives\mesh.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\primitives\mesh_instance.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\primitives\plane.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\primitives\sphere.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\primitives\triangle.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
