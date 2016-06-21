@@ -156,11 +156,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Y_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.y - EPS)
+					if (rope_node->split_value > bounds.min.y - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.y + EPS)
+					else if (rope_node->split_value < bounds.max.y + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -171,11 +171,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Z_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.z - EPS)
+					if (rope_node->split_value > bounds.min.z - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.z + EPS)
+					else if (rope_node->split_value < bounds.max.z + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -189,11 +189,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 			{
 				if (rope_node->split_axis == X_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.x - EPS)
+					if (rope_node->split_value > bounds.min.x - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.x + EPS)
+					else if (rope_node->split_value < bounds.max.x + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -215,11 +215,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Z_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.z - EPS)
+					if (rope_node->split_value > bounds.min.z - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.z + EPS)
+					else if (rope_node->split_value < bounds.max.z + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -233,11 +233,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 			{
 				if (rope_node->split_axis == X_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.x - EPS)
+					if (rope_node->split_value > bounds.min.x - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.x + EPS)
+					else if (rope_node->split_value < bounds.max.x + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -248,11 +248,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Y_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.y - EPS)
+					if (rope_node->split_value > bounds.min.y - ILLUME_EPS)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.y + EPS)
+					else if (rope_node->split_value < bounds.max.y + ILLUME_EPS)
 					{
 						ropes[i] = rope_node->left_index;
 					}

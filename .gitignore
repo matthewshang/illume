@@ -1,3 +1,4 @@
 *.o
 *.png
 !renders/*.png
+x64/

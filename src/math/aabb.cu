@@ -3,8 +3,8 @@
 AABB aabb_create()
 {
 	AABB aabb;
-	aabb.min = vector3_create(FLOAT_MAX, FLOAT_MAX, FLOAT_MAX);
-	aabb.max = vector3_create(FLOAT_MIN, FLOAT_MIN, FLOAT_MIN);
+	aabb.min = vector3_create(FLT_MAX, FLT_MAX, FLT_MAX);
+	aabb.max = vector3_create(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 	return aabb;
 }
 
@@ -50,8 +50,8 @@ float aabb_ray_intersect(AABB aabb, Ray ray)
 	Vector3 d = ray.d;
 	Vector3 min = aabb.min;
 	Vector3 max = aabb.max;
-	float tmin = FLOAT_MIN;
-	float tmax = FLOAT_MAX;
+	float tmin = -FLT_MAX;
+	float tmax = FLT_MAX;
 
 	if (d.x != 0)
 	{

@@ -33,7 +33,7 @@ static Scene* init_scene()
 	scenebuilder_add_mesh_instance(builder, mesh_instance_new(0, white, 
 			transform_create(
 				vector3_create(0, -0.15, 5), vector3_create(1, 1, 1), 
-					matrix4_from_axis_angle(vector3_create(0, 1, 0), PI / 8))));
+					matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 8))));
 
 	scenebuilder_add_mesh_instance(builder, 
 		mesh_instance_new(1, material_emissive(vector3_create(0.99 * 1.75, 0.4 * 1.75, 0)),
@@ -80,10 +80,11 @@ int main(int argc, char* argv[])
 			// Camera camera = camera_create(vector3_create(0, 0, 0), 70, 1, 0);
 
 			render_scene(scene, image, camera, spp, max_depth);
-			char name[snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5])];
+			char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5]), sizeof(char));
 			sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);
 			bitmap_save_to_png(image, name);
 			printf("Saved to: %s\n", name);
+			free(name);
 
 			scene_free(scene);
 		}

@@ -68,6 +68,23 @@ static void split_string_finish(char** tokens, int amount)
 	}
 }
 
+static void fix_aabb(AABB* aabb)
+{
+	if (aabb->max.x - aabb->min.x < ILLUME_EPS)
+	{
+		aabb->max.x += ILLUME_EPS;
+	}
+	if (aabb->max.y - aabb->min.y < ILLUME_EPS)
+	{
+		aabb->max.y += ILLUME_EPS;
+	}
+	if (aabb->max.z - aabb->min.z < ILLUME_EPS)
+	{
+		printf("corrented %e\n", ILLUME_EPS + 5);
+		aabb->max.z += ILLUME_EPS;
+	}
+}
+
 static void load_obj(Mesh* mesh, const char* path)
 {
 	FILE* file;
@@ -148,11 +165,14 @@ static void load_obj(Mesh* mesh, const char* path)
 	{
 		triangle_free((Triangle *) arraylist_get(triangles, i));
 		AABB* current = (AABB *) arraylist_get(aabbs, i);
+		fix_aabb(current);
 		final_aabbs[i] = *current;
 		free(current);
 	}
 	arraylist_free(triangles);
-	mesh->tree = kdtree_build(final_aabbs, aabbs->length, mesh->aabb, 5, 10);
+	printf("aabbs: %e %e %e %d\n", final_aabbs[0].min.x, final_aabbs[0].min.y, final_aabbs[0].min.z, aabbs->length);
+	printf("aabbs2: %e %e %e\n", final_aabbs[0].max.x, final_aabbs[0].max.y, final_aabbs[0].max.z);
+	mesh->tree = kdtree_build(final_aabbs, aabbs->length, mesh->aabb, 0, 10);
 	arraylist_free(aabbs);
 	free(final_aabbs);
 	fclose(file);
@@ -196,7 +216,7 @@ __device__
 Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
 {
 	Hit min = hit_create_no_intersect();
-	min.d = FLOAT_MAX;
+	min.d = FLT_MAX;
 	for (int i = 0; i < mesh->triangle_amount; i++)
 	{
 		Triangle tri = mesh->triangles[i];

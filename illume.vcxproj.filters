@@ -24,17 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Object Include="res\cube.obj">
-      <Filter>res</Filter>
-    </Object>
-    <Object Include="res\icosahedron.obj">
-      <Filter>res</Filter>
-    </Object>
-    <Object Include="res\quad.obj">
-      <Filter>res</Filter>
-    </Object>
-  </ItemGroup>
-  <ItemGroup>
     <Image Include="renders\dof1-960x600-2000spp-30md.png">
       <Filter>renders</Filter>
     </Image>
@@ -194,5 +183,8 @@
     <CudaCompile Include="src\primitives\triangle.cu">
       <Filter>src\primitives</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

@@ -61,7 +61,7 @@ __device__
 static Hit get_min_hit(Scene* scene, Ray ray)
 {
 	Hit min = hit_create_no_intersect();
-	min.d = FLOAT_MAX;
+	min.d = FLT_MAX;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
 		Hit inter = sphere_ray_intersect(scene->spheres[i], ray);
@@ -214,7 +214,7 @@ static RenderInfo* allocate_render_info_gpu(int width, int height, Camera camera
 	RenderInfo i;
 	i.image_width = width;
 	float dim_ratio = (float) height / (float) width;
-	float tan_half_fov = tanf(PI * camera.fov / 360);
+	float tan_half_fov = tanf(ILLUME_PI * camera.fov / 360);
 	i.camera_dof = camera.dof;	
 	i.camera_aperture = camera.aperture;
 	i.camera_pos = camera.pos;
@@ -372,7 +372,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	for (int i = 0; i < tree.node_amount; i++)
 	{
 		printf("%d :: %d %d\n", i, tree.nodes[i].left_index, tree.nodes[i].right_index);
-	// 	printf("%d %d %d %f\n", tree.nodes[i].prim_start, tree.nodes[i].prim_amount, tree.nodes[i].split_axis, tree.nodes[i].split_value);
+	 	printf("%d %d %d %f\n", tree.nodes[i].prim_start, tree.nodes[i].prim_amount, tree.nodes[i].split_axis, tree.nodes[i].split_value);
 		for (int j = 0; j < 6; j++)	printf("%d ", tree.nodes[i].ropes[j]);
 		printf("\n\n");
 	}
