@@ -43,43 +43,109 @@ void aabb_get_vertices(AABB aabb, Vector3* vertices)
 	vertices[7] = vector3_create(min.x, max.y, max.z);
 }
 
-__device__
-float aabb_ray_intersect(AABB aabb, Ray ray)
+__device__ __host__
+void aabb_ray_get_points(AABB aabb, Ray ray, float* entry, float* exit)
 {
-	Vector3 o = ray.o;
-	Vector3 d = ray.d;
-	Vector3 min = aabb.min;
-	Vector3 max = aabb.max;
 	float tmin = -FLT_MAX;
 	float tmax = FLT_MAX;
 
-	if (d.x != 0)
+	if (ray.d.x != 0)
 	{
-		float t1 = (min.x - o.x) / d.x;
-		float t2 = (max.x - o.x) / d.x;
+		float t1 = (aabb.min.x - ray.o.x) / ray.d.x;
+		float t2 = (aabb.max.x - ray.o.x) / ray.d.x;
 		tmin = fmaxf(tmin, fminf(t1, t2));
 		tmax = fminf(tmax, fmaxf(t1, t2));
 	}
-	if (d.y != 0)
+	if (ray.d.y != 0)
 	{
-		float t1 = (min.y - o.y) / d.y;
-		float t2 = (max.y - o.y) / d.y;
+		float t1 = (aabb.min.y - ray.o.y) / ray.d.y;
+		float t2 = (aabb.max.y - ray.o.y) / ray.d.y;
 		tmin = fmaxf(tmin, fminf(t1, t2));
 		tmax = fminf(tmax, fmaxf(t1, t2));
 	}
-	if (d.z != 0)
+	if (ray.d.z != 0)
 	{
-		float t1 = (min.z - o.z) / d.z;
-		float t2 = (max.z - o.z) / d.z;
+		float t1 = (aabb.min.z - ray.o.z) / ray.d.z;
+		float t2 = (aabb.max.z - ray.o.z) / ray.d.z;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+
+	if (tmax >= tmin && tmax > 0)
+	{
+		*entry = tmin;
+		*exit = tmax;
+	}
+}
+
+__device__
+float aabb_ray_exit(AABB aabb, Ray ray)
+{
+	float tmin = -FLT_MAX;
+	float tmax = FLT_MAX;
+
+	if (ray.d.x != 0)
+	{
+		float t1 = (aabb.min.x - ray.o.x) / ray.d.x;
+		float t2 = (aabb.max.x - ray.o.x) / ray.d.x;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+	if (ray.d.y != 0)
+	{
+		float t1 = (aabb.min.y - ray.o.y) / ray.d.y;
+		float t2 = (aabb.max.y - ray.o.y) / ray.d.y;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+	if (ray.d.z != 0)
+	{
+		float t1 = (aabb.min.z - ray.o.z) / ray.d.z;
+		float t2 = (aabb.max.z - ray.o.z) / ray.d.z;
 		tmin = fmaxf(tmin, fminf(t1, t2));
 		tmax = fminf(tmax, fmaxf(t1, t2));
 	}
 
 	if (tmax >= tmin && tmax >= 0)
 	{
+		return tmax;
+	}
+	return -FLT_MAX;
+}
+
+__device__
+float aabb_ray_intersect(AABB aabb, Ray ray)
+{
+	float tmin = -FLT_MAX;
+	float tmax = FLT_MAX;
+
+	if (ray.d.x != 0)
+	{
+		float t1 = (aabb.min.x - ray.o.x) / ray.d.x;
+		float t2 = (aabb.max.x - ray.o.x) / ray.d.x;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+	if (ray.d.y != 0)
+	{
+		float t1 = (aabb.min.y - ray.o.y) / ray.d.y;
+		float t2 = (aabb.max.y - ray.o.y) / ray.d.y;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+	if (ray.d.z != 0)
+	{
+		float t1 = (aabb.min.z - ray.o.z) / ray.d.z;
+		float t2 = (aabb.max.z - ray.o.z) / ray.d.z;
+		tmin = fmaxf(tmin, fminf(t1, t2));
+		tmax = fminf(tmax, fmaxf(t1, t2));
+	}
+
+	if (tmax > tmin && tmax >= 0)
+	{
 		return tmin;
 	}
-	return -1;
+	return -FLT_MAX;
 }
 
 int aabb_aabb_intersect(AABB u, AABB v)

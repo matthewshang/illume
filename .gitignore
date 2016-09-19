@@ -2,3 +2,6 @@
 *.png
 !renders/*.png
 x64/
+Debug/
+Release/
+illume.opensdf

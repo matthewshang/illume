@@ -10,7 +10,7 @@ typedef struct
 	float d;
 	Vector3 normal;
 	Material m;
-}
+} 
 Hit;
 
 #ifdef __cplusplus

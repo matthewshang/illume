@@ -38,7 +38,7 @@ void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
 __device__  
 Hit mesh_instance_ray_intersect(MeshInstance* instance, Mesh* mesh, Ray ray)
 {
-	if (aabb_ray_intersect(instance->aabb, ray) == -1)
+	if (aabb_ray_intersect(instance->aabb, ray) == -FLT_MAX)
 	{
 		return hit_create_no_intersect();
 	}

@@ -1,6 +1,6 @@
 #include "kdtree.h"
 
-static KDTreeNode* new_leaf(int prim_amount)
+static KDTreeNode* new_leaf(int prim_amount, AABB aabb)
 {
 	KDTreeNode* node = (KDTreeNode *) calloc(1, sizeof(KDTreeNode));
 	node->left_index = -1;
@@ -9,6 +9,7 @@ static KDTreeNode* new_leaf(int prim_amount)
 	node->prim_amount = prim_amount;
 	node->split_axis = -1;
 	node->split_value = 0;
+	node->aabb = aabb;
 	return node;
 }
 
@@ -23,7 +24,8 @@ static void init_node(KDTreeNode* node, int left_index, int right_index,
 	node->split_value = split_value;
 }
 
-static int node_is_leaf(KDTreeNode* node)
+__host__ __device__
+int kdtree_node_is_leaf(KDTreeNode* node)
 {
 	return node->left_index == -1;
 }
@@ -53,7 +55,7 @@ static float get_bounds(AABB* left, AABB* right, int axis, AABB current)
 	}
 	return split_value;
 }
-
+#include <stdio.h>
 static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int depth, int max_prims, 
 				  ArrayList* nodes, ArrayList* node_prims, int axis, AABB current_bounds)
 {
@@ -69,21 +71,26 @@ static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int
 		int* right_prims = (int *) calloc(node->prim_amount, sizeof(int));
 		int right_prims_amount = 0;
 		int* current_prims = (int *) arraylist_get(node_prims, index);
+
 		for (int i = 0; i < node->prim_amount; i++)
 		{
-			AABB current = prims[current_prims[i]];
-			if (aabb_aabb_intersect(left_bounds, current))
+			int current_index = current_prims[i];
+			AABB current = prims[current_index];
+			float min[] = { current.min.x, current.min.y, current.min.z };
+			float max[] = { current.max.x, current.max.y, current.max.z };
+			//printf("build - min: %f - max: %f - split: %f %d\n", min[split_axis], max[split_axis], split_value, split_axis);
+			if (min[split_axis] < split_value)
 			{
-				left_prims[i] = i;
+				left_prims[i] = current_index;
 				left_prims_amount++;
 			}
 			else
 			{
 				left_prims[i] = -1;
 			}
-			if (aabb_aabb_intersect(right_bounds, current))
+			if (max[split_axis] > split_value)
 			{
-				right_prims[i] = i;
+				right_prims[i] = current_index;
 				right_prims_amount++;
 			}
 			else
@@ -113,13 +120,13 @@ static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int
 		free(right_prims);
 
 		int left_index = nodes->length;
-		KDTreeNode* left = new_leaf(left_prims_amount);
+		KDTreeNode* left = new_leaf(left_prims_amount, left_bounds);
 		arraylist_add(nodes, left);
 		arraylist_add(node_prims, new_left_prims);
 		build(left, left_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, split_axis, left_bounds);
 		
 		int right_index = nodes->length;
-		KDTreeNode* right = new_leaf(right_prims_amount);
+		KDTreeNode* right = new_leaf(right_prims_amount, right_bounds);
 		arraylist_add(nodes, right);
 		arraylist_add(node_prims, new_right_prims);
 		build(right, right_index, prims, prim_amount, depth - 1, max_prims, nodes, node_prims, split_axis, right_bounds);
@@ -128,7 +135,7 @@ static void build(KDTreeNode* node, int index, AABB* prims, int prim_amount, int
 	}
 }
 
-static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes, AABB bounds)
+static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes)
 {
 	for (int i = 0; i < 6; i++)
 	{
@@ -136,9 +143,9 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 		{
 			continue;
 		}
-
+		AABB bounds = current_node->aabb;
 		KDTreeNode* rope_node = &nodes[ropes[i]];
-		while (!node_is_leaf(rope_node))
+		while (!kdtree_node_is_leaf(rope_node))
 		{
 			rope_node = &nodes[ropes[i]];
 			if (i == LEFT_S || i == RIGHT_S)
@@ -156,11 +163,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Y_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.y - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.y - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.y + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.y + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -171,11 +178,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Z_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.z - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.z - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.z + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.z + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -189,11 +196,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 			{
 				if (rope_node->split_axis == X_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.x - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.x - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.x + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.x + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -215,11 +222,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Z_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.z - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.z - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.z + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.z + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -233,11 +240,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 			{
 				if (rope_node->split_axis == X_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.x - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.x - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.x + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.x + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -248,11 +255,11 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 				}
 				else if (rope_node->split_axis == Y_AXIS)
 				{
-					if (rope_node->split_value > bounds.min.y - ILLUME_EPS)
+					if (rope_node->split_value < bounds.min.y - FLT_EPSILON)
 					{
 						ropes[i] = rope_node->right_index;
 					}
-					else if (rope_node->split_value < bounds.max.y + ILLUME_EPS)
+					else if (rope_node->split_value > bounds.max.y + FLT_EPSILON)
 					{
 						ropes[i] = rope_node->left_index;
 					}
@@ -277,9 +284,9 @@ static void optimize_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nod
 	}
 }
 
-static void build_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes, AABB bounds)
+static void build_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes)
 {
-	if (node_is_leaf(current_node))
+	if (kdtree_node_is_leaf(current_node))
 	{
 		for (int i = 0; i < 6; i++)
 		{
@@ -288,7 +295,7 @@ static void build_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes,
 	}
 	else
 	{
-		optimize_ropes(current_node, ropes, nodes, bounds);
+		optimize_ropes(current_node, ropes, nodes);
 
 		int sl;
 		int sr;
@@ -315,13 +322,10 @@ static void build_ropes(KDTreeNode* current_node, int* ropes, KDTreeNode* nodes,
 			left_ropes[i] = ropes[i];
 			right_ropes[i] = ropes[i];
 		}
-		AABB left_bounds;
-		AABB right_bounds;
-		get_bounds(&left_bounds, &right_bounds, current_node->split_axis, bounds);
 		left_ropes[sr] = current_node->right_index;
-		build_ropes(&nodes[current_node->left_index], left_ropes, nodes, left_bounds);
+		build_ropes(&nodes[current_node->left_index], left_ropes, nodes);
 		right_ropes[sl] = current_node->left_index;
-		build_ropes(&nodes[current_node->right_index], right_ropes, nodes, right_bounds);
+		build_ropes(&nodes[current_node->right_index], right_ropes, nodes);
 	}
 }
 
@@ -329,7 +333,7 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 {
 	ArrayList* nodes = arraylist_new(1);
 	ArrayList* node_prims = arraylist_new(1);
-	KDTreeNode* root = new_leaf(prim_amount);
+	KDTreeNode* root = new_leaf(prim_amount, bounds);
 	arraylist_add(nodes, root);
 	int* root_prims = (int *) calloc(prim_amount, sizeof(int));
 	for (int i = 0; i < prim_amount; i++)
@@ -346,7 +350,7 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 	for (int i = 0; i < nodes->length; i++)
 	{
 		KDTreeNode* node = (KDTreeNode *) arraylist_get(nodes, i);
-		if (node_is_leaf(node))
+		if (kdtree_node_is_leaf(node))
 		{
 			node->prim_start = tree.total_prims;
 			tree.total_prims += node->prim_amount;
@@ -360,7 +364,7 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 	{
 		KDTreeNode* node = &tree.nodes[i];
 		int* current_prims = (int *) arraylist_get(node_prims, i);
-		if (node_is_leaf(node))
+		if (kdtree_node_is_leaf(node))
 		{
 			for (int j = 0; j < node->prim_amount; j++)
 			{
@@ -374,7 +378,7 @@ KDTree kdtree_build(AABB* prims, int prim_amount, AABB bounds, int max_depth, in
 	}
 	arraylist_free(node_prims);
 	int null_ropes[6] = {-1, -1, -1, -1, -1, -1};
-	build_ropes(&tree.nodes[0], null_ropes, tree.nodes, bounds);
+	build_ropes(&tree.nodes[0], null_ropes, tree.nodes);
 	return tree;
 }
 

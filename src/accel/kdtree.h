@@ -3,8 +3,10 @@
 
 #include "../math/aabb.h"
 #include "../math/constants.h"
+#include "../math/ray.h"
 #include "../math/vector3.h"
 #include "../arraylist.h"
+#include "../hit.h"
 
 const int X_AXIS = 0;
 const int Y_AXIS = 1;
@@ -26,6 +28,7 @@ typedef struct
 	int prim_start;
 	int prim_amount;
 	int ropes[6];
+	AABB aabb;
 }
 KDTreeNode;
 
@@ -42,8 +45,10 @@ KDTree;
 extern "C" {
 #endif
 
-KDTree  kdtree_build  (AABB* prims, int prim_amount, AABB bounds, int depth, int max_prims);
-void    kdtree_free   (KDTree* tree);
+KDTree  kdtree_build         (AABB* prims, int prim_amount, AABB bounds, int depth, int max_prims);
+__host__ __device__
+int     kdtree_node_is_leaf  (KDTreeNode* node);
+void    kdtree_free          (KDTree* tree);
 
 #ifdef __cplusplus
 }

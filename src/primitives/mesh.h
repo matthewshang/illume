@@ -25,6 +25,7 @@ typedef struct
 	Triangle* triangles;
 	AABB aabb;
 	KDTree tree;
+	int is_tree_built;
 }
 Mesh;
 
@@ -33,7 +34,7 @@ extern "C" {
 #endif
 
 
-            Mesh*  mesh_new            (const char* path);
+            Mesh*  mesh_new            (const char* path, int tree_max_depth, int tree_max_per_node);
             void   mesh_free           (Mesh* mesh);
 __device__  Hit    mesh_ray_intersect  (Mesh* mesh, Ray ray);
 
