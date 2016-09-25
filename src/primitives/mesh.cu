@@ -16,7 +16,6 @@ void mesh_free(Mesh* mesh)
 		{
 			free(mesh->triangles);
 		}
-		kdtree_free(&mesh->tree);
 		free(mesh);
 	}
 }
@@ -171,33 +170,33 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	arraylist_free(tmp->vertices);
 }
 
-static void build_tree(tmp_mesh* tmp, Mesh* mesh, int max_depth, int max_per_node)
-{
-	AABB* final_aabbs = (AABB *) calloc(tmp->aabbs->length, sizeof(AABB));
-	for (int i = 0; i < tmp->aabbs->length; i++)
-	{
-		AABB* current = (AABB *) arraylist_get(tmp->aabbs, i);
-		fix_aabb(current);
-		final_aabbs[i] = *current;
-	}
-	mesh->tree = kdtree_build(final_aabbs, tmp->aabbs->length, mesh->aabb, max_depth, max_per_node);
-	free(final_aabbs);
-	KDTree tree = mesh->tree;
-	for (int i = 0; i < tree.node_amount; i++)
-	{
-		printf("%d :: %d %d\n", i, tree.nodes[i].left_index, tree.nodes[i].right_index);
-		printf("%d %d %d %f\n", tree.nodes[i].prim_start, tree.nodes[i].prim_amount, tree.nodes[i].split_axis, tree.nodes[i].split_value);
-		for (int j = 0; j < tree.nodes[i].prim_amount; j++)
-		{
-			printf("%d ", tree.node_prims[tree.nodes[i].prim_start + j]);
-		}
-		printf("\n");
-		for (int j = 0; j < 6; j++)	printf("%d ", tree.nodes[i].ropes[j]);
-		printf("\n\n");
-	}
-}
+//static void build_tree(tmp_mesh* tmp, Mesh* mesh, int max_depth, int max_per_node)
+//{
+//	AABB* final_aabbs = (AABB *) calloc(tmp->aabbs->length, sizeof(AABB));
+//	for (int i = 0; i < tmp->aabbs->length; i++)
+//	{
+//		AABB* current = (AABB *) arraylist_get(tmp->aabbs, i);
+//		fix_aabb(current);
+//		final_aabbs[i] = *current;
+//	}
+//	mesh->tree = kdtree_build(final_aabbs, tmp->aabbs->length, mesh->aabb, max_depth, max_per_node);
+//	free(final_aabbs);
+//	KDTree tree = mesh->tree;
+//	for (int i = 0; i < tree.node_amount; i++)
+//	{
+//		printf("%d :: %d %d\n", i, tree.nodes[i].left_index, tree.nodes[i].right_index);
+//		printf("%d %d %d %f\n", tree.nodes[i].prim_start, tree.nodes[i].prim_amount, tree.nodes[i].split_axis, tree.nodes[i].split_value);
+//		for (int j = 0; j < tree.nodes[i].prim_amount; j++)
+//		{
+//			printf("%d ", tree.node_prims[tree.nodes[i].prim_start + j]);
+//		}
+//		printf("\n");
+//		for (int j = 0; j < 6; j++)	printf("%d ", tree.nodes[i].ropes[j]);
+//		printf("\n\n");
+//	}
+//}
 
-Mesh* mesh_new(const char* path, int tree_max_depth, int tree_max_per_node)
+Mesh* mesh_new(const char* path)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
 	if (!mesh)
@@ -206,17 +205,12 @@ Mesh* mesh_new(const char* path, int tree_max_depth, int tree_max_per_node)
 	}
 	mesh->triangle_amount = 0;
 	mesh->triangles = NULL;
-	mesh->is_tree_built = 0;
+
 	tmp_mesh tmp;
 	load_obj(mesh, path, &tmp);
 	copy_triangles(&tmp, mesh);
 	build_mesh_bounds(&tmp, mesh);
-	if (tree_max_depth > 0)
-	{
-		build_tree(&tmp, mesh, tree_max_depth, tree_max_per_node);
-		printf("mesh_new: built tree for mesh %s\n", path);
-		mesh->is_tree_built = 1;
-	}
+
 	for (int i = 0; i < tmp.aabbs->length; i++)
 	{
 		free((AABB *) arraylist_get(tmp.aabbs, i));
@@ -255,150 +249,145 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 	return -FLT_MAX;
 }
 
-__device__
-static int left_of_split(Vector3 point, int axis, float value)
-{
-	float v[] = { point.x, point.y, point.z };
-	return v[axis] < value;
-}
-
-__device__
-static int get_exit_side(AABB aabb, Vector3 exit_point, int* ropes)
-{
-	if (fabsf(aabb.min.x - exit_point.x) <= 2 * FLT_EPSILON)
-	{
-		return ropes[LEFT_S];
-	}
-	else if (fabsf(aabb.max.x - exit_point.x) <= 2 * FLT_EPSILON)
-	{
-		return ropes[RIGHT_S];
-	}
-	else if (fabsf(aabb.min.y - exit_point.y) <= 2 * FLT_EPSILON)
-	{
-		return ropes[BOTTOM_S];
-	}
-	else if (fabsf(aabb.max.y - exit_point.y) <= 2 * FLT_EPSILON)
-	{
-		return ropes[TOP_S];
-	}
-	else if (fabsf(aabb.min.z - exit_point.z) <= 2 * FLT_EPSILON)
-	{
-		return ropes[BACK_S];
-	}
-	else if (fabsf(aabb.max.z - exit_point.z) <= 2 * FLT_EPSILON)
-	{
-		return ropes[FRONT_S];
-	}
-	return -1;
-}
-
-__device__
-static Hit kdtree_ray_intersect(Mesh* mesh, Ray ray)
-{
-	KDTree tree = mesh->tree;
-	float entry = -FLT_MAX;
-	float exit = FLT_MAX;
-	KDTreeNode* node = &tree.nodes[0];
-	aabb_ray_get_points(node->aabb, ray, &entry, &exit);
-
-	//if (entry > 0)
-	//{
-	//	Vector3 point = ray_position_along(ray, entry);
-	//	printf("min: %f %f %f max: %f %f %f entry: %f exit: %f point: %f %f %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, entry, exit, point.x, point.y, point.z);
-	//}
-	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
-
-	float last_entry = -FLT_MAX;
-	int iteration = 0;
-	while (entry < exit && entry > last_entry)
-	{
-		last_entry = entry;
-		//printf("min: %f %f %f max: %f %f %f entry: %f exit: %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, entry, exit);
-
-		Vector3 point = ray_position_along(ray, entry);
-		while (!kdtree_node_is_leaf(node))
-		{
-			if (left_of_split(point, node->split_axis, node->split_value))
-			{
-				node = &tree.nodes[node->left_index];
-			}
-			else
-			{
-				node = &tree.nodes[node->right_index];
-			}
-		}
-		//if (node->aabb.min.x < ray.o.x && node->aabb.min.y < ray.o.y && node->aabb.min.z < ray.o.z && node->aabb.max.x > ray.o.x && node->aabb.max.y > ray.o.y && node->aabb.max.z > ray.o.z)
-		//{
-		//	printf("inside %f\n", aabb_ray_exit(node->aabb, ray));
-		//}
-		//if (aabb_ray_exit(node->aabb, ray) == -FLT_MAX)
-		{
-			//if (node->aabb.min.x < ray.o.x && node->aabb.min.y < ray.o.y && node->aabb.min.z < ray.o.z && node->aabb.max.x > ray.o.x && node->aabb.max.y > ray.o.y && node->aabb.max.z > ray.o.z)
-			{
-				//printf("min: %f %f %f max: %f %f %f\n origin %f %f %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, ray.o.x, ray.o.y, ray.o.z);
-
-				//printf("inside %f %f %f\n", ray.o.x, ray.o.y, ray.o.z);
-			}
-		}
-
-		for (int i = 0; i < node->prim_amount; i++)
-		{
-			int prim_index = tree.node_prims[node->prim_start + i];
-			Triangle tri = mesh->triangles[prim_index];
-			float d = triangle_ray_intersect(tri, ray);
-			if (d > 0 && d < exit && d > entry)
-			{
-				min.d = d;
-				min.normal = tri.n;
-				min.is_intersect = 1;
-				exit = d;
-			}
-		}
-
-		entry = aabb_ray_exit(node->aabb, ray);
-
-		int rope_index = get_exit_side(node->aabb, ray_position_along(ray, entry), node->ropes);
-		//Vector3 point2 = ray_position_along(ray, entry);
-		//printf("min: %f %f %f max: %f %f %f point: %f %f %f rope: %d\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, point2.x, point2.y, point2.z, rope_index);
-
-		if (rope_index == -1)
-		{
-			break;
-		}
-
-		node = &tree.nodes[rope_index];
-		//if (iteration == 1 && min.is_intersect == 1)
-		//	printf("%d %f %f %f %d\n", iteration, last_entry, entry, exit, rope_index);
-		iteration++;
-	}
-		//printf("%f %f %f - %f %f %f\n", ray.o.x, ray.o.y, ray.o.z, ray.d.x, ray.d.y, ray.d.z);
-		//printf("min - d: %f normal: %f %f %f is: %d\n", min.d, min.normal.x, min.normal.y, min.normal.z, min.is_intersect);
-	return min;
-}
+//__device__
+//static int left_of_split(Vector3 point, int axis, float value)
+//{
+//	float v[] = { point.x, point.y, point.z };
+//	return v[axis] < value;
+//}
+//
+//__device__
+//static int get_exit_side(AABB aabb, Vector3 exit_point, int* ropes)
+//{
+//	if (fabsf(aabb.min.x - exit_point.x) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[LEFT_S];
+//	}
+//	else if (fabsf(aabb.max.x - exit_point.x) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[RIGHT_S];
+//	}
+//	else if (fabsf(aabb.min.y - exit_point.y) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[BOTTOM_S];
+//	}
+//	else if (fabsf(aabb.max.y - exit_point.y) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[TOP_S];
+//	}
+//	else if (fabsf(aabb.min.z - exit_point.z) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[BACK_S];
+//	}
+//	else if (fabsf(aabb.max.z - exit_point.z) <= 2 * FLT_EPSILON)
+//	{
+//		return ropes[FRONT_S];
+//	}
+//	return -1;
+//}
+//
+//__device__
+//static Hit kdtree_ray_intersect(Mesh* mesh, Ray ray)
+//{
+//	KDTree tree = mesh->tree;
+//	float entry = -FLT_MAX;
+//	float exit = FLT_MAX;
+//	KDTreeNode* node = &tree.nodes[0];
+//	aabb_ray_get_points(node->aabb, ray, &entry, &exit);
+//
+//	//if (entry > 0)
+//	//{
+//	//	Vector3 point = ray_position_along(ray, entry);
+//	//	printf("min: %f %f %f max: %f %f %f entry: %f exit: %f point: %f %f %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, entry, exit, point.x, point.y, point.z);
+//	//}
+//	Hit min = hit_create_no_intersect();
+//	min.d = FLT_MAX;
+//
+//	float last_entry = -FLT_MAX;
+//	int iteration = 0;
+//	while (entry < exit && entry > last_entry)
+//	{
+//		last_entry = entry;
+//		//printf("min: %f %f %f max: %f %f %f entry: %f exit: %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, entry, exit);
+//
+//		Vector3 point = ray_position_along(ray, entry);
+//		while (!kdtree_node_is_leaf(node))
+//		{
+//			if (left_of_split(point, node->split_axis, node->split_value))
+//			{
+//				node = &tree.nodes[node->left_index];
+//			}
+//			else
+//			{
+//				node = &tree.nodes[node->right_index];
+//			}
+//		}
+//		//if (node->aabb.min.x < ray.o.x && node->aabb.min.y < ray.o.y && node->aabb.min.z < ray.o.z && node->aabb.max.x > ray.o.x && node->aabb.max.y > ray.o.y && node->aabb.max.z > ray.o.z)
+//		//{
+//		//	printf("inside %f\n", aabb_ray_exit(node->aabb, ray));
+//		//}
+//		//if (aabb_ray_exit(node->aabb, ray) == -FLT_MAX)
+//		{
+//			//if (node->aabb.min.x < ray.o.x && node->aabb.min.y < ray.o.y && node->aabb.min.z < ray.o.z && node->aabb.max.x > ray.o.x && node->aabb.max.y > ray.o.y && node->aabb.max.z > ray.o.z)
+//			{
+//				//printf("min: %f %f %f max: %f %f %f\n origin %f %f %f\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, ray.o.x, ray.o.y, ray.o.z);
+//
+//				//printf("inside %f %f %f\n", ray.o.x, ray.o.y, ray.o.z);
+//			}
+//		}
+//
+//		for (int i = 0; i < node->prim_amount; i++)
+//		{
+//			int prim_index = tree.node_prims[node->prim_start + i];
+//			Triangle tri = mesh->triangles[prim_index];
+//			float d = triangle_ray_intersect(tri, ray);
+//			if (d > 0 && d < exit && d > entry)
+//			{
+//				min.d = d;
+//				min.normal = tri.n;
+//				min.is_intersect = 1;
+//				exit = d;
+//			}
+//		}
+//
+//		entry = aabb_ray_exit(node->aabb, ray);
+//
+//		int rope_index = get_exit_side(node->aabb, ray_position_along(ray, entry), node->ropes);
+//		//Vector3 point2 = ray_position_along(ray, entry);
+//		//printf("min: %f %f %f max: %f %f %f point: %f %f %f rope: %d\n", node->aabb.min.x, node->aabb.min.y, node->aabb.min.z, node->aabb.max.x, node->aabb.max.y, node->aabb.max.z, point2.x, point2.y, point2.z, rope_index);
+//
+//		if (rope_index == -1)
+//		{
+//			break;
+//		}
+//
+//		node = &tree.nodes[rope_index];
+//		//if (iteration == 1 && min.is_intersect == 1)
+//		//	printf("%d %f %f %f %d\n", iteration, last_entry, entry, exit, rope_index);
+//		iteration++;
+//	}
+//		//printf("%f %f %f - %f %f %f\n", rayo..x, ray.o.y, ray.o.z, ray.d.x, ray.d.y, ray.d.z);
+//		//printf("min - d: %f normal: %f %f %f is: %d\n", min.d, min.normal.x, min.normal.y, min.normal.z, min.is_intersect);
+//	return min;
+//}
 
 __device__
 Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
 {
-	if (!mesh->is_tree_built)
+	Hit min = hit_create_no_intersect();
+	min.d = FLT_MAX;
+	for (int i = 0; i < mesh->triangle_amount; i++)
 	{
-		Hit min = hit_create_no_intersect();
-		min.d = FLT_MAX;
-		for (int i = 0; i < mesh->triangle_amount; i++)
+		Triangle tri = mesh->triangles[i];
+		float inter_d = triangle_ray_intersect(tri, ray);
+
+		if (inter_d > 0 && inter_d < min.d)
 		{
-			Triangle tri = mesh->triangles[i];
-			float inter_d = triangle_ray_intersect(tri, ray);
-
-			if (inter_d > 0 && inter_d < min.d)
-			{
-				min.d = inter_d;
-				min.normal = tri.n;
-				min.is_intersect = 1;
-			}
+			min.d = inter_d;
+			min.normal = tri.n;
+			min.is_intersect = 1;
 		}
-
-		return min;
 	}
-	
-	//return kdtree_ray_intersect(mesh, ray);
+
+	return min;
 }

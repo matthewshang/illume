@@ -28,9 +28,24 @@ void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
 	{
 		Vector3 aabb_vertices[8];
 		aabb_get_vertices(mesh.aabb, aabb_vertices);
+		AABB* inst_aabb = &instance->aabb;
+
 		for (int i = 0; i < 8; i++)
 		{
-			aabb_update(&instance->aabb, matrix4_mul_vector3(&instance->t.mat, aabb_vertices[i], 1));
+			aabb_update(inst_aabb, matrix4_mul_vector3(&instance->t.mat, aabb_vertices[i], 1));
+		}
+		float bias = 10 * FLT_EPSILON;
+		if (inst_aabb->max.x - inst_aabb->min.x < bias)
+		{
+			inst_aabb->max.x += bias;
+		}
+		if (inst_aabb->max.y - inst_aabb->min.y < bias)
+		{
+			inst_aabb->max.y += bias;
+		}
+		if (inst_aabb->max.z - inst_aabb->min.z < bias)
+		{
+			inst_aabb->max.z += bias;
 		}
 	}
 }

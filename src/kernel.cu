@@ -100,7 +100,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	return vector3_create(1, 1, 1);
+	return vector3_create(0, 0, 0);
 }
 
 __global__
@@ -125,8 +125,13 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			}
 			else if (min.m.type == MATERIAL_DIFFUSE)
 			{
+				Ray r = rays[ray_index];
+				if (vector3_dot(min.normal, r.d) > 0)
+				{
+					min.normal = vector3_mul(min.normal, -1.0f);
+				}
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
-				Vector3 new_origin = ray_position_along(rays[ray_index], min.d);
+				Vector3 new_origin = ray_position_along(r, min.d);
 				vector3_add_to(&new_origin, vector3_mul(min.normal, 10e-6));
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
@@ -138,6 +143,10 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			else if (min.m.type == MATERIAL_SPECULAR)
 			{
 				Ray r = rays[ray_index];
+				if (vector3_dot(min.normal, r.d) > 0)
+				{
+					min.normal = vector3_mul(min.normal, -1.0f);
+				}
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
 				Vector3 new_origin = ray_position_along(r, min.d);
 				vector3_add_to(&new_origin, vector3_mul(min.normal, 10e-6));
@@ -287,18 +296,6 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 		HANDLE_ERROR( cudaMemcpy(ref.d_triangle_pointers[i], mesh.triangles, triangles_size, cudaMemcpyHostToDevice) );
 		h_triangle_pointers[i] = mesh.triangles;
 		mesh_p->triangles = ref.d_triangle_pointers[i];	
-
-		int nodes_size = mesh.tree.node_amount * sizeof(KDTreeNode);
-		HANDLE_ERROR( cudaMalloc(&ref.d_mesh_nodes[i], nodes_size));
-		HANDLE_ERROR( cudaMemcpy(ref.d_mesh_nodes[i], mesh.tree.nodes, nodes_size, cudaMemcpyHostToDevice) );
-		h_mesh_nodes[i] = mesh.tree.nodes;
-		mesh_p->tree.nodes = ref.d_mesh_nodes[i];
-
-		int prims_size = mesh.tree.total_prims * sizeof(int);
-		HANDLE_ERROR( cudaMalloc(&ref.d_mesh_prims[i], prims_size));
-		HANDLE_ERROR( cudaMemcpy(ref.d_mesh_prims[i], mesh.tree.node_prims, prims_size, cudaMemcpyHostToDevice) );
-		h_mesh_prims[i] = mesh.tree.node_prims;
-		mesh_p->tree.node_prims = ref.d_mesh_prims[i];
 	}
 
 	Sphere* h_spheres = scene->spheres;
@@ -321,8 +318,6 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
 		scene->meshes[i].triangles = h_triangle_pointers[i];
-		scene->meshes[i].tree.nodes = h_mesh_nodes[i];
-		scene->meshes[i].tree.node_prims = h_mesh_prims[i];
 	}
 	free(h_triangle_pointers);
 	free(h_mesh_nodes);
