@@ -6,6 +6,7 @@
 const int MATERIAL_EMISSIVE = 0;
 const int MATERIAL_DIFFUSE = 1;
 const int MATERIAL_SPECULAR = 2;
+const int MATERIAL_REFRACTIVE = 3;
 
 typedef struct
 {
@@ -21,6 +22,7 @@ extern "C" {
 Material  material_emissive  (Vector3 e);
 Material  material_diffuse   (Vector3 d);
 Material  material_specular  (Vector3 s);
+Material  material_refractive(Vector3 r);
 
 #ifdef __cplusplus
 }

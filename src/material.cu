@@ -23,3 +23,11 @@ Material material_specular(Vector3 s)
 	material.type = MATERIAL_SPECULAR;
 	return material;
 }
+
+Material material_refractive(Vector3 r)
+{
+	Material material;
+	material.c = r;
+	material.type = MATERIAL_REFRACTIVE;
+	return material;
+}

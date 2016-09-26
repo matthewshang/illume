@@ -1,12 +1,13 @@
 #include "kernel.h"
+#include <stdint.h>
 
 __global__ 
-void init_curand_states(curandState* states, int N)
+void init_curand_states(curandState* states, uint32_t hash, int N)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	if (index < N)
 	{
-		curand_init((666420691337 << 20) + index, 0, 0, &states[index]);
+		curand_init(hash + index, 0, 0, &states[index]);
 	}
 }
 
@@ -85,7 +86,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 	for (int i = 0; i < scene->instance_amount; i++)
 	{
 		int mesh_index = scene->instances[i].mesh_index;
-		Hit inter = 
+		Hit inter =
 			mesh_instance_ray_intersect(scene->instances + i, scene->meshes + mesh_index, ray);
 
 		if (inter.is_intersect == 1 && inter.d < min.d)
@@ -100,12 +101,12 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	return vector3_create(0, 0, 0);
+	return vector3_create(0.05f, 0.05f, 0.05f);
 }
 
 __global__
-void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, 
-					  Vector3* ray_colors, Scene* scene, curandState* states, int N)
+void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
+Vector3* ray_colors, Scene* scene, curandState* states, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
@@ -117,42 +118,75 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 
 		if (min.is_intersect == 1)
 		{
+			Ray r = rays[ray_index];
+			Vector3 new_dir;
+			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
+			Vector3 new_origin = ray_position_along(r, min.d);
+			vector3_add_to(&new_origin, vector3_mul(norm_o, 10e-6));
+
 			if (min.m.type == MATERIAL_EMISSIVE)
 			{
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
 				vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 				ray_statuses[index] = -1;
+				new_dir = vector3_create(0, 0, 0);
 			}
 			else if (min.m.type == MATERIAL_DIFFUSE)
 			{
-				Ray r = rays[ray_index];
-				if (vector3_dot(min.normal, r.d) > 0)
-				{
-					min.normal = vector3_mul(min.normal, -1.0f);
-				}
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
-				Vector3 new_origin = ray_position_along(r, min.d);
-				vector3_add_to(&new_origin, vector3_mul(min.normal, 10e-6));
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
 				Vector3 sample = sample_hemisphere_cosine(u1, u2);
-				Vector3 new_direction = vector3_to_basis(sample, min.normal);
-				ray_set(&rays[ray_index], new_origin, new_direction);
+				new_dir = vector3_to_basis(sample, norm_o);
 
 			}
 			else if (min.m.type == MATERIAL_SPECULAR)
 			{
-				Ray r = rays[ray_index];
-				if (vector3_dot(min.normal, r.d) > 0)
-				{
-					min.normal = vector3_mul(min.normal, -1.0f);
-				}
 				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
-				Vector3 new_origin = ray_position_along(r, min.d);
-				vector3_add_to(&new_origin, vector3_mul(min.normal, 10e-6));
-				Vector3 new_direction = vector3_reflect(r.d, min.normal);
-				ray_set(&rays[ray_index], new_origin, new_direction);
+				new_dir = vector3_reflect(r.d, norm_o);
 			}
+			else if (min.m.type == MATERIAL_REFRACTIVE)
+			{
+				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
+				float nc = 1.0f;
+				float nt = 1.5f;
+				float nnt = into ? nc / nt : nt / nc;
+				float ddn = vector3_dot(r.d, norm_o);
+				float cos2t = 1.0f - nnt * nnt * (1.0f - ddn * ddn);
+				if (cos2t < 0.0f)
+				{
+					new_dir = vector3_reflect(r.d, min.normal);
+				}
+				else
+				{
+					Vector3 tdir = vector3_sub(vector3_mul(r.d, nnt), vector3_mul(min.normal, (into ? 1.0f : -1.0f) * (ddn * nnt + sqrtf(cos2t))));
+					vector3_normalize(&tdir);
+					float a = nt - nc;
+					float b = nt + nc;
+					float r0 = (a * a) / (b * b);
+					float c = 1.0f - (into ? -ddn : vector3_dot(tdir, min.normal));
+					float re = r0 + (1.0f - r0) * c * c * c * c *c;
+					float tr = 1.0f - re;
+					float p = 0.25f + 0.5f * re;
+					float rp = re / p;
+					float tp = tr / (1.0f - p);
+
+					if (curand_uniform(&states[ray_index]) < p)
+					{
+						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], rp);
+						new_dir = vector3_reflect(r.d, min.normal);
+					}
+					else
+					{
+						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], tp);
+						new_dir = tdir;
+						vector3_add_to(&new_origin, vector3_mul(norm_o, -0.001));
+
+					}
+				}
+			}
+
+			ray_set(&rays[ray_index], new_origin, new_dir);
 		}
 		else
 		{
@@ -357,34 +391,23 @@ static void end_timer(cudaEvent_t* start, cudaEvent_t* stop, float* time)
 	HANDLE_ERROR( cudaEventElapsedTime(time, *start, *stop) );
 }
 #include "math/aabb.h"
+
+uint32_t wang_hash(uint32_t a)
+{
+	a = (a ^ 61) ^ (a >> 16);
+	a = a + (a << 3);
+	a = a ^ (a >> 4);
+	a = a * 0x27d4eb2d;
+	a = a ^ (a >> 15);
+	return a;
+}
+
 void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int max_depth)
 {
 	if (!scene)
 	{
 		return;
 	}
-	//KDTree tree = scene->meshes[3].tree;
-	//int* included = (int *) calloc(scene->meshes[3].triangle_amount, sizeof(int));
-	////printf("%d\n", tree.node_amount);
-	//for (int i = 0; i < tree.node_amount; i++)
-	//{
-	//	if (kdtree_node_is_leaf(&tree.nodes[i]))
-	//	{
-	//		//printf("%d\n", tree.nodes[i].prim_amount);
-	//		for (int j = 0; j < tree.nodes[i].prim_amount; j++)
-	//		{
-	//			included[tree.node_prims[tree.nodes[i].prim_start + j]] = 1;
-	//		}
-	//	}
-	//}
-
-	//for (int i = 0; i < scene->meshes[3].triangle_amount; i++)
-	//{
-	//	if (!included[i])
-	//	{
-	//		printf(":( %d\n", i);
-	//	}
-	//}
 
 	cudaEvent_t render_start;
 	cudaEvent_t render_stop;
@@ -397,7 +420,6 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 	curandState* d_states;
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
-	init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, pixels_amount);
 
 	RenderInfo* d_info = 
 		allocate_render_info_gpu(bitmap->width, bitmap->height, camera);
@@ -423,6 +445,8 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 	for (int i = 0; i < samples; i++)
 	{
+		init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, wang_hash(i), pixels_amount);
+
 		init_rays<<<blocks_amount, threads_per_block>>>
 			(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, pixels_amount);
 
