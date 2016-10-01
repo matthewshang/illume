@@ -52,7 +52,8 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 			pos = 
 				vector3_add(vector3_mul(sample_circle(u1, u2), i.camera_aperture), i.camera_pos);
 		}
-		rays[index] = ray_create(pos, vector3_sub(vector3_create(r_x, r_y, i.camera_dof), pos));
+		Vector3 image_pos = vector3_add(i.camera_pos, vector3_create(r_x, r_y, i.camera_dof));
+		rays[index] = ray_create(pos, vector3_sub(image_pos, pos));
 		ray_statuses[index] = index;
 		ray_colors[index] = vector3_create(1, 1, 1);
 	}
@@ -101,7 +102,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	return vector3_create(0.05f, 0.05f, 0.05f);
+	return vector3_create(0.0f, 0.0f, 0.0f);
 }
 
 __global__
