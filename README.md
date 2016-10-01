@@ -1,4 +1,4 @@
 # illume
 CUDA C Pathtracer
 
-![Alt text](renders/glass-960x720-5000spp-12md.png?raw=true "Title")
+![Alt text](renders/cornelllight-1440x1080-10000spp-15md.png?raw=true "Title")
