@@ -4,7 +4,6 @@
 #include <math.h>
 
 #include "vector3.h"
-#include "constants.h"
 #include "ray.h"
 
 typedef struct

@@ -1,17 +1,10 @@
 #ifndef _MESH_
 #define _MESH_
 
-#include <stdio.h>
-#include <string.h>
-
-#include "triangle.h"
-#include "../arraylist.h"
-#include "../math/vector3.h"
 #include "../math/ray.h"
 #include "../math/aabb.h"
-#include "../math/constants.h"
 #include "../hit.h"
-#include "../accel/kdtree.h"
+#include "triangle.h"
 
 static const int OBJ_TOKENS = 4;
 static const int VERTEX_COMPONENTS = 4;

@@ -39,6 +39,7 @@
     <ClInclude Include="src\camera.h" />
     <ClInclude Include="src\error_check.h" />
     <ClInclude Include="src\hit.h" />
+    <ClInclude Include="src\intellisense.h" />
     <ClInclude Include="src\kernel.h" />
     <ClInclude Include="src\material.h" />
     <ClInclude Include="src\math\aabb.h" />

@@ -1,17 +1,6 @@
 #include "matrix4.h"
 
-void matrix4_print(Matrix4 m)
-{
-	for (int i = 0; i < 4; i++)
-	{
-		for (int j = 0; j < 4; j++)
-		{
-			printf("%f    ", m.m[i][j]);
-		}
-		printf("\n");
-	}
-	printf("\n");
-}
+#include <math.h>
 
 Matrix4 matrix4_create()
 {

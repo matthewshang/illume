@@ -1,5 +1,7 @@
 #include "scene.h"
 
+#include "../arraylist.h"
+
 Scene* scene_new(SceneBuilder* builder)
 {
 	Scene* scene = (Scene *) calloc(1, sizeof(Scene));

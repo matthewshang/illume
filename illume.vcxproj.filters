@@ -124,6 +124,9 @@
     <ClInclude Include="src\primitives\triangle.h">
       <Filter>src\primitives</Filter>
     </ClInclude>
+    <ClInclude Include="src\intellisense.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\camera.cu">

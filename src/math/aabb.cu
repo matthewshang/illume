@@ -1,5 +1,7 @@
 #include "aabb.h"
 
+#include "constants.h"
+
 AABB aabb_create()
 {
 	AABB aabb;

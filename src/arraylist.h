@@ -1,8 +1,6 @@
 #ifndef _ARRAYLIST_
 #define _ARRAYLIST_
 
-#include <stdlib.h>
-
 typedef struct
 {
 	int length;

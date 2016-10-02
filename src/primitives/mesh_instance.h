@@ -1,10 +1,8 @@
 #ifndef _MESH_INSTANCE_
 #define _MESH_INSTANCE_
 
-#include "../math/vector3.h"
 #include "../math/ray.h"
 #include "../math/transform.h"
-#include "../math/matrix4.h"
 #include "../math/aabb.h"
 #include "mesh.h"
 #include "../material.h"

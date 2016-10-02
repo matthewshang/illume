@@ -2,7 +2,6 @@
 #define _MATRIX4_
 
 #include "vector3.h"
-#include <stdio.h>
 
 const int SUB[4][3] = 
 {
@@ -22,7 +21,6 @@ Matrix4;
 extern "C" {
 #endif
 			
-                      void     matrix4_print            (Matrix4 m);
                       Matrix4  matrix4_create           ();
                       Matrix4  matrix4_from_axis_angle  (Vector3 axis, float angle);
                       Matrix4  matrix4_from_scale       (Vector3 scale);

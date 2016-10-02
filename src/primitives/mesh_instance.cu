@@ -1,5 +1,11 @@
 #include "mesh_instance.h"
 
+#include <stdlib.h>
+
+#include "../math/vector3.h"
+#include "../math/matrix4.h"
+#include "../math/constants.h"
+
 MeshInstance* mesh_instance_new(int mesh_index, Material m, Transform t)
 {
 	MeshInstance* instance = (MeshInstance *) calloc(1, sizeof(MeshInstance));

@@ -1,5 +1,7 @@
 #include "arraylist.h"
 
+#include <stdlib.h>
+
 ArrayList* arraylist_new(int start_size)
 {
 	ArrayList* array = (ArrayList *) calloc(1, sizeof(ArrayList));

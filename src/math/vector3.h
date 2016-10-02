@@ -1,6 +1,8 @@
 #ifndef _VECTOR3_
 #define _VECTOR3_
 
+#include "../intellisense.h"
+
 typedef struct
 {
 	float x;

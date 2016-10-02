@@ -5,6 +5,7 @@
 #include "kernel.h"
 #include "bitmap.h"
 #include "material.h"
+#include "math/constants.h"
 #include "math/vector3.h"
 #include "math/transform.h"
 #include "math/matrix4.h"
@@ -30,6 +31,7 @@ static Scene* init_scene()
 	scenebuilder_add_mesh(builder, mesh_new("res/cube.obj"));
 	scenebuilder_add_mesh(builder, mesh_new("res/monkey.obj"));
 	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj"));
+	scenebuilder_add_mesh(builder, mesh_new("res/bunny.obj"));
 
 	//scenebuilder_add_mesh_instance(builder,
 	//	mesh_instance_new(1, glass,
@@ -80,6 +82,11 @@ static Scene* init_scene()
 
 	//scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(0, 4.5, 5), material_emissive(vector3_create(0.99 * 1.75, 0.99 * 1.75, 0.99 * 1.75))));
 	
+	//scenebuilder_add_mesh_instance(builder,
+	//	mesh_instance_new(3, white,
+	//		transform_create(
+	//			vector3_create(0, 0, 5), vector3_create(1, 1, 1),
+	//				matrix4_from_axis_angle(vector3_create(0, 1, 0), 0))));
 	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
 	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(-1.25, -0.1, 6), mirror));
 

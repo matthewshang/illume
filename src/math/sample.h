@@ -2,7 +2,6 @@
 #define _SAMPLE_
 
 #include "vector3.h"
-#include "constants.h"
 
 #ifdef __cplusplus
 extern "C" {

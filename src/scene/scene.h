@@ -6,7 +6,6 @@
 #include "../primitives/mesh.h"
 #include "../primitives/mesh_instance.h"
 #include "scenebuilder.h"
-#include "../arraylist.h"
 
 typedef struct
 {

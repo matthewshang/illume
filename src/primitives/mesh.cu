@@ -1,5 +1,12 @@
   #include "mesh.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include "../arraylist.h"
+#include "../math/vector3.h"
+#include "../math/constants.h"
+
 typedef struct
 {
 	ArrayList* vertices;

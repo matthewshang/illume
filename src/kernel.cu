@@ -1,5 +1,24 @@
 #include "kernel.h"
+
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <curand.h>
+#include <curand_kernel.h>
+
+#include "error_check.h"
+#include "material.h"
+#include "primitives/plane.h"
+#include "primitives/sphere.h"
+#include "primitives/mesh.h"
+#include "primitives/mesh_instance.h"
+#include "math/sample.h"
+#include "math/vector3.h"
+#include "math/ray.h"
+#include "math/constants.h"
+
+#include "intellisense.h"
 
 __global__ 
 void init_curand_states(curandState* states, uint32_t hash, int N)
@@ -49,8 +68,7 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 		{
 			float u1 = curand_uniform(&states[index]);
 			float u2 = curand_uniform(&states[index]);
-			pos = 
-				vector3_add(vector3_mul(sample_circle(u1, u2), i.camera_aperture), i.camera_pos);
+			pos = vector3_add(vector3_mul(sample_circle(u1, u2), i.camera_aperture), i.camera_pos);
 		}
 		Vector3 image_pos = vector3_add(i.camera_pos, vector3_create(r_x, r_y, i.camera_dof));
 		rays[index] = ray_create(pos, vector3_sub(image_pos, pos));
@@ -294,8 +312,6 @@ typedef struct
 	Mesh* d_meshes;
 	int mesh_amount;
 	Triangle** d_triangle_pointers;
-	KDTreeNode** d_mesh_nodes;
-	int** d_mesh_prims;
 	MeshInstance* d_instances;
 } 
 SceneReference;
@@ -316,10 +332,6 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	HANDLE_ERROR( cudaMalloc(&ref.d_meshes, meshes_size) );
 	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
 	Triangle** h_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
-	ref.d_mesh_nodes = (KDTreeNode **) calloc(scene->mesh_amount, sizeof(KDTreeNode *));
-	KDTreeNode** h_mesh_nodes = (KDTreeNode **) calloc(scene->mesh_amount, sizeof(KDTreeNode *));
-	ref.d_mesh_prims = (int **) calloc(scene->mesh_amount, sizeof(int *));
-	int** h_mesh_prims = (int **) calloc(scene->mesh_amount, sizeof(int *));
 
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
@@ -355,8 +367,6 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 		scene->meshes[i].triangles = h_triangle_pointers[i];
 	}
 	free(h_triangle_pointers);
-	free(h_mesh_nodes);
-	free(h_mesh_prims);
 	return ref;
 }
 
@@ -370,12 +380,8 @@ static void free_scene_gpu(SceneReference ref)
 	for (int i = 0; i < ref.mesh_amount; i++)
 	{
 		HANDLE_ERROR( cudaFree(ref.d_triangle_pointers[i]) );
-		HANDLE_ERROR( cudaFree(ref.d_mesh_nodes[i]) );
-		HANDLE_ERROR( cudaFree(ref.d_mesh_prims[i]) );
 	}
 	free(ref.d_triangle_pointers);
-	free(ref.d_mesh_nodes);
-	free(ref.d_mesh_prims);
 }
 
 static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)
