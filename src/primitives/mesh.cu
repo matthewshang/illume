@@ -92,6 +92,7 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
 		printf("mesh_load_obj: cannot read file %s\n", path);
 		return;
 	}
+	printf("Loading mesh from %s...\n", path);
 
 	char line[100];
 	char* token;

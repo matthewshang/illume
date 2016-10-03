@@ -18,6 +18,65 @@
 
 static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
+static Scene* init_scene_cornell_box()
+{
+	Material white = material_diffuse(vector3_create(0.75, 0.75, 0.75));
+	Material blue = material_diffuse(vector3_create(0.25, 0.25, 0.75));
+	Material red = material_diffuse(vector3_create(0.75, 0.25, 0.25));
+	Material mirror = material_specular(vector3_create(0.9, 0.9, 0.9));
+	Material glass = material_refractive(vector3_create(0, 0, 0));
+	SceneBuilder* builder = scenebuilder_new();
+
+	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj"));
+
+	// Back
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, white,
+		transform_create(
+		vector3_create(0, 1.5, 7.5), vector3_create(10, 10, 10),
+		matrix4_from_axis_angle(vector3_create(1, 0, 0), 0))));
+
+	// Bottom
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, white,
+		transform_create(
+		vector3_create(0, -1, 5), vector3_create(10, 10, 10),
+		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
+
+	// Sides
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, blue,
+		transform_create(
+		vector3_create(3.0, 1.5, 5), vector3_create(10, 10, 10),
+		matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
+
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, red,
+		transform_create(
+		vector3_create(-3.0, 1.5, 5), vector3_create(10, 10, 10),
+		matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
+
+	// Ceiling
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, white,
+		transform_create(
+		vector3_create(0, 3.5, 5), vector3_create(10, 10, 10),
+		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
+
+	scenebuilder_add_mesh_instance(builder,
+		mesh_instance_new(0, material_emissive(vector3_mul(vector3_create(3, 2.5, 1.5), 5)),
+		transform_create(
+		vector3_create(-0.0f, 3.5f - 0.0001f, 5.5f), vector3_create(2.25f, 1.25f, 1.0f),
+		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
+	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(-1.25, -0.1, 6), mirror));
+
+	Scene* scene = scene_new(builder);
+	scenebuilder_free(builder);
+	return scene;
+}
+
 static Scene* init_scene()
 {
 	Material white = material_diffuse(vector3_create(0.75, 0.75, 0.75));
@@ -33,51 +92,11 @@ static Scene* init_scene()
 	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj"));
 	scenebuilder_add_mesh(builder, mesh_new("res/bunny.obj"));
 
-	//scenebuilder_add_mesh_instance(builder,
-	//	mesh_instance_new(1, glass,
-	//		transform_create(
-	//			vector3_create(-0.5f, -0.15, 3), vector3_create(0.75, 0.75, 0.75),
-	//				matrix4_mul(matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI),
-	//						matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2)))));
-
-	// Back
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(2, white,
-			transform_create(
-				vector3_create(0, 1.5, 7.5), vector3_create(10, 10, 10),
-					matrix4_from_axis_angle(vector3_create(1, 0, 0), 0))));
-
 	// Bottom
 	scenebuilder_add_mesh_instance(builder,
 		mesh_instance_new(2, white,
 			transform_create(
-				vector3_create(0, -1, 5), vector3_create(10, 10, 10),
-					matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
-
-	// Sides
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(2, blue,
-			transform_create(
-				vector3_create(3.0, 1.5, 5), vector3_create(10, 10, 10),
-					matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
-
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(2, red,
-			transform_create(
-				vector3_create(-3.0, 1.5, 5), vector3_create(10, 10, 10),
-					matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
-	
-	// Ceiling
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(2, white,
-			transform_create(
-				vector3_create(0, 3.5, 5), vector3_create(10, 10, 10),
-					matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
-
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(2, material_emissive(vector3_mul(vector3_create(3, 2.5, 1.5), 5)),
-			transform_create(
-				vector3_create(-0.0f, 3.5f - 0.0001f, 5.5f), vector3_create(2.25f, 1.25f, 1.0f),
+				vector3_create(0, -1, 5), vector3_create(50, 50, 50),
 					matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
 
 	//scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(0, 4.5, 5), material_emissive(vector3_create(0.99 * 1.75, 0.99 * 1.75, 0.99 * 1.75))));
@@ -87,10 +106,48 @@ static Scene* init_scene()
 	//		transform_create(
 	//			vector3_create(0, 0, 5), vector3_create(1, 1, 1),
 	//				matrix4_from_axis_angle(vector3_create(0, 1, 0), 0))));
-	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
-	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(-1.25, -0.1, 6), mirror));
+	//scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(0, 0, 4), 
+	//	material_coat(vector3_create(255.f / 255.f, 127.f / 255.f, 80.f / 255.f))));
 
-	
+	scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(0, 0, 4),
+		material_refractive(vector3_create(255.f / 255.f, 127.f / 255.f, 80.f / 255.f))));
+	scenebuilder_add_sphere(builder, sphere_new(0.99, vector3_create(0, 0, 4),
+		material_diffuse(vector3_create(255.f / 255.f, 127.f / 255.f, 80.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.2, vector3_create(-0.65, -0.8, 2.5),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(0.19, vector3_create(-0.65, -0.8, 2.5),
+		material_diffuse(vector3_create(255.f / 255.f, 255.f / 255.f, 123.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.4, vector3_create(-1.4, -0.6, 2.65),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(0.39, vector3_create(-1.4, -0.6, 2.65),
+		material_diffuse(vector3_create(235.f / 255.f, 122.f / 255.f, 142.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(1, vector3_create(-2.9, 0, 3.5),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(0.99, vector3_create(-2.9, 0, 3.5),
+		material_diffuse(vector3_create(235.f / 255.f, 122.f / 255.f, 142.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.35, vector3_create(-2.4, -0.65, 5),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(0.34, vector3_create(-2.4, -0.65, 5),
+		material_diffuse(vector3_create(255.f / 255.f, 255.f / 255.f, 123.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(1.25, vector3_create(2.55, 0.25, 4.5),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(1.24, vector3_create(2.55, 0.25, 4.5),
+		material_diffuse(vector3_create(255.f / 255.f, 145.f / 255.f, 238.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.45, vector3_create(1.2, -0.55, 2.7),
+		material_refractive(vector3_create(0, 0, 0))));
+	scenebuilder_add_sphere(builder, sphere_new(0.44, vector3_create(1.2, -0.55, 2.7),
+		material_diffuse(vector3_create(255.f / 255.f, 131.f / 255.f, 107.f / 255.f))));
+
+	scenebuilder_add_sphere(builder, sphere_new(0.5, vector3_create(2.0f, -0.5, 6),
+		material_specular(vector3_create(0.99, 0.99, 0.99))));
+
+	scenebuilder_add_sphere(builder, sphere_new(10.f, vector3_create(-50.f, 50.f, 4.f), material_emissive(vector3_mul(vector3_create(3, 2.5, 1.5), 25))));
 	Scene* scene = scene_new(builder);
 	scenebuilder_free(builder);
 	return scene;
@@ -121,7 +178,7 @@ int main(int argc, char* argv[])
 				goto exit_scene;
 			}
 			//Camera camera = camera_create(vector3_create(0, 0, 0), 70, 4.5, 0.085);
-			 Camera camera = camera_create(vector3_create(0, 1.0f, 0.5f), 90, 1, 0);
+			 Camera camera = camera_create(vector3_create(0, 0.0f, 0.5f), 70, 3.5, 0.125);
 
 			render_scene(scene, image, camera, spp, max_depth);
 			char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5]), sizeof(char));

@@ -120,7 +120,7 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	return vector3_create(0.0f, 0.0f, 0.0f);
+	return vector3_create(223.f / 255.f, 228.f / 255.f, 244.f / 255.f);
 }
 
 __global__
@@ -168,7 +168,7 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 			{
 				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
 				float nc = 1.0f;
-				float nt = 1.5f;
+				float nt = 1.9f;
 				float nnt = into ? nc / nt : nt / nc;
 				float ddn = vector3_dot(r.d, norm_o);
 				float cos2t = 1.0f - nnt * nnt * (1.0f - ddn * ddn);
@@ -446,10 +446,9 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 	int* h_ray_statuses = (int *) calloc(pixels_amount, sizeof(int));
 
-	cudaEvent_t calc_start;
-	cudaEvent_t calc_stop;
-	start_timer(&calc_start, &calc_stop);
-
+	printf("Rendering...    "); fflush(stdout);
+	int last_progress = -1;
+	float progress_step = 100.0f / (float) samples;
 	for (int i = 0; i < samples; i++)
 	{
 		init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, wang_hash(i), pixels_amount);
@@ -462,17 +461,20 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 
 		for (int j = 0; j < max_depth; j++)
 		{
-
 			pathtrace_kernel<<<blocks, threads_per_block>>>
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
 				 ref.d_scene, d_states, active_pixels);		
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
+		int progress = (int) ((float) i * progress_step);
+		if (progress != last_progress)
+		{
+			printf("\b\b\b%02d%%", progress); fflush(stdout);
+			last_progress = progress;
+		}
 	}
-
-	float calc_time;
-	end_timer(&calc_start, &calc_stop, &calc_time);
+	printf("\b\b\b100%%\n");
 
 	HANDLE_ERROR( cudaFree(d_states) );
 	HANDLE_ERROR( cudaFree(d_rays) );
@@ -496,6 +498,5 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	float render_time;
 	end_timer(&render_start, &render_stop, &render_time);
 
-	printf("Calculation time: %f seconds\n", 1e-3 * (double) calc_time);
 	printf("Render time: %f seconds\n", 1e-3 * (double) render_time);
 }
