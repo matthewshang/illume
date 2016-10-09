@@ -53,7 +53,6 @@
     <ClInclude Include="src\primitives\mesh_instance.h" />
     <ClInclude Include="src\primitives\plane.h" />
     <ClInclude Include="src\primitives\sphere.h" />
-    <ClInclude Include="src\primitives\triangle.h" />
     <ClInclude Include="src\scene\scene.h" />
     <ClInclude Include="src\scene\scenebuilder.h" />
   </ItemGroup>
@@ -74,7 +73,6 @@
     <CudaCompile Include="src\primitives\mesh_instance.cu" />
     <CudaCompile Include="src\primitives\plane.cu" />
     <CudaCompile Include="src\primitives\sphere.cu" />
-    <CudaCompile Include="src\primitives\triangle.cu" />
     <CudaCompile Include="src\scene\scene.cu" />
     <CudaCompile Include="src\scene\scenebuilder.cu" />
   </ItemGroup>

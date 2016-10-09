@@ -121,9 +121,6 @@
     <ClInclude Include="src\primitives\sphere.h">
       <Filter>src\primitives</Filter>
     </ClInclude>
-    <ClInclude Include="src\primitives\triangle.h">
-      <Filter>src\primitives</Filter>
-    </ClInclude>
     <ClInclude Include="src\intellisense.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -181,9 +178,6 @@
       <Filter>src\primitives</Filter>
     </CudaCompile>
     <CudaCompile Include="src\primitives\sphere.cu">
-      <Filter>src\primitives</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\primitives\triangle.cu">
       <Filter>src\primitives</Filter>
     </CudaCompile>
   </ItemGroup>

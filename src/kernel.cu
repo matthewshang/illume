@@ -120,7 +120,9 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	return vector3_create(223.f / 255.f, 228.f / 255.f, 244.f / 255.f);
+	//return vector3_create(223.f / 255.f, 228.f / 255.f, 244.f / 255.f);
+	return vector3_create(0.01, 0.01, 0.01);
+
 }
 
 __global__
