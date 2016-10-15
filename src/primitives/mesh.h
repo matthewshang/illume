@@ -5,6 +5,7 @@
 #include "../math/aabb.h"
 #include "../math/vector3.h"
 #include "../hit.h"
+#include "../accel/bvh.h"
 
 static const int OBJ_TOKENS = 4;
 static const int VERTEX_COMPONENTS = 4;
@@ -31,6 +32,7 @@ typedef struct
 	int triangle_amount;
 	Triangle* triangles;
 	AABB aabb;
+	BVH bvh;
 }
 Mesh;
 
@@ -39,7 +41,7 @@ extern "C" {
 #endif
 
 
-            Mesh*  mesh_new            (const char* path);
+            Mesh*  mesh_new            (const char* path, int zUp);
             void   mesh_free           (Mesh* mesh);
 __device__  Hit    mesh_ray_intersect  (Mesh* mesh, Ray ray);
 

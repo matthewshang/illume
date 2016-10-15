@@ -89,6 +89,7 @@ void scene_free(Scene* scene)
 				{
 					free(scene->meshes[i].triangles);
 				}
+				bvh_free(&scene->meshes[i].bvh);
 			}
 			free(scene->meshes);
 		}

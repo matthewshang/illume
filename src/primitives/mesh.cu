@@ -1,10 +1,12 @@
-  #include "mesh.h"
+ #include "mesh.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #include "../arraylist.h"
 #include "../math/constants.h"
+
+#define BVH_STACK_SIZE 32
 
 typedef struct
 {
@@ -49,14 +51,6 @@ static Triangle* triangle_new(Vector3 v0, Vector3 v1, Vector3 v2)
 	}
 	*tri = triangle_create(v0, v1, v2);
 	return tri;
-}
-
-static void triangle_free(Triangle* triangle)
-{
-	if (triangle)
-	{
-		free(triangle);
-	}
 }
 
 void mesh_free(Mesh* mesh)
@@ -127,7 +121,7 @@ static void fix_aabb(AABB* aabb)
 	}
 }
 
-static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
+static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, int zUp)
 {
 	FILE* file;
 	file = fopen(path, "rt");
@@ -136,14 +130,11 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
 		printf("mesh_load_obj: cannot read file %s\n", path);
 		return;
 	}
-	printf("Loading mesh from %s...\n", path);
 
 	char line[100];
 	char* token;
 	char** tokens = (char **) calloc(OBJ_TOKENS, sizeof(char *));
-	tmp->vertices = arraylist_new(3);
-	tmp->triangles = arraylist_new(1);
-	tmp->aabbs = arraylist_new(1);
+	int tris = 0;
 
 	while(fgets(line, 100, file))
 	{
@@ -152,9 +143,18 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
 		if (strcmp(token, TOKEN_VERTEX) == 0)
 		{
 			split_string(line, " ", VERTEX_COMPONENTS, tokens);
-			arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
-												strtof(tokens[2], NULL),
-											    strtof(tokens[3], NULL)));
+			if (zUp)
+			{
+				arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
+					strtof(tokens[3], NULL),
+					strtof(tokens[2], NULL)));
+			}
+			else
+			{
+				arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
+					strtof(tokens[2], NULL),
+					strtof(tokens[3], NULL)));
+			}
 			split_string_finish(tokens, VERTEX_COMPONENTS);
 		}
 		else if (strcmp(token, TOKEN_FACE) == 0)
@@ -171,9 +171,11 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
 			aabb_update(aabb, v0);
 			aabb_update(aabb, v1);
 			aabb_update(aabb, v2);
+			fix_aabb(aabb);
 			arraylist_add(tmp->aabbs, aabb);
 			arraylist_add(tmp->triangles, triangle_new(v0, v1, v2));
 			split_string_finish(tokens, FACE_COMPONENTS);
+			tris++;
 		}
 
 		if (token) 
@@ -187,6 +189,8 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp)
 	}
 
 	fclose(file);
+	printf("Loaded mesh from %s...\n", path);
+	printf("Triangles: %d\n", tris);
 }
 
 static void copy_triangles(tmp_mesh* tmp, Mesh* mesh)
@@ -198,10 +202,8 @@ static void copy_triangles(tmp_mesh* tmp, Mesh* mesh)
 		{
 			Triangle* triangle = (Triangle *) arraylist_get(tmp->triangles, i);
 			mesh->triangles[i] = *triangle;
-			triangle_free(triangle);
 		}
 		mesh->triangle_amount = tmp->triangles->length;
-		arraylist_free(tmp->triangles);
 	}
 	else
 	{
@@ -217,12 +219,10 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	{
 		Vector3* v = (Vector3 *) arraylist_get(tmp->vertices, i);
 		aabb_update(&mesh->aabb, *v);
-		vector3_free(v);
 	}
-	arraylist_free(tmp->vertices);
 }
 
-Mesh* mesh_new(const char* path)
+Mesh* mesh_new(const char* path, int zUp)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
 	if (!mesh)
@@ -233,15 +233,36 @@ Mesh* mesh_new(const char* path)
 	mesh->triangles = NULL;
 
 	tmp_mesh tmp;
-	load_obj(mesh, path, &tmp);
+	tmp.vertices = arraylist_new(3);
+	tmp.triangles = arraylist_new(1);
+	tmp.aabbs = arraylist_new(1);
+	load_obj(mesh, path, &tmp, zUp);
 	copy_triangles(&tmp, mesh);
 	build_mesh_bounds(&tmp, mesh);
+	int length = strlen(path);
+	char* filename = (char *) calloc(length + 1, sizeof(char));
+	memcpy(filename, path, length);
+	filename[length - 3] = 'b';
+	filename[length - 2] = 'v';
+	filename[length - 1] = 'h';
+	filename[length] = '\0';
+	mesh->bvh = bvh_create(tmp.aabbs, mesh->aabb, filename);
 
 	for (int i = 0; i < tmp.aabbs->length; i++)
 	{
 		free((AABB *) arraylist_get(tmp.aabbs, i));
 	}
 	arraylist_free(tmp.aabbs);
+	for (int i = 0; i < tmp.vertices->length; i++)
+	{
+		free(arraylist_get(tmp.vertices, i));
+	}
+	arraylist_free(tmp.vertices);
+	for (int i = 0; i < tmp.triangles->length; i++)
+	{
+		free(arraylist_get(tmp.triangles, i));
+	}
+	arraylist_free(tmp.triangles);
 	return mesh;
 }
 
@@ -267,7 +288,7 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 
 	// one point of triangle is at origin 
 	if (point_in_triangle(tri.t1x, tri.t1y, tri.t2x, tri.t2y,
-						  vector3_dot(p0, tri.ex), vector3_dot(p0, tri.ey), tri.area))
+		vector3_dot(p0, tri.ex), vector3_dot(p0, tri.ey), tri.area))
 	{
 		return d;
 	}
@@ -275,23 +296,70 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 	return -FLT_MAX;
 }
 
+// Based on method described at http://raytracey.blogspot.com/2016/01/gpu-path-tracing-tutorial-3-take-your.html
+__device__
+Hit bvh_ray_intersect(Triangle* tris, BVH* bvh, Ray ray)
+{
+	int stack[BVH_STACK_SIZE];
+	int stack_idx = 0;
+	stack[stack_idx++] = 0;
+	Hit min = hit_create_no_intersect();
+	min.d = FLT_MAX;
+
+	while (stack_idx > 0)
+	{
+		GPUNode node = bvh->nodes[stack[stack_idx - 1]];
+		stack_idx--;
+		if (node.u.leaf.tri_amount & 0x80000000)
+		{
+			for (unsigned i = node.u.leaf.tri_start;
+				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
+				i++)
+				{
+					Triangle tri = tris[bvh->tri_indices[i]];
+					float d = triangle_ray_intersect(tri, ray);
+					if (d > 0 && d < min.d)
+					{
+						min.d = d;
+						min.normal = tri.n;
+						min.is_intersect = 1;
+					}
+				}
+		}
+		else
+		{
+			if (aabb_ray_intersect(node.bounds, ray) != -FLT_MAX)
+			{
+				stack[stack_idx++] = node.u.node.right_node;
+				stack[stack_idx++] = node.u.node.left_node;
+				if (stack_idx > BVH_STACK_SIZE)
+				{
+					return hit_create_no_intersect();
+				}
+			}
+		}
+	}
+	return min;
+}
+
 __device__
 Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
 {
-	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
-	for (int i = 0; i < mesh->triangle_amount; i++)
-	{
-		Triangle tri = mesh->triangles[i];
-		float inter_d = triangle_ray_intersect(tri, ray);
+	//Hit min = hit_create_no_intersect();
+	//min.d = FLT_MAX;
+	//for (int i = 0; i < mesh->triangle_amount; i++)
+	//{
+	//	Triangle tri = mesh->triangles[i];
+	//	float inter_d = triangle_ray_intersect(tri, ray);
 
-		if (inter_d > 0 && inter_d < min.d)
-		{
-			min.d = inter_d;
-			min.normal = tri.n;
-			min.is_intersect = 1;
-		}
-	}
-
-	return min;
+	//	if (inter_d > 0 && inter_d < min.d)
+	//	{
+	//		min.d = inter_d;
+	//		min.normal = tri.n;
+	//		min.is_intersect = 1;
+	//	}
+	//}
+	//
+	//return min;
+	return bvh_ray_intersect(mesh->triangles, &mesh->bvh, ray);
 }

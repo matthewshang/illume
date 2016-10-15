@@ -17,6 +17,7 @@
 #include "math/vector3.h"
 #include "math/ray.h"
 #include "math/constants.h"
+#include "accel/bvh.h"
 
 #include "intellisense.h"
 
@@ -170,7 +171,7 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 			{
 				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
 				float nc = 1.0f;
-				float nt = 1.9f;
+				float nt = 1.5f;
 				float nnt = into ? nc / nt : nt / nc;
 				float ddn = vector3_dot(r.d, norm_o);
 				float cos2t = 1.0f - nnt * nnt * (1.0f - ddn * ddn);
@@ -315,6 +316,8 @@ typedef struct
 	int mesh_amount;
 	Triangle** d_triangle_pointers;
 	MeshInstance* d_instances;
+	GPUNode** d_bvh_nodes;
+	int** d_bvh_indices;
 } 
 SceneReference;
 
@@ -335,6 +338,11 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
 	Triangle** h_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
 
+	ref.d_bvh_nodes = (GPUNode **) calloc(scene->mesh_amount, sizeof(GPUNode*));
+	GPUNode** h_bvh_nodes = (GPUNode **) calloc(scene->mesh_amount, sizeof(GPUNode*));
+	ref.d_bvh_indices = (int **) calloc(scene->mesh_amount, sizeof(int*));
+	int** h_bvh_indices = (int **) calloc(scene->mesh_amount, sizeof(int*));
+
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
 		Mesh* mesh_p = &scene->meshes[i];
@@ -345,6 +353,18 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 		HANDLE_ERROR( cudaMemcpy(ref.d_triangle_pointers[i], mesh.triangles, triangles_size, cudaMemcpyHostToDevice) );
 		h_triangle_pointers[i] = mesh.triangles;
 		mesh_p->triangles = ref.d_triangle_pointers[i];	
+
+		int nodes_size = mesh.bvh.node_amount * sizeof(GPUNode);
+		HANDLE_ERROR(cudaMalloc(&ref.d_bvh_nodes[i], nodes_size));
+		HANDLE_ERROR(cudaMemcpy(ref.d_bvh_nodes[i], mesh.bvh.nodes, nodes_size, cudaMemcpyHostToDevice));
+		h_bvh_nodes[i] = mesh.bvh.nodes;
+		mesh_p->bvh.nodes = ref.d_bvh_nodes[i];
+
+		int indices_size = mesh.bvh.tri_index_amount * sizeof(int);
+		HANDLE_ERROR(cudaMalloc(&ref.d_bvh_indices[i], indices_size));
+		HANDLE_ERROR(cudaMemcpy(ref.d_bvh_indices[i], mesh.bvh.tri_indices, indices_size, cudaMemcpyHostToDevice));
+		h_bvh_indices[i] = mesh.bvh.tri_indices;
+		mesh_p->bvh.tri_indices = ref.d_bvh_indices[i];
 	}
 
 	Sphere* h_spheres = scene->spheres;
@@ -367,8 +387,12 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	for (int i = 0; i < scene->mesh_amount; i++)
 	{
 		scene->meshes[i].triangles = h_triangle_pointers[i];
+		scene->meshes[i].bvh.nodes = h_bvh_nodes[i];
+		scene->meshes[i].bvh.tri_indices = h_bvh_indices[i];
 	}
 	free(h_triangle_pointers);
+	free(h_bvh_nodes);
+	free(h_bvh_indices);
 	return ref;
 }
 
@@ -382,8 +406,12 @@ static void free_scene_gpu(SceneReference ref)
 	for (int i = 0; i < ref.mesh_amount; i++)
 	{
 		HANDLE_ERROR( cudaFree(ref.d_triangle_pointers[i]) );
+		HANDLE_ERROR( cudaFree(ref.d_bvh_nodes[i]) );
+		HANDLE_ERROR( cudaFree(ref.d_bvh_indices[i]) );
 	}
 	free(ref.d_triangle_pointers);
+	free(ref.d_bvh_nodes);
+	free(ref.d_bvh_indices);
 }
 
 static void start_timer(cudaEvent_t* start, cudaEvent_t* stop)
