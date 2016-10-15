@@ -74,12 +74,8 @@ static Scene* init_scene_cornell_box()
 
 	scenebuilder_add_mesh(builder, mesh_new("res/bunny70k.obj", 1));
 	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(1, mirror,
-		transform_create(vector3_create(-0.5, -0.75, 6.5), vector3_create(0.9, 0.9, 0.9), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
-
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(1, glass,
-		transform_create(vector3_create(1.5, -0.75, 5), vector3_create(0.9, 0.9, 0.9), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
+		mesh_instance_new(1, white,
+		transform_create(vector3_create(0.5, -0.75, 5), vector3_create(0.9, 0.9, 0.9), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
 
 	//scenebuilder_add_mesh(builder, mesh_new("res/lucy.obj", 1));
 	//scenebuilder_add_mesh_instance(builder,

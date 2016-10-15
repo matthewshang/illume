@@ -15,15 +15,10 @@ static const char* TOKEN_FACE = "f";
 
 typedef struct
 {
-	Vector3 n;
+	Vector3 e1;
+	Vector3 e2;
 	Vector3 v0;
-	Vector3 ex;
-	Vector3 ey;
-	float t1x;
-	float t1y;
-	float t2x;
-	float t2y;
-	float area;
+	Vector3 n;
 }
 Triangle;
 

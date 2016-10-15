@@ -25,20 +25,11 @@ static float tri_area_times_two(float ax, float ay, float bx, float by, float cx
 static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
 {
 	Triangle tri;
+	tri.e1 = vector3_sub(v1, v0);
+	tri.e2 =  vector3_sub(v2, v0);
 	tri.v0 = v0;
-	Vector3 e10 = vector3_sub(v1, v0);
-	Vector3 e20 = vector3_sub(v2, v0);
-	tri.n = vector3_cross(e10, e20);
+	tri.n = vector3_cross(tri.e1, tri.e2);
 	vector3_normalize(&tri.n);
-
-	tri.ex = e10;
-	vector3_normalize(&tri.ex);
-	tri.ey = vector3_cross(tri.ex, tri.n);
-	tri.t1x = vector3_dot(tri.ex, e10);
-	tri.t1y = vector3_dot(tri.ey, e10);
-	tri.t2x = vector3_dot(tri.ex, e20);
-	tri.t2y = vector3_dot(tri.ey, e20);
-	tri.area = 1e-4 + tri_area_times_two(0, 0, tri.t1x, tri.t1y, tri.t2x, tri.t2y);
 	return tri;
 }
 
@@ -275,25 +266,33 @@ static int point_in_triangle(float bx, float by, float cx, float cy, float px, f
 	return (ABP + BCP + CAP < area);
 }
 
+// Moller-trumbore method
 __device__
 static float triangle_ray_intersect(Triangle tri, Ray ray)
 {
-	float d = vector3_dot(tri.n, vector3_sub(tri.v0, ray.o)) / vector3_dot(tri.n, ray.d);
-	if (d < 0)
-	{
-		return -FLT_MAX;
-	}
-	Vector3 point = ray_position_along(ray, d);
-	Vector3 p0 = vector3_sub(point, tri.v0);
+	Vector3 P, Q, T;
+	float det, u, v;
 
-	// one point of triangle is at origin 
-	if (point_in_triangle(tri.t1x, tri.t1y, tri.t2x, tri.t2y,
-		vector3_dot(p0, tri.ex), vector3_dot(p0, tri.ey), tri.area))
+	P = vector3_cross(ray.d, tri.e2);
+	det = vector3_dot(tri.e1, P);
+	if (fabsf(det) < FLT_EPSILON)
 	{
-		return d;
+		return -1;
 	}
-
-	return -FLT_MAX;
+	det = 1.f / det;
+	T = vector3_sub(ray.o, tri.v0);
+	u = vector3_dot(T, P) * det;
+	if (u < 0.f || u > 1.f)
+	{
+		return -1;
+	}
+	Q = vector3_cross(T, tri.e1);
+	v = vector3_dot(ray.d, Q) * det;
+	if (v < 0.f || u + v > 1.f)
+	{
+		return -1;
+	}
+	return vector3_dot(tri.e2, Q) * det;
 }
 
 // Based on method described at http://raytracey.blogspot.com/2016/01/gpu-path-tracing-tutorial-3-take-your.html
