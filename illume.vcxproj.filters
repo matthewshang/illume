@@ -56,6 +56,9 @@
     <ClCompile Include="src\bitmap.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\accel\bvh.cpp">
+      <Filter>src\accel</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\arraylist.h">
@@ -78,9 +81,6 @@
     </ClInclude>
     <ClInclude Include="src\material.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\accel\kdtree.h">
-      <Filter>src\accel</Filter>
     </ClInclude>
     <ClInclude Include="src\math\aabb.h">
       <Filter>src\math</Filter>
@@ -124,6 +124,9 @@
     <ClInclude Include="src\intellisense.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\accel\bvh.h">
+      <Filter>src\accel</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\camera.cu">
@@ -140,9 +143,6 @@
     </CudaCompile>
     <CudaCompile Include="src\material.cu">
       <Filter>src</Filter>
-    </CudaCompile>
-    <CudaCompile Include="src\accel\kdtree.cu">
-      <Filter>src\accel</Filter>
     </CudaCompile>
     <CudaCompile Include="src\math\aabb.cu">
       <Filter>src\math</Filter>

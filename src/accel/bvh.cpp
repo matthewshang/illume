@@ -2,7 +2,9 @@
 
 #include "../math/vector3.h"
 #include "../math/constants.h"
+
 #include <stdio.h>
+#include <time.h>
 
 // Based on bvh described at http://raytracey.blogspot.com/2016/01/gpu-path-tracing-tutorial-3-take-your.html
 
@@ -58,11 +60,13 @@ BVHNode* bvh_inner_node_new(BVHNode* left, BVHNode* right)
 	return node;
 }
 
-BVHNode* build(ArrayList* work, int depth, float pct)
+int report_counter = 0;
+
+BVHNode* build(ArrayList* work, int depth, int tris_per_node, float pct)
 {
 	float pct_span = 11.f / powf(3.f, depth);
 
-	if (work->length < 4)
+	if (work->length < tris_per_node)
 	{
 		return bvh_leaf_new(work);
 	}
@@ -116,7 +120,10 @@ BVHNode* build(ArrayList* work, int depth, float pct)
 
 		for (float split = start + step; split < end - step; split += step)
 		{
-			printf("\b\b\b%02d%%", (int) pct_start); fflush(stdout);
+			if ((1023 & report_counter++) == 0)
+			{
+				printf("\b\b\b%02d%%", (int) pct_start); fflush(stdout);
+			}
 			pct_start += pct_step;
 
 			AABB left_bounds = aabb_create();
@@ -222,13 +229,18 @@ BVHNode* build(ArrayList* work, int depth, float pct)
 		}
 	}
 
-	printf("\b\b\b%2d%%", (int) (pct + 3.f * pct_span)); fflush(stdout);
+	if ((1023 & report_counter++) == 0)
+	{
+		printf("\b\b\b%2d%%", (int) (pct + 3.f * pct_span)); fflush(stdout);
+	}
+	BVHNode* left_node = build(left, depth + 1, tris_per_node, pct + 3.f * pct_span);
 
-	BVHNode* left_node = build(left, depth + 1, pct + 3.f * pct_span);
+	if ((1023 & report_counter++) == 0)
+	{
+		printf("\b\b\b%2d%%", (int) (pct + 6.f * pct_span)); fflush(stdout);
+	}
+	BVHNode* right_node = build(right, depth + 1, tris_per_node, pct + 6.f * pct_span);
 
-	printf("\b\b\b%2d%%", (int) (pct + 6.f * pct_span)); fflush(stdout);
-
-	BVHNode* right_node = build(right, depth + 1, pct + 6.f * pct_span);
 	arraylist_free(left);
 	arraylist_free(right);
 	left_node->bounds = left_bounds;
@@ -348,8 +360,11 @@ void print_gpu_tree(BVH* bvh, int node_amount, int tri_amount)
 	}
 }
 
-BVH build_bvh(ArrayList* aabbs, AABB bounds)
+BVH build_bvh(ArrayList* aabbs, AABB bounds, int tris_per_node)
 {
+	clock_t start = clock();
+	clock_t diff;
+
 	BVHWork* work = (BVHWork *) calloc(aabbs->length, sizeof(BVHWork));
 	ArrayList* work_list = arraylist_new(aabbs->length);
 	for (int i = 0; i < aabbs->length; i++)
@@ -358,7 +373,7 @@ BVH build_bvh(ArrayList* aabbs, AABB bounds)
 		arraylist_add(work_list, &work[i]);
 	}
 	printf("Building BVH...    "); fflush(stdout);
-	BVHNode* root = build(work_list, 0, 0.f);
+	BVHNode* root = build(work_list, 0, tris_per_node, 0.f);
 	printf("\b\b\b100%%\n");
 	root->bounds = bounds;
 	free(work);
@@ -375,15 +390,18 @@ BVH build_bvh(ArrayList* aabbs, AABB bounds)
 	node_free(root);
 	//print_gpu_tree(&bvh, bvh.node_amount, bvh.tri_index_amount);
 
+	diff = clock() - start;
+	int msec = diff * 1000 / CLOCKS_PER_SEC;
+	printf("Build time: %d.%d seconds\n", msec / 1000, msec % 1000);
 	return bvh;
 }
 
-BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename)
+BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename, int tris_per_node)
 {
 	FILE* fp = fopen(filename, "rb");
 	if (!fp)
 	{
-		BVH bvh = build_bvh(aabbs, bounds);
+		BVH bvh = build_bvh(aabbs, bounds, tris_per_node);
 		fp = fopen(filename, "wb");
 		if (!fp || (1 != fwrite(&bvh.node_amount, sizeof(int), 1, fp))
 			|| (1 != fwrite(&bvh.tri_index_amount, sizeof(int), 1, fp))
@@ -405,7 +423,7 @@ BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename)
 			1 != fread(&bvh.tri_index_amount, sizeof(int), 1, fp))
 		{
 			printf("Error: could not read bvh\n");
-			return build_bvh(aabbs, bounds);
+			return build_bvh(aabbs, bounds, tris_per_node);
 		}
 		bvh.tri_indices = (int*) calloc(bvh.tri_index_amount, sizeof(int));
 		bvh.nodes = (GPUNode*) calloc(bvh.node_amount, sizeof(GPUNode));
@@ -413,7 +431,7 @@ BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename)
 			bvh.tri_index_amount != fread(bvh.tri_indices, sizeof(int), bvh.tri_index_amount, fp))
 		{
 			printf("Error: could not read bvh\n");
-			return build_bvh(aabbs, bounds);
+			return build_bvh(aabbs, bounds, tris_per_node);
 		}
 		fclose(fp);
 		return bvh;

@@ -213,7 +213,7 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	}
 }
 
-Mesh* mesh_new(const char* path, int zUp)
+Mesh* mesh_new(const char* path, int zUp, int tris_per_node)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
 	if (!mesh)
@@ -237,7 +237,7 @@ Mesh* mesh_new(const char* path, int zUp)
 	filename[length - 2] = 'v';
 	filename[length - 1] = 'h';
 	filename[length] = '\0';
-	mesh->bvh = bvh_create(tmp.aabbs, mesh->aabb, filename);
+	mesh->bvh = bvh_create(tmp.aabbs, mesh->aabb, filename, tris_per_node);
 
 	for (int i = 0; i < tmp.aabbs->length; i++)
 	{
@@ -255,15 +255,6 @@ Mesh* mesh_new(const char* path, int zUp)
 	}
 	arraylist_free(tmp.triangles);
 	return mesh;
-}
-
-__device__
-static int point_in_triangle(float bx, float by, float cx, float cy, float px, float py, float area)
-{
-	float ABP = tri_area_times_two(0, 0, bx, by, px, py);
-	float BCP = tri_area_times_two(bx, by, cx, cy, px, py);
-	float CAP = tri_area_times_two(cx, cy, 0, 0, px, py);
-	return (ABP + BCP + CAP < area);
 }
 
 // Moller-trumbore method
