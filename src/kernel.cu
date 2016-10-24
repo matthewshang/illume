@@ -17,6 +17,7 @@
 #include "math/vector3.h"
 #include "math/ray.h"
 #include "math/constants.h"
+#include "math/matrix4.h"
 #include "accel/bvh.h"
 
 #include "intellisense.h"
@@ -56,19 +57,16 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 		float r_x = left_edge + i.camera_pixel_size * curand_uniform(&states[index]);
 		float r_y = top_edge - i.camera_pixel_size * curand_uniform(&states[index]);
 
-		Vector3 pos;
-		if (i.camera.aperture == 0)
-		{
-			pos = i.camera.pos;
-		}
-		else
+		Vector3 pos = vector3_create(0, 0, 0);
+		if (i.camera.aperture > FLT_EPSILON)
 		{
 			float u1 = curand_uniform(&states[index]);
 			float u2 = curand_uniform(&states[index]);
-			pos = vector3_add(vector3_mul(sample_circle(u1, u2), i.camera.aperture), i.camera.pos);
+			pos = vector3_mul(sample_circle(u1, u2), i.camera.aperture);
 		}
-		Vector3 image_pos = vector3_add(i.camera.pos, vector3_create(r_x, r_y, i.camera.dof));
-		rays[index] = ray_create(pos, vector3_sub(image_pos, pos));
+		Vector3 origin = matrix4_mul_vector3(&i.camera.transform, pos, 1.f);
+		Vector3 image_pos = matrix4_mul_vector3(&i.camera.transform, vector3_create(r_x, r_y, i.camera.dof), 1.f);
+		rays[index] = ray_create(origin, vector3_sub(image_pos, origin));
 		ray_statuses[index] = index;
 		ray_colors[index] = vector3_create(1, 1, 1);
 	}
