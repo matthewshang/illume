@@ -72,7 +72,10 @@ static Scene* init_scene_cornell_box()
 	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
 	scenebuilder_add_sphere(builder, sphere_new(0.8, vector3_create(-1.25, -0.2, 6), mirror));
 
-	Scene* scene = scene_new(builder, camera_create(vector3_create(0, 1.0f, 1.5f), matrix4_create(), 90, 1, 0));
+	Scene* scene = scene_new(builder, 
+							 camera_create(vector3_create(0, 1.0f, 1.5f), matrix4_create(), 90, 1, 0),
+							 vector3_create(0.01f, 0.01f, 0.01f));
+	
 	scenebuilder_free(builder);
 	return scene;
 }
@@ -103,7 +106,11 @@ static Scene* init_scene()
 		matrix4_create())));
 
 	scenebuilder_add_sphere(builder, sphere_new(0.75f, vector3_create(-2.5f, -1.25f, 5.f), mirror));
-	Scene* scene = scene_new(builder, camera_create(vector3_create(0, 2.f, -1.f), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 12), 75, 1, 0));
+	
+	Scene* scene = scene_new(builder, 
+							 camera_create(vector3_create(0, 2.f, -1.f), 
+							     matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 12), 75, 1, 0),
+							 vector3_create(221.12f / 255.f, 248.45f / 255.f, 255.f / 255.f));
 	scenebuilder_free(builder);
 	return scene;
 }

@@ -112,14 +112,6 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 	return min;
 }
 
-__device__
-static Vector3 get_background_color(Vector3 direction)
-{
-	return vector3_create(221.12f / 255.f, 248.45f / 255.f, 255.f / 255.f);
-	//return vector3_create(0.01, 0.01, 0.01);
-
-}
-
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 Vector3* ray_colors, Scene* scene, curandState* states, int N)
@@ -206,8 +198,7 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 		}
 		else
 		{
-			Vector3 sky = get_background_color(rays[ray_index].d);
-			vector3_mul_vector_to(&ray_colors[ray_index], sky);
+			vector3_mul_vector_to(&ray_colors[ray_index], scene->sky_color);
 			vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 			ray_statuses[index] = -1;
 		}

@@ -2,7 +2,7 @@
 
 #include "../arraylist.h"
 
-Scene* scene_new(SceneBuilder* builder, Camera camera)
+Scene* scene_new(SceneBuilder* builder, Camera camera, Vector3 sky_color)
 {
 	Scene* scene = (Scene *) calloc(1, sizeof(Scene));
 	if (!scene)
@@ -15,6 +15,7 @@ Scene* scene_new(SceneBuilder* builder, Camera camera)
 	int instance_amount = builder->instances->length;
 
 	scene->camera = camera;
+	scene->sky_color = sky_color;
 	scene->sphere_amount = sphere_amount;
 	scene->spheres = (Sphere *) calloc(sphere_amount, sizeof(Sphere));
 	if (!scene->spheres)
