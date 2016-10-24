@@ -34,9 +34,7 @@ void init_curand_states(curandState* states, uint32_t hash, int N)
 typedef struct
 {
 	float image_width;
-	float camera_dof;
-	float camera_aperture;
-	Vector3 camera_pos;
+	Camera camera;
 	float camera_pixel_size;
 	float camera_left;
 	float camera_top;
@@ -53,25 +51,23 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 		int x = index % (int) i.image_width;
 		int y = index / (int) i.image_width;
 		float left_edge = i.camera_left + i.camera_pixel_size * (float) x;
-		float right_edge = left_edge + i.camera_pixel_size;
 		float top_edge = i.camera_top - i.camera_pixel_size * (float) y;
-		float bottom_edge = top_edge + i.camera_pixel_size;
 
-		float r_x = left_edge + (right_edge - left_edge) * curand_uniform(&states[index]);
-		float r_y = bottom_edge + (top_edge - bottom_edge) * curand_uniform(&states[index]);
+		float r_x = left_edge + i.camera_pixel_size * curand_uniform(&states[index]);
+		float r_y = top_edge - i.camera_pixel_size * curand_uniform(&states[index]);
 
 		Vector3 pos;
-		if (i.camera_aperture == 0)
+		if (i.camera.aperture == 0)
 		{
-			pos = i.camera_pos;
+			pos = i.camera.pos;
 		}
 		else
 		{
 			float u1 = curand_uniform(&states[index]);
 			float u2 = curand_uniform(&states[index]);
-			pos = vector3_add(vector3_mul(sample_circle(u1, u2), i.camera_aperture), i.camera_pos);
+			pos = vector3_add(vector3_mul(sample_circle(u1, u2), i.camera.aperture), i.camera.pos);
 		}
-		Vector3 image_pos = vector3_add(i.camera_pos, vector3_create(r_x, r_y, i.camera_dof));
+		Vector3 image_pos = vector3_add(i.camera.pos, vector3_create(r_x, r_y, i.camera.dof));
 		rays[index] = ray_create(pos, vector3_sub(image_pos, pos));
 		ray_statuses[index] = index;
 		ray_colors[index] = vector3_create(1, 1, 1);
@@ -121,8 +117,8 @@ static Hit get_min_hit(Scene* scene, Ray ray)
 __device__
 static Vector3 get_background_color(Vector3 direction)
 {
-	//return vector3_create(223.f / 255.f, 228.f / 255.f, 244.f / 255.f);
-	return vector3_create(0.01, 0.01, 0.01);
+	return vector3_create(221.12f / 255.f, 248.45f / 255.f, 255.f / 255.f);
+	//return vector3_create(0.01, 0.01, 0.01);
 
 }
 
@@ -280,10 +276,8 @@ static RenderInfo* allocate_render_info_gpu(int width, int height, Camera camera
 	i.image_width = width;
 	float dim_ratio = (float) height / (float) width;
 	float tan_half_fov = tanf(ILLUME_PI * camera.fov / 360);
-	i.camera_dof = camera.dof;	
-	i.camera_aperture = camera.aperture;
-	i.camera_pos = camera.pos;
-	float dofmfov = i.camera_dof * tan_half_fov;
+	i.camera = camera;
+	float dofmfov = camera.dof * tan_half_fov;
 	i.camera_pixel_size = dofmfov * 2 / (float) width;
 	i.camera_left = -1 * dofmfov;
 	i.camera_top = dim_ratio * dofmfov;
@@ -439,7 +433,7 @@ uint32_t wang_hash(uint32_t a)
 	return a;
 }
 
-void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int max_depth)
+void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 {
 	if (!scene)
 	{
@@ -459,7 +453,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, Camera camera, int samples, int 
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 
 	RenderInfo* d_info = 
-		allocate_render_info_gpu(bitmap->width, bitmap->height, camera);
+		allocate_render_info_gpu(bitmap->width, bitmap->height, scene->camera);
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 

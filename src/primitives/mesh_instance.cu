@@ -1,6 +1,7 @@
 #include "mesh_instance.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../math/vector3.h"
 #include "../math/matrix4.h"
@@ -53,6 +54,7 @@ void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
 		{
 			inst_aabb->max.z += bias;
 		}
+		printf("mesh instance bounds: \n  min: %f %f %f\n  max: %f %f %f\n", inst_aabb->min.x, inst_aabb->min.y, inst_aabb->min.z, inst_aabb->max.x, inst_aabb->max.y, inst_aabb->max.z);
 	}
 }
 

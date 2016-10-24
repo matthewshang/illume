@@ -6,6 +6,7 @@
 #include "../primitives/mesh.h"
 #include "../primitives/mesh_instance.h"
 #include "scenebuilder.h"
+#include "../camera.h"
 
 typedef struct
 {
@@ -17,6 +18,7 @@ typedef struct
 	int mesh_amount;
 	MeshInstance* instances;
 	int instance_amount;
+	Camera camera;
 } 
 Scene;
 
@@ -24,7 +26,7 @@ Scene;
 extern "C" {
 #endif
 
-Scene*  scene_new   (SceneBuilder* builder);
+Scene*  scene_new   (SceneBuilder* builder, Camera camera);
 void    scene_free  (Scene* scene);
 
 #ifdef __cplusplus

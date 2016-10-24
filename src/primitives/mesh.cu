@@ -230,6 +230,7 @@ Mesh* mesh_new(const char* path, int zUp, int tris_per_node)
 	load_obj(mesh, path, &tmp, zUp);
 	copy_triangles(&tmp, mesh);
 	build_mesh_bounds(&tmp, mesh);
+	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
 	int length = strlen(path);
 	char* filename = (char *) calloc(length + 1, sizeof(char));
 	memcpy(filename, path, length);

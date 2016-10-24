@@ -2,7 +2,7 @@
 
 #include "../arraylist.h"
 
-Scene* scene_new(SceneBuilder* builder)
+Scene* scene_new(SceneBuilder* builder, Camera camera)
 {
 	Scene* scene = (Scene *) calloc(1, sizeof(Scene));
 	if (!scene)
@@ -14,6 +14,7 @@ Scene* scene_new(SceneBuilder* builder)
 	int mesh_amount = builder->meshes->length;
 	int instance_amount = builder->instances->length;
 
+	scene->camera = camera;
 	scene->sphere_amount = sphere_amount;
 	scene->spheres = (Sphere *) calloc(sphere_amount, sizeof(Sphere));
 	if (!scene->spheres)

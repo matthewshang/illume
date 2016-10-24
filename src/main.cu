@@ -72,7 +72,7 @@ static Scene* init_scene_cornell_box()
 	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
 	scenebuilder_add_sphere(builder, sphere_new(0.8, vector3_create(-1.25, -0.2, 6), mirror));
 
-	Scene* scene = scene_new(builder);
+	Scene* scene = scene_new(builder, camera_create(vector3_create(0, 1.0f, 1.5f), 90, 1, 0));
 	scenebuilder_free(builder);
 	return scene;
 }
@@ -80,34 +80,30 @@ static Scene* init_scene_cornell_box()
 static Scene* init_scene()
 {
 	Material white = material_diffuse(vector3_create(0.75, 0.75, 0.75));
+	Material marble = material_diffuse(vector3_create(0.7968, 0.7815, 0.6941));
+	Material ground = material_diffuse(vector3_create(0.4, 0.4, 0.4));
 	Material blue = material_diffuse(vector3_create(0.25, 0.25, 0.75));
 	Material red = material_diffuse(vector3_create(0.75, 0.25, 0.25));
 	Material mirror = material_specular(vector3_create(0.99, 0.99, 0.99));
 	Material glass = material_refractive(vector3_create(0, 0, 0));
 	SceneBuilder* builder = scenebuilder_new();
 
-	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj", 0, 4));
-
-	// Bottom
+	scenebuilder_add_mesh(builder, mesh_new("res/bunny145k.obj", 1, 8));
 	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, white,
+		mesh_instance_new(0, marble,
 		transform_create(
-		vector3_create(0, -1, 5), vector3_create(50, 50, 50),
-		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
+		vector3_create(1, -1.55, 8), vector3_create(0.05, 0.05, 0.05),
+		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
 
-	scenebuilder_add_sphere(builder, sphere_new(10, vector3_create(5, 25, -5), material_emissive(vector3_mul(vector3_create(1, 1, 1), 7.5))));
-
-	//scenebuilder_add_mesh(builder, mesh_new("res/bunny70k.obj", 1, 4));
-	//scenebuilder_add_mesh_instance(builder,
-	//	mesh_instance_new(1, white,
-	//	transform_create(vector3_create(0.5, -0.75, 5), vector3_create(0.9, 0.9, 0.9), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
-
-	scenebuilder_add_mesh(builder, mesh_new("res/lucy.obj", 1, 12));
+	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj", 1, 4));
 	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(1, material_diffuse(vector3_create(0.7968, 0.7815, 0.6941)),
-		transform_create(vector3_create(1.5, 0.32, 5), vector3_mul(vector3_create(1, 1, 1), 0.0022), matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / -2))));
+		mesh_instance_new(1, ground,
+		transform_create(
+		vector3_create(0, -2, 0), vector3_create(25, 25, 25),
+		matrix4_create())));
 
-	Scene* scene = scene_new(builder);
+	scenebuilder_add_sphere(builder, sphere_new(0.75f, vector3_create(-2.5f, -1.25f, 5.f), mirror));
+	Scene* scene = scene_new(builder, camera_create(vector3_create(0, 1.f, -1.f), 75, 1, 0));
 	scenebuilder_free(builder);
 	return scene;
 }
@@ -137,12 +133,8 @@ int main(int argc, char* argv[])
 			{
 				goto exit_scene;
 			}
-			//Camera camera = camera_create(vector3_create(0, 1.0f, 0.5f), 90, 1, 0);
-			Camera camera = camera_create(vector3_create(0, 1.0f, 1.5f), 90, 1, 0);
 
-			 //Camera camera = camera_create(vector3_create(0, 0, 0.5f), 90, 3.5, 0);
-
-			render_scene(scene, image, camera, spp, max_depth);
+			render_scene(scene, image, spp, max_depth);
 			char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5]), sizeof(char));
 			sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);
 			bitmap_save_to_png(image, name);
