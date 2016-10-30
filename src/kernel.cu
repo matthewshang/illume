@@ -157,7 +157,7 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 			{
 				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
 				float nc = 1.0f;
-				float nt = 1.5f;
+				float nt = min.m.ior;
 				float nnt = into ? nc / nt : nt / nc;
 				float ddn = vector3_dot(r.d, norm_o);
 				float cos2t = 1.0f - nnt * nnt * (1.0f - ddn * ddn);
@@ -186,9 +186,10 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 					}
 					else
 					{
+						vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
 						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], tp);
 						new_dir = tdir;
-						vector3_add_to(&new_origin, vector3_mul(norm_o, -0.001));
+						vector3_add_to(&new_origin, vector3_mul(norm_o, -10e-5));
 
 					}
 				}
