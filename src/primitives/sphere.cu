@@ -29,7 +29,7 @@ Sphere sphere_create(float r, Vector3 center, Material m)
 }
 
 __device__
-Hit sphere_ray_intersect(Sphere sphere, Ray ray)
+void sphere_ray_intersect(Sphere sphere, Ray ray, Hit* hit)
 {
 	Vector3 l = vector3_sub(sphere.center, ray.o);
 	float s = vector3_dot(l, ray.d);
@@ -37,12 +37,14 @@ Hit sphere_ray_intersect(Sphere sphere, Ray ray)
 	float rs = sphere.r * sphere.r;
 	if (s < 0 && ls > rs)
 	{
-		return hit_create_no_intersect();
+		hit_set_no_intersect(hit);
+		return;
 	}
 	float ms = ls - s * s;
 	if (ms > rs)
 	{
-		return hit_create_no_intersect();
+		hit_set_no_intersect(hit);
+		return;
 	}
 	float q = sqrtf(rs - ms);
 	float t = s;
@@ -57,5 +59,5 @@ Hit sphere_ray_intersect(Sphere sphere, Ray ray)
 	Vector3 pos = ray_position_along(ray, t);
 	Vector3 normal = vector3_sub(pos, sphere.center);
 	vector3_normalize(&normal);
-	return hit_create(t, normal, sphere.m);
+	hit_set(hit, t, normal, sphere.m);
 }

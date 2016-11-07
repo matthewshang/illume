@@ -21,7 +21,7 @@ extern "C" {
             Plane*  plane_new            (Vector3 p, Vector3 n, Material m);
             void    plane_free           (Plane* plane);
             Plane   plane_create         (Vector3 p, Vector3 n, Material m);
-__device__  Hit     plane_ray_intersect  (Plane plane, Ray r);
+__device__  void    plane_ray_intersect  (Plane plane, Ray r, Hit* hit);
 
 #ifdef __cplusplus
 }

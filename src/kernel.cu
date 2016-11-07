@@ -9,6 +9,7 @@
 
 #include "error_check.h"
 #include "material.h"
+#include "medium.h"
 #include "primitives/plane.h"
 #include "primitives/sphere.h"
 #include "primitives/mesh.h"
@@ -21,6 +22,16 @@
 #include "accel/bvh.h"
 
 #include "intellisense.h"
+
+#ifdef __CUDACC__
+#define KERNEL_ARGS2(grid, block) <<< grid, block >>>
+#define KERNEL_ARGS3(grid, block, sh_mem) <<< grid, block, sh_mem >>>
+#define KERNEL_ARGS4(grid, block, sh_mem, stream) <<< grid, block, sh_mem, stream >>>
+#else
+#define KERNEL_ARGS2(grid, block)
+#define KERNEL_ARGS3(grid, block, sh_mem)
+#define KERNEL_ARGS4(grid, block, sh_mem, stream)
+#endif
 
 __global__ 
 void init_curand_states(curandState* states, uint32_t hash, int N)
@@ -43,7 +54,7 @@ typedef struct
 RenderInfo;
 
 __global__
-void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* info, curandState* states, int N)
+void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, Medium* ray_mediums, RenderInfo* info, curandState* states, int N)
 {
 	int index = blockIdx.x * blockDim.x + threadIdx.x;
 	if (index < N)
@@ -69,52 +80,50 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, RenderInfo* in
 		rays[index] = ray_create(origin, vector3_sub(image_pos, origin));
 		ray_statuses[index] = index;
 		ray_colors[index] = vector3_create(1, 1, 1);
+		ray_mediums[index] = medium_air();
 	}
 }
 
 __device__
-static Hit get_min_hit(Scene* scene, Ray ray)
+static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 {
-	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
+	min->d = FLT_MAX;
+	Hit inter;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
-		Hit inter = sphere_ray_intersect(scene->spheres[i], ray);
+		sphere_ray_intersect(scene->spheres[i], ray, &inter);
 
-		if (inter.is_intersect == 1 && inter.d < min.d)
+		if (inter.is_intersect == 1 && inter.d < min->d)
 		{
-			min = inter;
+			*min = inter;
 		}
 	}
 
 	for (int i = 0; i < scene->plane_amount; i++)
 	{
-		Hit inter = plane_ray_intersect(scene->planes[i], ray);
+		plane_ray_intersect(scene->planes[i], ray, &inter);
 
-		if (inter.is_intersect == 1 && inter.d < min.d)
+		if (inter.is_intersect == 1 && inter.d < min->d)
 		{
-			min = inter;
+			*min = inter;
 		}
 	}
 
 	for (int i = 0; i < scene->instance_amount; i++)
 	{
 		int mesh_index = scene->instances[i].mesh_index;
-		Hit inter =
-			mesh_instance_ray_intersect(scene->instances + i, scene->meshes + mesh_index, ray);
+		mesh_instance_ray_intersect(scene->instances + i, scene->meshes + mesh_index, ray, &inter);
 
-		if (inter.is_intersect == 1 && inter.d < min.d)
+		if (inter.is_intersect == 1 && inter.d < min->d)
 		{
-			min = inter;
+			*min = inter;
 		}
 	}
-
-	return min;
 }
 
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
-Vector3* ray_colors, Scene* scene, curandState* states, int N)
+					  Vector3* ray_colors, Medium* ray_mediums, Scene* scene, curandState* states, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
@@ -122,7 +131,39 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 	if (index < N && ray_index != -1)
 	{
 		Scene local_scene = *scene;
-		Hit min = get_min_hit(&local_scene, rays[ray_index]);
+		Hit min;
+		hit_set_no_intersect(&min);
+		get_min_hit(&local_scene, rays[ray_index], &min);
+
+		if (ray_mediums[ray_index].active)
+		{
+			Medium medium = ray_mediums[ray_index];
+			float u = curand_uniform(&states[ray_index]);
+			float scatter_dist = -log(u) / medium.scattering;
+			if (scatter_dist < min.d)
+			{
+				float u1 = curand_uniform(&states[ray_index]);
+				float u2 = curand_uniform(&states[ray_index]);
+				ray_set(&rays[ray_index], ray_position_along(rays[ray_index], scatter_dist), sample_sphere(u1, u2));
+				vector3_mul_vector_to(&ray_colors[ray_index], 
+						vector3_create(expf(-1.0f * scatter_dist * medium.absorption.x),
+									   expf(-1.0f * scatter_dist * medium.absorption.y),
+									   expf(-1.0f * scatter_dist * medium.absorption.z)));
+				if (vector3_length2(ray_colors[ray_index]) < 1e-4)
+				{
+					ray_statuses[index] = -1;
+				}
+				return;
+			}
+			else
+			{
+				vector3_mul_vector_to(&ray_colors[ray_index], 
+						vector3_create(expf(-1.0f * min.d * medium.absorption.x),
+									   expf(-1.0f * min.d * medium.absorption.y),
+									   expf(-1.0f * min.d * medium.absorption.z)));
+
+				}
+		}
 
 		if (min.is_intersect == 1)
 		{
@@ -186,11 +227,10 @@ Vector3* ray_colors, Scene* scene, curandState* states, int N)
 					}
 					else
 					{
-						vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
+						ray_mediums[ray_index] = into ? min.m.medium : medium_air();
 						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], tp);
 						new_dir = tdir;
 						vector3_add_to(&new_origin, vector3_mul(norm_o, -10e-5));
-
 					}
 				}
 			}
@@ -434,7 +474,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	cudaEvent_t render_stop;
 	start_timer(&render_start, &render_stop);
 
-	HANDLE_ERROR( cudaDeviceSetLimit(cudaLimitMallocHeapSize, 256 * 1024 * 1024) );
+	HANDLE_ERROR( cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1024 * 1024 * 1024) );
 	int pixels_amount = bitmap->width * bitmap->height;
 	int threads_per_block = 256;
 	int blocks_amount = (pixels_amount + threads_per_block - 1) / threads_per_block;
@@ -453,6 +493,9 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	int* d_ray_statuses;
 	HANDLE_ERROR( cudaMalloc(&d_ray_statuses, pixels_amount * sizeof(int)) );
 
+	Medium* d_ray_mediums;
+	HANDLE_ERROR( cudaMalloc(&d_ray_mediums, pixels_amount * sizeof(Medium)) );
+
 	Ray* d_rays;
 	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
 
@@ -465,18 +508,18 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	float progress_step = 100.0f / (float) samples;
 	for (int i = 0; i < samples; i++)
 	{
-		init_curand_states<<<blocks_amount, threads_per_block>>>(d_states, wang_hash(i), pixels_amount);
+		init_curand_states KERNEL_ARGS2(blocks_amount, threads_per_block) (d_states, wang_hash(i), pixels_amount);
 
-		init_rays<<<blocks_amount, threads_per_block>>>
-			(d_rays, d_ray_statuses, d_ray_colors, d_info, d_states, pixels_amount);
+		init_rays KERNEL_ARGS2(blocks_amount, threads_per_block)
+			(d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums, d_info, d_states, pixels_amount);
 
 		int active_pixels = pixels_amount;
 		int blocks = blocks_amount;
 
 		for (int j = 0; j < max_depth; j++)
 		{
-			pathtrace_kernel<<<blocks, threads_per_block>>>
-				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, 
+			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
+				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
 				 ref.d_scene, d_states, active_pixels);		
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
@@ -495,6 +538,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaFree(d_info) );
 	HANDLE_ERROR( cudaFree(d_ray_statuses) );
 	HANDLE_ERROR( cudaFree(d_ray_colors) );
+	HANDLE_ERROR( cudaFree(d_ray_mediums) );
 	free_scene_gpu(ref);
 	free(h_ray_statuses);
 
@@ -503,7 +547,8 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaMalloc(&d_pixels, sizeof(Pixel) * pixels_amount) );
 	HANDLE_ERROR( cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice) );
 
-	set_bitmap<<<blocks_amount, threads_per_block>>>(d_final_colors, d_pixels, (float) samples, pixels_amount);
+	set_bitmap KERNEL_ARGS2(blocks_amount, threads_per_block) 
+		(d_final_colors, d_pixels, (float) samples, pixels_amount);
 	HANDLE_ERROR( cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost) );
 
 	HANDLE_ERROR( cudaFree(d_final_colors) );

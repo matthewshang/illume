@@ -38,7 +38,7 @@ extern "C" {
 
             Mesh*  mesh_new            (const char* path, int zUp, int tris_per_node);
             void   mesh_free           (Mesh* mesh);
-__device__  Hit    mesh_ray_intersect  (Mesh* mesh, Ray ray);
+__device__  void   mesh_ray_intersect  (Mesh* mesh, Ray ray, Hit* hit);
 
 #ifdef __cplusplus
 }

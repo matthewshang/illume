@@ -20,7 +20,7 @@ extern "C" {
             Sphere*  sphere_new            (float r, Vector3 center, Material m);
             void     sphere_free           (Sphere* sphere);
             Sphere   sphere_create         (float r, Vector3 center, Material m);
-__device__  Hit      sphere_ray_intersect  (Sphere sphere, Ray ray);
+__device__  void     sphere_ray_intersect  (Sphere sphere, Ray ray, Hit* hit);
 
 #ifdef __cplusplus
 }

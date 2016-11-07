@@ -10,6 +10,7 @@ typedef struct
 	float d;
 	Vector3 normal;
 	Material m;
+	int a;
 } 
 Hit;
 
@@ -17,8 +18,8 @@ Hit;
 extern "C" {
 #endif
 
-__device__  Hit  hit_create               (float d, Vector3 normal, Material m);
-__device__  Hit  hit_create_no_intersect  ();
+__device__  void  hit_set               (Hit* hit, float d, Vector3 normal, Material m);
+__device__  void  hit_set_no_intersect  (Hit* hit);
 
 #ifdef __cplusplus
 }

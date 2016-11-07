@@ -2,6 +2,7 @@
 #define _MATERIAL_
 
 #include "math/vector3.h"
+#include "medium.h"
 
 const int MATERIAL_EMISSIVE = 0;
 const int MATERIAL_DIFFUSE = 1;
@@ -14,6 +15,7 @@ typedef struct
 	int type;
 	
 	float ior;
+	Medium medium;
 }
 Material;
 
@@ -24,7 +26,7 @@ extern "C" {
 Material  material_emissive  (Vector3 e);
 Material  material_diffuse   (Vector3 d);
 Material  material_specular  (Vector3 s);
-Material  material_refractive(Vector3 r, float ior);
+Material  material_refractive(Vector3 r, float ior, Medium m);
 
 #ifdef __cplusplus
 }

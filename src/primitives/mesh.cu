@@ -28,7 +28,7 @@ static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
 	tri.e1 = vector3_sub(v1, v0);
 	tri.e2 =  vector3_sub(v2, v0);
 	tri.v0 = v0;
-	tri.n = vector3_cross(tri.e1, tri.e2);
+	tri.n = vector3_cross(tri.e2, tri.e1);
 	vector3_normalize(&tri.n);
 	return tri;
 }
@@ -288,53 +288,53 @@ static float triangle_ray_intersect(Triangle tri, Ray ray)
 }
 
 // Based on method described at http://raytracey.blogspot.com/2016/01/gpu-path-tracing-tutorial-3-take-your.html
-__device__
-Hit bvh_ray_intersect(Triangle* tris, BVH* bvh, Ray ray)
-{
-	int stack[BVH_STACK_SIZE];
-	int stack_idx = 0;
-	stack[stack_idx++] = 0;
-	Hit min = hit_create_no_intersect();
-	min.d = FLT_MAX;
+//__device__
+//Hit bvh_ray_intersect(Triangle* tris, BVH* bvh, Ray ray)
+//{
+//	int stack[BVH_STACK_SIZE];
+//	int stack_idx = 0;
+//	stack[stack_idx++] = 0;
+//	Hit min = hit_create_no_intersect();
+//	min.d = FLT_MAX;
+//
+//	while (stack_idx > 0)
+//	{
+//		GPUNode node = bvh->nodes[stack[stack_idx - 1]];
+//		stack_idx--;
+//		if (node.u.leaf.tri_amount & 0x80000000)
+//		{
+//			for (unsigned i = node.u.leaf.tri_start;
+//				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
+//				i++)
+//				{
+//					Triangle tri = tris[bvh->tri_indices[i]];
+//					float d = triangle_ray_intersect(tri, ray);
+//					if (d > 0 && d < min.d)
+//					{
+//						min.d = d;
+//						min.normal = tri.n;
+//						min.is_intersect = 1;
+//					}
+//				}
+//		}
+//		else
+//		{
+//			if (aabb_ray_intersect(node.bounds, ray) != -FLT_MAX)
+//			{
+//				stack[stack_idx++] = node.u.node.right_node;
+//				stack[stack_idx++] = node.u.node.left_node;
+//				if (stack_idx > BVH_STACK_SIZE)
+//				{
+//					return hit_create_no_intersect();
+//				}
+//			}
+//		}
+//	}
+//	return min;
+//}
 
-	while (stack_idx > 0)
-	{
-		GPUNode node = bvh->nodes[stack[stack_idx - 1]];
-		stack_idx--;
-		if (node.u.leaf.tri_amount & 0x80000000)
-		{
-			for (unsigned i = node.u.leaf.tri_start;
-				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
-				i++)
-				{
-					Triangle tri = tris[bvh->tri_indices[i]];
-					float d = triangle_ray_intersect(tri, ray);
-					if (d > 0 && d < min.d)
-					{
-						min.d = d;
-						min.normal = tri.n;
-						min.is_intersect = 1;
-					}
-				}
-		}
-		else
-		{
-			if (aabb_ray_intersect(node.bounds, ray) != -FLT_MAX)
-			{
-				stack[stack_idx++] = node.u.node.right_node;
-				stack[stack_idx++] = node.u.node.left_node;
-				if (stack_idx > BVH_STACK_SIZE)
-				{
-					return hit_create_no_intersect();
-				}
-			}
-		}
-	}
-	return min;
-}
-
 __device__
-Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
+void mesh_ray_intersect(Mesh* mesh, Ray ray, Hit* hit)
 {
 	//Hit min = hit_create_no_intersect();
 	//min.d = FLT_MAX;
@@ -352,5 +352,47 @@ Hit mesh_ray_intersect(Mesh* mesh, Ray ray)
 	//}
 	//
 	//return min;
-	return bvh_ray_intersect(mesh->triangles, &mesh->bvh, ray);
+	BVH* bvh = &mesh->bvh;
+	Triangle* tris = mesh->triangles;
+
+	int stack[BVH_STACK_SIZE];
+	int stack_idx = 0;
+	stack[stack_idx++] = 0;
+	hit_set_no_intersect(hit);
+	hit->d = FLT_MAX;
+
+	while (stack_idx > 0)
+	{
+		GPUNode node = bvh->nodes[stack[stack_idx - 1]];
+		stack_idx--;
+		if (node.u.leaf.tri_amount & 0x80000000)
+		{
+			for (unsigned i = node.u.leaf.tri_start;
+				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
+				i++)
+			{
+				Triangle tri = tris[bvh->tri_indices[i]];
+				float d = triangle_ray_intersect(tri, ray);
+				if (d > 0 && d < hit->d)
+				{
+					hit->d = d;
+					hit->normal = tri.n;
+					hit->is_intersect = 1;
+				}
+			}
+		}
+		else
+		{
+			if (aabb_ray_intersect(node.bounds, ray) != -FLT_MAX)
+			{
+				stack[stack_idx++] = node.u.node.right_node;
+				stack[stack_idx++] = node.u.node.left_node;
+				if (stack_idx > BVH_STACK_SIZE)
+				{
+					hit_set_no_intersect(hit);
+					return;
+				}
+			}
+		}
+	}
 }

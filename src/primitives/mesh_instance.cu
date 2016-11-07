@@ -59,26 +59,24 @@ void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
 }
 
 __device__  
-Hit mesh_instance_ray_intersect(MeshInstance* instance, Mesh* mesh, Ray ray)
+void mesh_instance_ray_intersect(MeshInstance* instance, Mesh* mesh, Ray ray, Hit* hit)
 {
 	if (aabb_ray_intersect(instance->aabb, ray) == -FLT_MAX)
 	{
-		return hit_create_no_intersect();
+		hit_set_no_intersect(hit);
 	}
 
 	Vector3 new_origin = matrix4_mul_vector3(&instance->t.inv, ray.o, 1);
 	Vector3 new_dir = matrix4_mul_vector3(&instance->t.trans, ray.d, 0);
 	Ray new_ray = ray_create(new_origin, new_dir);
-	Hit isect = mesh_ray_intersect(mesh, new_ray);
+	mesh_ray_intersect(mesh, new_ray, hit);
 
-	if (isect.is_intersect)
+	if (hit->is_intersect)
 	{
-		Vector3 p = matrix4_mul_vector3(&instance->t.mat, ray_position_along(new_ray, isect.d), 1);
-		isect.d = vector3_length(vector3_sub(ray.o, p));
-		isect.normal = matrix4_mul_vector3(&instance->t.trans_inv, isect.normal, 0);
-		vector3_normalize(&isect.normal);
-		isect.m = instance->m;
+		Vector3 p = matrix4_mul_vector3(&instance->t.mat, ray_position_along(new_ray, hit->d), 1);
+		hit->d = vector3_length(vector3_sub(ray.o, p));
+		hit->normal = matrix4_mul_vector3(&instance->t.trans_inv, hit->normal, 0);
+		vector3_normalize(&hit->normal);
+		hit->m = instance->m;
 	}
-
-	return isect;
 }  

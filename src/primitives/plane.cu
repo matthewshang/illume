@@ -29,13 +29,14 @@ Plane plane_create(Vector3 p, Vector3 n, Material m)
 }
 
 __device__
-Hit plane_ray_intersect(Plane plane, Ray r)
+void plane_ray_intersect(Plane plane, Ray r, Hit* hit)
 {
 	float d = vector3_dot(plane.n, vector3_sub(plane.p, r.o)) / vector3_dot(plane.n, r.d);
 	if (d < 0)
 	{
-		return hit_create_no_intersect();
+		hit_set_no_intersect(hit);
+		return;
 	}
 
-	return hit_create(d, plane.n, plane.m);
+	hit_set(hit, d, plane.n, plane.m);
 }
