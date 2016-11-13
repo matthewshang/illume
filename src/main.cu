@@ -74,7 +74,7 @@ static Scene* init_scene_cornell_box()
 	scenebuilder_add_sphere(builder, sphere_new(0.8, vector3_create(-1.25, -0.2, 6), mirror));
 
 	Scene* scene = scene_new(builder, 
-							 camera_create(vector3_create(0, 1.0f, 1.5f), matrix4_create(), 100, 1, 0),
+							 camera_create(vector3_create(0, 1.0f, 0.5f), matrix4_create(), 90, 1, 0),
 							 vector3_create(0.01f, 0.01f, 0.01f));
 	
 	scenebuilder_free(builder);

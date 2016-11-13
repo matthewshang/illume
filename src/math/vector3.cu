@@ -1,5 +1,7 @@
 #include "vector3.h"
 
+#include <math.h>
+
 Vector3* vector3_new(float x, float y, float z)
 {
 	Vector3* vector = (Vector3 *) calloc(1, sizeof(Vector3));
@@ -83,28 +85,22 @@ __device__ __host__
 Vector3 vector3_to_basis(Vector3 v, Vector3 normal)
 {
 	Vector3 tangent;
-	if (normal.x == 0)
+	if (fabsf(normal.x) > 0.1f)
 	{
-		vector3_set(&tangent, 1, 0, 0);
-	}
-	else if (normal.y == 0)
-	{
-		vector3_set(&tangent, 0, 1, 0);
-	}
-	else if (normal.z == 0)
-	{
-		vector3_set(&tangent, 0, 0, 1);
+		tangent = vector3_create(0.0f, 1.0f, 0.0f);
 	}
 	else
 	{
-		vector3_set(&tangent, 0, -1 * normal.z, normal.y);
+		tangent = vector3_create(1.0f, 0.0f, 0.0f);
 	}
-	vector3_normalize(&tangent);
-	Vector3 bittangent = vector3_cross(tangent, normal);
-	Vector3 x = vector3_mul(tangent, v.x);
-	Vector3 y = vector3_mul(normal, v.y);
-	Vector3 z = vector3_mul(bittangent, v.z);
-	return vector3_add(x, vector3_add(y, z));
+	Vector3 bitangent = vector3_cross(normal, tangent);
+	vector3_normalize(&bitangent);
+	tangent = vector3_cross(bitangent, normal);
+	Vector3 b = vector3_add(vector3_add(vector3_mul(tangent, v.x), 
+								   vector3_mul(normal, v.y)), 
+								   vector3_mul(bitangent, v.z));
+	vector3_normalize(&b);
+	return b;
 }
 
 __device__ __host__ 
