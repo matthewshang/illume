@@ -144,7 +144,8 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			{
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
-				ray_set(&rays[ray_index], ray_position_along(rays[ray_index], scatter_dist), sample_sphere(u1, u2));
+				Vector3 scatter_dir = vector3_to_basis(sample_henyey_greenstein(medium.g, u1, u2), rays[ray_index].d);
+				ray_set(&rays[ray_index], ray_position_along(rays[ray_index], scatter_dist), scatter_dir);
 				vector3_mul_vector_to(&ray_colors[ray_index], 
 						vector3_create(expf(-1.0f * scatter_dist * medium.absorption.x),
 									   expf(-1.0f * scatter_dist * medium.absorption.y),

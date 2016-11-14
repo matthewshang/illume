@@ -10,6 +10,7 @@ extern "C" {
 __device__  Vector3  sample_hemisphere_cosine  (float u1, float u2);
 __device__  Vector3  sample_circle             (float u1, float u2);
 __device__  Vector3  sample_sphere             (float u1, float u2);
+__device__  Vector3  sample_henyey_greenstein  (float g, float u1, float u2);
 
 #ifdef __cplusplus
 }
