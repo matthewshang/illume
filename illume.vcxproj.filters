@@ -127,6 +127,9 @@
     <ClInclude Include="src\accel\bvh.h">
       <Filter>src\accel</Filter>
     </ClInclude>
+    <ClInclude Include="src\medium.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\camera.cu">
@@ -179,6 +182,9 @@
     </CudaCompile>
     <CudaCompile Include="src\primitives\sphere.cu">
       <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="src\medium.cu">
+      <Filter>src</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

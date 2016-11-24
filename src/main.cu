@@ -144,8 +144,8 @@ int main(int argc, char* argv[])
 			goto exit_bitmap;
 		}
 		{
-			Scene* scene = init_scene();
-			//Scene* scene = init_scene_cornell_box();
+			//Scene* scene = init_scene();
+			Scene* scene = init_scene_cornell_box();
 			if (!scene)
 			{
 				goto exit_scene;

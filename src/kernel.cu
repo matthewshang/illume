@@ -123,7 +123,7 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
-					  Vector3* ray_colors, Medium* ray_mediums, Scene* scene, curandState* states, int N)
+					  Vector3* ray_colors, Medium* ray_mediums, int depth, Scene* scene, curandState* states, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
@@ -237,6 +237,17 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			}
 
 			ray_set(&rays[ray_index], new_origin, new_dir);
+
+			//if (depth > 6)
+			//{
+			//	float p = fmaxf(ray_colors[ray_index].x, fmaxf(ray_colors[ray_index].y, ray_colors[ray_index].z));
+			//	if (curand_uniform(&states[ray_index]) > p)
+			//	{
+			//		ray_statuses[index] = -1;
+			//		return;
+			//	}
+			//	ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], 1.0f / p);
+			//}
 		}
 		else
 		{
@@ -452,7 +463,6 @@ static void end_timer(cudaEvent_t* start, cudaEvent_t* stop, float* time)
 	HANDLE_ERROR( cudaEventSynchronize(*stop) );
 	HANDLE_ERROR( cudaEventElapsedTime(time, *start, *stop) );
 }
-#include "math/aabb.h"
 
 uint32_t wang_hash(uint32_t a)
 {
@@ -507,8 +517,10 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	printf("Rendering...    "); fflush(stdout);
 	int last_progress = -1;
 	float progress_step = 100.0f / (float) samples;
+	cudaEvent_t start, stop;
 	for (int i = 0; i < samples; i++)
 	{
+		start_timer(&start, &stop);
 		init_curand_states KERNEL_ARGS2(blocks_amount, threads_per_block) (d_states, wang_hash(i), pixels_amount);
 
 		init_rays KERNEL_ARGS2(blocks_amount, threads_per_block)
@@ -521,7 +533,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 		{
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
-				 ref.d_scene, d_states, active_pixels);		
+				 j, ref.d_scene, d_states, active_pixels);		
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
@@ -531,6 +543,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 			printf("\b\b\b%02d%%", progress); fflush(stdout);
 			last_progress = progress;
 		}
+		
 	}
 	printf("\b\b\b100%%\n");
 
