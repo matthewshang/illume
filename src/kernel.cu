@@ -197,40 +197,44 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			}
 			else if (min.m.type == MATERIAL_REFRACTIVE)
 			{
+				// http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
-				float nc = 1.0f;
-				float nt = min.m.ior;
-				float nnt = into ? nc / nt : nt / nc;
-				float ddn = vector3_dot(r.d, norm_o);
-				float cos2t = 1.0f - nnt * nnt * (1.0f - ddn * ddn);
-				if (cos2t < 0.0f)
+				float n1;
+				float n2;
+				float cosI = -vector3_dot(r.d, norm_o);
+				if (into)
+				{
+					n1 = 1.0f;
+					n2 = min.m.ior;
+				}
+				else
+				{
+					n1 = min.m.ior;
+					n2 = 1.0f;
+				}
+				float nr = n1 / n2;
+				float sin2T = nr * nr * (1.0f - cosI * cosI);
+				if (sin2T > 1.0f)
 				{
 					new_dir = vector3_reflect(r.d, min.normal);
 				}
 				else
 				{
-					Vector3 tdir = vector3_sub(vector3_mul(r.d, nnt), vector3_mul(min.normal, (into ? 1.0f : -1.0f) * (ddn * nnt + sqrtf(cos2t))));
-					vector3_normalize(&tdir);
-					float a = nt - nc;
-					float b = nt + nc;
-					float r0 = (a * a) / (b * b);
-					float c = 1.0f - (into ? -ddn : vector3_dot(tdir, min.normal));
-					float re = r0 + (1.0f - r0) * c * c * c * c *c;
-					float tr = 1.0f - re;
-					float p = 0.25f + 0.5f * re;
-					float rp = re / p;
-					float tp = tr / (1.0f - p);
-
-					if (curand_uniform(&states[ray_index]) < p)
+					float cosT = sqrtf(1.0f - sin2T);
+					float rperp = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+					rperp *= rperp;
+					float rpar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+					rpar *= rpar;
+					float R = (rperp + rpar) * 0.5f;
+					if (curand_uniform(&states[ray_index]) < R)
 					{
-						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], rp);
 						new_dir = vector3_reflect(r.d, min.normal);
 					}
 					else
 					{
 						ray_mediums[ray_index] = into ? min.m.medium : medium_air();
-						ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], tp);
-						new_dir = tdir;
+						new_dir = vector3_add(vector3_mul(r.d, nr),
+											  vector3_mul(norm_o, nr * cosI - sqrtf(1.0f - sin2T)));
 						vector3_add_to(&new_origin, vector3_mul(norm_o, -10e-5));
 					}
 				}
