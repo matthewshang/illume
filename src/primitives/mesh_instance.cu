@@ -67,14 +67,13 @@ void mesh_instance_ray_intersect(MeshInstance* instance, Mesh* mesh, Ray ray, Hi
 	}
 
 	Vector3 new_origin = matrix4_mul_vector3(&instance->t.inv, ray.o, 1);
-	Vector3 new_dir = matrix4_mul_vector3(&instance->t.trans, ray.d, 0);
-	Ray new_ray = ray_create(new_origin, new_dir);
+	Vector3 new_dir = matrix4_mul_vector3(&instance->t.inv, ray.d, 0);
+	Ray new_ray;
+	new_ray.o = new_origin;
+	new_ray.d = new_dir;
 	mesh_ray_intersect(mesh, new_ray, hit);
-
 	if (hit->is_intersect)
 	{
-		Vector3 p = matrix4_mul_vector3(&instance->t.mat, ray_position_along(new_ray, hit->d), 1);
-		hit->d = vector3_length(vector3_sub(ray.o, p));
 		hit->normal = matrix4_mul_vector3(&instance->t.trans_inv, hit->normal, 0);
 		vector3_normalize(&hit->normal);
 		hit->m = instance->m;

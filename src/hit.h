@@ -10,7 +10,6 @@ typedef struct
 	float d;
 	Vector3 normal;
 	Material m;
-	int a;
 } 
 Hit;
 

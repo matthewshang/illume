@@ -239,6 +239,47 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 					}
 				}
 			}
+			else if (min.m.type = MATERIAL_COOKTORRANCE)
+			{
+				//float a = (1.2f - 0.2f * sqrtf(fabsf(vector3_dot(r.d, norm_o)))) * min.m.roughness;
+				float a = min.m.roughness;
+				float u1 = curand_uniform(&states[ray_index]);
+				float u2 = curand_uniform(&states[ray_index]);
+				Vector3 m = vector3_to_basis(sample_beckmann(a, u1, u2), norm_o);
+				new_dir = vector3_reflect(r.d, m);
+
+				Vector3 H = vector3_sub(new_dir, r.d);
+				vector3_normalize(&H);
+
+				float n1 = 1.0f;
+				float n2 = min.m.ior;
+				float nr = n1 / n2;
+				float cosI = fabsf(vector3_dot(r.d, norm_o));
+				float cosT = sqrtf(1.0f - nr * nr * (1.0f - cosI * cosI));
+				float rperp = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+				rperp *= rperp;
+				float rpar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+				rpar *= rpar;
+				float F = (rperp + rpar) * 0.5f;
+
+				float NdotL = fabsf(vector3_dot(norm_o, new_dir));
+				float NdotV = cosI;
+				float NdotH = fabsf(vector3_dot(norm_o, H));
+				float VdotH = fabsf(vector3_dot(r.d, H));
+
+				float G = fminf(1.0f, fminf(2.0f * NdotH * NdotV / VdotH, 2.0f * NdotH * NdotL / VdotH));
+				
+				float D = fminf(1.0f, fmaxf(0.0f, NdotH)) * expf((NdotH * NdotH - 1.0f) / (a * a * NdotH * NdotH)) / (ILLUME_PI * a * a * NdotH * NdotH * NdotH * NdotH);
+				Vector3 reflectance = vector3_mul(min.m.c, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
+				//Vector3 reflectance = vector3_mul(min.m.c, (F *  D * G) / (4.0f * NdotV));
+
+	/*			if (reflectance.x > 1.0f)
+				{
+					printf("%f %f %f %f\n", reflectance.x, NdotV, D, (F * D * G) / (4.0f * NdotV));
+
+				}*/
+				vector3_mul_vector_to(&ray_colors[ray_index], reflectance);
+			}
 
 			ray_set(&rays[ray_index], new_origin, new_dir);
 
