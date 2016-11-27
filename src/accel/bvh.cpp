@@ -66,7 +66,7 @@ BVHNode* build(ArrayList* work, int depth, int tris_per_node, float pct)
 {
 	float pct_span = 11.f / powf(3.f, depth);
 
-	if (work->length < tris_per_node)
+	if (work->length < tris_per_node || depth > BVH_STACK_SIZE)
 	{
 		return bvh_leaf_new(work);
 	}
@@ -290,7 +290,7 @@ int count_tris(BVHNode* node)
 	}
 	else
 	{
-		return count_tris(node->left) + count_tris(node->left);
+		return count_tris(node->left) + count_tris(node->right);
 	}
 }
 

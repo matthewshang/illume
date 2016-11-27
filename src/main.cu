@@ -136,22 +136,30 @@ static Scene* init_scene()
 	scenebuilder_add_mesh_instance(builder,
 		mesh_instance_new(0, material_emissive(vector3_mul(vector3_create(3, 2.5, 1.5), 5)),
 			transform_create(
-				vector3_create(-0.0f, 3.5f - 0.0001f, 5.5f), vector3_create(2.25f, 1.25f, 1.0f),
+				vector3_create(-0.0f, 3.5f - 0.0001f, 5.f), vector3_create(2.25f, 1.25f, 1.0f),
 				matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
 
-	for (int i = 0; i < 5; i++)
-	{
-		scenebuilder_add_sphere(builder, sphere_new(0.6f, vector3_create(-2.4f + 1.2f * (float)i, -0.4f, 5.0f), material_cooktorrance(vector3_create(0.99, 0.99, 0.99), 1.5f, (float)i * 0.2f)));
-	}
+	//scenebuilder_add_mesh_instance(builder,
+	//	mesh_instance_new(0, material_cooktorrance(vector3_create(0.99f, 0.99f, 0.99f), 1.5f, 0.15f),
+	//		transform_create(vector3_create(0.0f, 1.25f, 7.499), vector3_create(5.0f, 3.5f, 1.0f),
+	//			matrix4_mul(matrix4_from_axis_angle(vector3_create(1, 0, 0), 0),
+	//						matrix4_from_axis_angle(vector3_create(0, 1, 0), 0)))));
+
+	scenebuilder_add_mesh(builder, mesh_new("res/xyzrgb_dragon.obj", 1, 8));
 
 	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, material_cooktorrance(vector3_create(0.99f, 0.99f, 0.99f), 1.5f, 0.15f),
-			transform_create(vector3_create(0.0f, 1.25f, 7.499), vector3_create(5.0f, 3.5f, 1.0f),
-				matrix4_mul(matrix4_from_axis_angle(vector3_create(1, 0, 0), 0),
-							matrix4_from_axis_angle(vector3_create(0, 1, 0), 0)))));
+		mesh_instance_new(1, material_cooktorrance(vector3_create(0.0290f, 0.6121f, 0.6121f), 1.59f, 0.2f),
+			transform_create(vector3_create(0.295f, -1.01f, 5.0f), vector3_create(0.25f, 0.25f, 0.25f),
+				matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI * -130.f / 180.f))));
+
+	//scenebuilder_add_mesh_instance(builder,
+	//	mesh_instance_new(1, material_cooktorrance(vector3_create(0.0290f, 0.6121f, 0.6121f), 1.59f, 0.15f),
+	//		transform_create(vector3_create(0.15f, -1.01f, 5.0f), vector3_create(0.25f, 0.25f, 0.25f),
+	//			matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI * -130.f / 180.f))));
+
 
 	Scene* scene = scene_new(builder,
-		camera_create(vector3_create(0, 1.0f, 0.5f), matrix4_create(), 90, 5, 0.1),
+		camera_create(vector3_create(0, 1.0f, 0.25f), matrix4_create(), 90, 5, 0),
 		vector3_create(0.01f, 0.01f, 0.01f));
 
 	scenebuilder_free(builder);

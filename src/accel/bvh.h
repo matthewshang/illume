@@ -4,6 +4,8 @@
 #include "../arraylist.h"
 #include "../math/aabb.h"
 
+#define BVH_STACK_SIZE 32
+
 typedef struct GPUNode
 {
 	AABB bounds;

@@ -6,8 +6,6 @@
 #include "../arraylist.h"
 #include "../math/constants.h"
 
-#define BVH_STACK_SIZE 32
-
 typedef struct
 {
 	ArrayList* vertices;
