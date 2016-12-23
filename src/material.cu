@@ -1,5 +1,43 @@
 #include "material.h"
 
+#include "jsonutils.h"
+
+Material material_from_json(rapidjson::Value& json)
+{
+	std::string type;
+	JsonUtils::from_json(json, "type", type);
+
+	Vector3 color;
+	JsonUtils::from_json(json, "color", color);
+	if (type == "emissive")
+	{
+		return material_emissive(color);
+	}
+	else if (type == "diffuse")
+	{
+		return material_diffuse(color);
+	}
+	else if (type == "specular")
+	{
+		return material_specular(color);
+	}
+	else if (type == "refractive")
+	{
+		float ior;
+		JsonUtils::from_json(json, "ior", ior);
+		return material_refractive(color, ior, medium_air());
+	}
+	else if (type == "cooktorrance")
+	{
+		float ior, roughness;
+		JsonUtils::from_json(json, "ior",       ior);
+		JsonUtils::from_json(json, "roughness", roughness);
+		return material_cooktorrance(color, ior, roughness);
+	}
+	printf("material_from_json: invalid material type %s\n", type.c_str());
+	return material_diffuse(vector3_create(0, 0, 0));
+}
+
 Material material_emissive(Vector3 e)
 {
 	Material material;

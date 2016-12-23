@@ -3,9 +3,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "../jsonutils.h"
 #include "../math/vector3.h"
 #include "../math/matrix4.h"
 #include "../math/constants.h"
+
+MeshInstance mesh_instance_create(int mesh_index, Material m, Transform t)
+{
+	MeshInstance instance;
+	instance.mesh_index = mesh_index;
+	instance.m = m;
+	instance.t = t;
+	instance.aabb = aabb_create();
+	return instance;
+}
 
 MeshInstance* mesh_instance_new(int mesh_index, Material m, Transform t)
 {
@@ -21,6 +32,21 @@ MeshInstance* mesh_instance_new(int mesh_index, Material m, Transform t)
 	return instance;
 }
 
+MeshInstance mesh_instance_from_json(rapidjson::Value& json, Material m, int mesh_index, Mesh* mesh)
+{
+	MeshInstance ret;
+	ret.mesh_index = mesh_index;
+	ret.m = m;
+	auto transform = json.FindMember("transform");
+	if (transform != json.MemberEnd())
+	{
+		ret.t = transform_from_json(transform->value);
+	}
+	ret.aabb = aabb_create();
+	mesh_instance_build_aabb(&ret, mesh);
+	return ret;
+}
+
 void mesh_instance_free(MeshInstance* instance)
 {
 	if (instance)
@@ -29,12 +55,12 @@ void mesh_instance_free(MeshInstance* instance)
 	}
 }
 
-void mesh_instance_build_aabb(MeshInstance* instance, Mesh mesh)
+void mesh_instance_build_aabb(MeshInstance* instance, Mesh* mesh)
 {
 	if (instance)
 	{
 		Vector3 aabb_vertices[8];
-		aabb_get_vertices(mesh.aabb, aabb_vertices);
+		aabb_get_vertices(mesh->aabb, aabb_vertices);
 		AABB* inst_aabb = &instance->aabb;
 
 		for (int i = 0; i < 8; i++)

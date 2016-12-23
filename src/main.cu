@@ -11,75 +11,12 @@
 #include "math/transform.h"
 #include "math/matrix4.h"
 #include "primitives/sphere.h"
-#include "primitives/plane.h"
 #include "primitives/mesh.h"
 #include "primitives/mesh_instance.h"
 #include "scene/scenebuilder.h"
 #include "scene/scene.h"
 
 static char format[] = "%s-%sx%s-%sspp-%smd.png";
-
-static Scene* init_scene_cornell_box()
-{
-	Material white = material_diffuse(vector3_create(0.75, 0.75, 0.75));
-	Material blue = material_diffuse(vector3_create(0.25, 0.25, 0.75));
-	Material red = material_diffuse(vector3_create(0.75, 0.25, 0.25));
-	Material mirror = material_specular(vector3_create(0.99, 0.99, 0.99));
-	Material glass = material_refractive(vector3_create(0.99f, 0.99f, 0.99f), 1.5f, medium_air());
-
-	SceneBuilder* builder = scenebuilder_new();
-
-	scenebuilder_add_mesh(builder, mesh_new("res/quad.obj", 0, 4));
-	// Back
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, white,
-		transform_create(
-		vector3_create(0, 1.5, 7.5), vector3_create(10, 10, 10),
-		matrix4_from_axis_angle(vector3_create(1, 0, 0), 0))));
-
-	// Bottom
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, white,
-		transform_create(
-		vector3_create(0, -1, 5), vector3_create(10, 10, 10),
-		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
-
-	// Sides
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, blue,
-		transform_create(
-		vector3_create(3.0, 1.5, 5), vector3_create(10, 10, 10),
-		matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
-
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, red,
-		transform_create(
-		vector3_create(-3.0, 1.5, 5), vector3_create(10, 10, 10),
-		matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI / 2))));
-
-	// Ceiling
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, white,
-		transform_create(
-		vector3_create(0, 3.5, 5), vector3_create(10, 10, 10),
-		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
-
-	scenebuilder_add_mesh_instance(builder,
-		mesh_instance_new(0, material_emissive(vector3_mul(vector3_create(3, 2.5, 1.5), 5)),
-		transform_create(
-		vector3_create(-0.0f, 3.5f - 0.0001f, 5.5f), vector3_create(2.25f, 1.25f, 1.0f),
-		matrix4_from_axis_angle(vector3_create(1, 0, 0), ILLUME_PI / 2))));
-
-	scenebuilder_add_sphere(builder, sphere_new(0.9, vector3_create(1.25, -0.1, 5), glass));
-	scenebuilder_add_sphere(builder, sphere_new(0.8, vector3_create(-1.25, -0.2, 6), mirror));
-
-	Scene* scene = scene_new(builder, 
-							 camera_create(vector3_create(0, 1.0f, 0.5f), matrix4_create(), 90, 1, 0),
-							 vector3_create(0.01f, 0.01f, 0.01f));
-	
-	scenebuilder_free(builder);
-	return scene;
-}
 
 static Scene* init_scene()
 {
@@ -158,9 +95,7 @@ static Scene* init_scene()
 	//			matrix4_from_axis_angle(vector3_create(0, 1, 0), ILLUME_PI * -130.f / 180.f))));
 
 
-	Scene* scene = scene_new(builder,
-		camera_create(vector3_create(0, 1.0f, 0.25f), matrix4_create(), 90, 5, 0),
-		vector3_create(0.01f, 0.01f, 0.01f));
+	Scene* scene = scene_new("res/testscene/scene.json");
 
 	scenebuilder_free(builder);
 	return scene;
@@ -229,8 +164,9 @@ int main(int argc, char* argv[])
 			goto exit_bitmap;
 		}
 		{
-			Scene* scene = init_scene();
-			//Scene* scene = init_scene_cornell_box();
+			//Scene* scene = init_scene();
+			Scene* scene = scene_new("res/scenes/cornell_spheres/cornell_spheres.json");
+
 			if (!scene)
 			{
 				goto exit_scene;

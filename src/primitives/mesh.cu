@@ -211,6 +211,47 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	}
 }
 
+Mesh mesh_create(const char * path, int zUp, int tris_per_node)
+{
+	Mesh mesh;
+	mesh.triangle_amount = 0;
+	mesh.triangles = NULL;
+
+	tmp_mesh tmp;
+	tmp.vertices = arraylist_new(3);
+	tmp.triangles = arraylist_new(1);
+	tmp.aabbs = arraylist_new(1);
+	load_obj(&mesh, path, &tmp, zUp);
+	copy_triangles(&tmp, &mesh);
+	build_mesh_bounds(&tmp, &mesh);
+	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
+	int length = strlen(path);
+	char* filename = (char *)calloc(length + 1, sizeof(char));
+	memcpy(filename, path, length);
+	filename[length - 3] = 'b';
+	filename[length - 2] = 'v';
+	filename[length - 1] = 'h';
+	filename[length] = '\0';
+	mesh.bvh = bvh_create(tmp.aabbs, mesh.aabb, filename, tris_per_node);
+
+	for (int i = 0; i < tmp.aabbs->length; i++)
+	{
+		free((AABB *)arraylist_get(tmp.aabbs, i));
+	}
+	arraylist_free(tmp.aabbs);
+	for (int i = 0; i < tmp.vertices->length; i++)
+	{
+		free(arraylist_get(tmp.vertices, i));
+	}
+	arraylist_free(tmp.vertices);
+	for (int i = 0; i < tmp.triangles->length; i++)
+	{
+		free(arraylist_get(tmp.triangles, i));
+	}
+	arraylist_free(tmp.triangles);
+	return mesh;
+}
+
 Mesh* mesh_new(const char* path, int zUp, int tris_per_node)
 {
 	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));

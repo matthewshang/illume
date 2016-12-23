@@ -1,5 +1,7 @@
 #include "sphere.h"
 
+#include "../jsonutils.h"
+
 Sphere* sphere_new(float r, Vector3 center, Material m)
 {
 	Sphere* sphere = (Sphere *) calloc(1, sizeof(Sphere));
@@ -17,6 +19,15 @@ void sphere_free(Sphere* sphere)
 	{
 		free(sphere);
 	}
+}
+
+Sphere sphere_from_json(rapidjson::Value& json, Material m)
+{
+	Sphere ret;
+	JsonUtils::from_json(json, "radius", ret.r);
+	JsonUtils::from_json(json, "center", ret.center);
+	ret.m = m;
+	return ret;
 }
 
 Sphere sphere_create(float r, Vector3 center, Material m)

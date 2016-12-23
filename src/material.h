@@ -1,6 +1,8 @@
 #ifndef _MATERIAL_
 #define _MATERIAL_
 
+#include "rapidjson/document.h"
+
 #include "math/vector3.h"
 #include "medium.h"
 
@@ -25,11 +27,12 @@ Material;
 extern "C" {
 #endif
 
-Material  material_emissive  (Vector3 e);
-Material  material_diffuse   (Vector3 d);
-Material  material_specular  (Vector3 s);
-Material  material_refractive(Vector3 r, float ior, Medium m);
-Material  material_cooktorrance(Vector3 r, float ior, float roughness);
+Material  material_from_json     (rapidjson::Value& json);
+Material  material_emissive      (Vector3 e);
+Material  material_diffuse       (Vector3 d);
+Material  material_specular      (Vector3 s);
+Material  material_refractive    (Vector3 r, float ior, Medium m);
+Material  material_cooktorrance  (Vector3 r, float ior, float roughness);
 
 #ifdef __cplusplus
 }

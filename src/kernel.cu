@@ -10,7 +10,6 @@
 #include "error_check.h"
 #include "material.h"
 #include "medium.h"
-#include "primitives/plane.h"
 #include "primitives/sphere.h"
 #include "primitives/mesh.h"
 #include "primitives/mesh_instance.h"
@@ -92,16 +91,6 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
 		sphere_ray_intersect(scene->spheres[i], ray, &inter);
-
-		if (inter.is_intersect == 1 && inter.d < min->d)
-		{
-			*min = inter;
-		}
-	}
-
-	for (int i = 0; i < scene->plane_amount; i++)
-	{
-		plane_ray_intersect(scene->planes[i], ray, &inter);
 
 		if (inter.is_intersect == 1 && inter.d < min->d)
 		{
@@ -268,7 +257,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 				float VdotH = fabsf(vector3_dot(r.d, H));
 
 				float G = fminf(1.0f, fminf(2.0f * NdotH * NdotV / VdotH, 2.0f * NdotH * NdotL / VdotH));
-				
+
 				float D = fminf(1.0f, fmaxf(0.0f, NdotH)) * expf((NdotH * NdotH - 1.0f) / (a * a * NdotH * NdotH)) / (ILLUME_PI * a * a * NdotH * NdotH * NdotH * NdotH);
 				Vector3 reflectance = vector3_mul(min.m.c, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
 				//Vector3 reflectance = vector3_mul(min.m.c, (F *  D * G) / (4.0f * NdotV));
@@ -392,7 +381,6 @@ typedef struct
 {
 	Scene* d_scene;
 	Sphere* d_spheres;
-	Plane* d_planes;
 	Mesh* d_meshes;
 	int mesh_amount;
 	Triangle** d_triangle_pointers;
@@ -406,14 +394,12 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 {
 	SceneReference ref;
 	int spheres_size = sizeof(Sphere) * scene->sphere_amount;
-	int planes_size = sizeof(Plane) * scene->plane_amount;
 	int meshes_size = sizeof(Mesh) * scene->mesh_amount;
 	int instances_size = sizeof(MeshInstance) * scene->instance_amount;
 	ref.mesh_amount = scene->mesh_amount;
 
 	HANDLE_ERROR( cudaMalloc(&ref.d_scene, sizeof(Scene)) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_spheres, spheres_size) );
-	HANDLE_ERROR( cudaMalloc(&ref.d_planes, planes_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_instances, instances_size) );
 	HANDLE_ERROR( cudaMalloc(&ref.d_meshes, meshes_size) );
 	ref.d_triangle_pointers = (Triangle **) calloc(scene->mesh_amount, sizeof(Triangle *));
@@ -449,20 +435,16 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 	}
 
 	Sphere* h_spheres = scene->spheres;
-	Plane* h_planes = scene->planes;
 	Mesh* h_meshes = scene->meshes;
 	MeshInstance* h_instances = scene->instances;
 	scene->spheres = ref.d_spheres;
-	scene->planes = ref.d_planes;
 	scene->meshes = ref.d_meshes;
 	scene->instances = ref.d_instances;
 	HANDLE_ERROR( cudaMemcpy(ref.d_scene, scene, sizeof(Scene), cudaMemcpyHostToDevice) );
 	scene->spheres = h_spheres;
-	scene->planes = h_planes;
 	scene->meshes = h_meshes;
 	scene->instances = h_instances;
 	HANDLE_ERROR( cudaMemcpy(ref.d_spheres, scene->spheres, spheres_size, cudaMemcpyHostToDevice) );
-	HANDLE_ERROR( cudaMemcpy(ref.d_planes, scene->planes, planes_size, cudaMemcpyHostToDevice) );
 	HANDLE_ERROR( cudaMemcpy(ref.d_instances, scene->instances, instances_size, cudaMemcpyHostToDevice) );
 	HANDLE_ERROR( cudaMemcpy(ref.d_meshes, scene->meshes, meshes_size, cudaMemcpyHostToDevice) );
 	for (int i = 0; i < scene->mesh_amount; i++)
@@ -480,7 +462,6 @@ static SceneReference allocate_scene_gpu(Scene* scene)
 static void free_scene_gpu(SceneReference ref)
 {
 	HANDLE_ERROR( cudaFree(ref.d_spheres) );
-	HANDLE_ERROR( cudaFree(ref.d_planes) );
 	HANDLE_ERROR( cudaFree(ref.d_instances) );
 	HANDLE_ERROR( cudaFree(ref.d_meshes) );
 	HANDLE_ERROR( cudaFree(ref.d_scene) );

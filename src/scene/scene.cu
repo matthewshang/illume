@@ -1,66 +1,112 @@
 #include "scene.h"
 
-#include "../arraylist.h"
+#include "rapidjson/document.h"
+#include "rapidjson/error/en.h"
 
-Scene* scene_new(SceneBuilder* builder, Camera camera, Vector3 sky_color)
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <unordered_map>
+
+#include "../arraylist.h"
+#include "../jsonutils.h"
+
+void scene_from_json(const char* path, Scene* scene)
+{
+	std::ifstream t(path);
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+	rapidjson::Document document;
+	document.Parse(buffer.str().c_str());
+	if (document.HasParseError())
+	{
+		printf("Error parsing JSON(offset %u): %s\n", (unsigned) document.GetErrorOffset(), rapidjson::GetParseError_En(document.GetParseError()));
+	}
+
+	JsonUtils::from_json(document, "bgcolor", scene->sky_color);
+
+	std::unordered_map<std::string, Material> mat_map;
+	std::unordered_map<std::string, int> mesh_index_map;
+	std::vector<Mesh> meshes;
+	std::vector<Sphere> spheres;
+	std::vector<MeshInstance> instances;
+
+	auto camera     = document.FindMember("camera");
+	auto materials  = document.FindMember("materials");
+	auto meshes_loc = document.FindMember("meshes");
+	auto primitives = document.FindMember("primitives");
+
+	if (camera != document.MemberEnd())
+	{
+		scene->camera = camera_from_json(camera->value);
+	}
+
+	if (materials != document.MemberEnd())
+	{
+		for (auto& itr : materials->value.GetArray())
+		{
+			std::string name;
+			JsonUtils::from_json(itr, "name", name);
+			mat_map.emplace(std::make_pair(name, material_from_json(itr)));
+		}
+	}
+
+	if (meshes_loc != document.MemberEnd())
+	{
+		for (auto& itr : meshes_loc->value.GetArray())
+		{
+			std::string name, file;
+			int z_up, items_per_node;
+			JsonUtils::from_json(itr, "name",               name);
+			JsonUtils::from_json(itr, "file",               file);
+			JsonUtils::from_json(itr, "z_up",               z_up);
+			JsonUtils::from_json(itr, "bvh_items_per_node", items_per_node);
+
+			mesh_index_map.emplace(std::make_pair(name, meshes.size()));
+			meshes.push_back(mesh_create(file.c_str(), z_up, items_per_node));
+		}
+	}
+
+	if (primitives != document.MemberEnd())
+	{
+		for (auto& itr : primitives->value.GetArray())
+		{
+			std::string type, mat_name;
+			JsonUtils::from_json(itr, "material", mat_name);
+			JsonUtils::from_json(itr, "type",     type);
+			if (type == "sphere")
+			{
+				spheres.push_back(sphere_from_json(itr, mat_map[mat_name]));
+			}
+			else if (type == "mesh_instance")
+			{
+				std::string mesh_name;
+				JsonUtils::from_json(itr, "mesh", mesh_name);
+				int mesh_index = mesh_index_map[mesh_name];
+				instances.push_back(mesh_instance_from_json(itr, mat_map[mat_name], mesh_index, &meshes[mesh_index]));
+			}
+		}
+
+		scene->sphere_amount = spheres.size();
+		scene->spheres = (Sphere *) calloc(scene->sphere_amount, sizeof(Sphere));
+		std::copy(spheres.begin(), spheres.end(), scene->spheres);
+
+		scene->mesh_amount = meshes.size();
+		scene->meshes = (Mesh *) calloc(scene->mesh_amount, sizeof(Mesh));
+		std::copy(meshes.begin(), meshes.end(), scene->meshes);
+
+		scene->instance_amount = instances.size();
+		scene->instances = (MeshInstance *) calloc(scene->instance_amount, sizeof(MeshInstance));
+		std::copy(instances.begin(), instances.end(), scene->instances);
+	}
+}
+
+Scene* scene_new(const char* path)
 {
 	Scene* scene = (Scene *) calloc(1, sizeof(Scene));
-	if (!scene)
-	{
-		return NULL;
-	}
-	int sphere_amount = builder->spheres->length;
-	int plane_amount = builder->planes->length;
-	int mesh_amount = builder->meshes->length;
-	int instance_amount = builder->instances->length;
 
-	scene->camera = camera;
-	scene->sky_color = sky_color;
-	scene->sphere_amount = sphere_amount;
-	scene->spheres = (Sphere *) calloc(sphere_amount, sizeof(Sphere));
-	if (!scene->spheres)
-	{
-		scene_free(scene);
-		return NULL;
-	}
-	scene->plane_amount = plane_amount;
-	scene->planes = (Plane *) calloc(plane_amount, sizeof(Plane));
-	if (!scene->planes)
-	{
-		scene_free(scene);
-		return NULL;
-	}
-	scene->mesh_amount = mesh_amount;
-	scene->meshes = (Mesh *) calloc(mesh_amount, sizeof(Mesh));
-	if (!scene->meshes)
-	{
-		scene_free(scene);
-		return NULL;
-	}
-	scene->instance_amount = instance_amount;
-	scene->instances = (MeshInstance *) calloc(instance_amount, sizeof(MeshInstance));
-	if (!scene->instances)
-	{
-		scene_free(scene);
-		return NULL;
-	}
-	for (int i = 0; i < sphere_amount; i++)
-	{
-		scene->spheres[i] = *((Sphere *) arraylist_get(builder->spheres, i));
-	}
-	for (int i = 0; i < plane_amount; i++)
-	{
-		scene->planes[i] = *((Plane *) arraylist_get(builder->planes, i));
-	}
-	for (int i = 0; i < mesh_amount; i++)
-	{
-		scene->meshes[i] = *((Mesh *) arraylist_get(builder->meshes, i));
-	}
-	for (int i = 0; i < instance_amount; i++)
-	{
-		scene->instances[i] = *((MeshInstance *) arraylist_get(builder->instances, i));
-		mesh_instance_build_aabb(&scene->instances[i], scene->meshes[scene->instances[i].mesh_index]);	
-	}
+	scene_from_json(path, scene);
+
 	return scene;
 }
 
@@ -71,11 +117,6 @@ void scene_free(Scene* scene)
 		if (scene->spheres)
 		{
 			free(scene->spheres);
-		}
-
-		if (scene->planes)
-		{
-			free(scene->planes);
 		}
 
 		if (scene->instances)

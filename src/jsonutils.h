@@ -1,0 +1,23 @@
+#pragma once
+
+#include "rapidjson/document.h"
+
+#include "math/vector3.h"
+
+namespace JsonUtils
+{
+	void object_from_json(rapidjson::Value& json, int& ret);
+	void object_from_json(rapidjson::Value& json, float& ret);
+	void object_from_json(rapidjson::Value& json, Vector3& ret);
+	void object_from_json(rapidjson::Value& json, std::string& ret);
+
+	template<typename T>
+	inline void from_json(rapidjson::Value& json, const char* name, T& object)
+	{
+		auto m = json.FindMember(name);
+		if (m != json.MemberEnd())
+		{
+			object_from_json(m->value, object);
+		}
+	}
+}
