@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "kernel.h"
+#include "renderer.h"
 #include "bitmap.h"
 #include "material.h"
 #include "medium.h"
@@ -147,43 +147,31 @@ static Scene* init_scene()
 
 int main(int argc, char* argv[])
 {
-	if (argc < 6)
+	if (argc < 7)
 	{
-		printf("illume: usage - <path> <width> <height> <spp> <maxdepth>\n");
-		goto exit_bitmap;
+		printf("illume: usage - <save> <scene> <width> <height> <spp> <maxdepth>\n");
+		return 0;
 	}
-	{
-		int width = strtol(argv[2], NULL, 10);
-		int height = strtol(argv[3], NULL, 10);
-		int spp = strtol(argv[4], NULL, 10);
-		int max_depth = strtol(argv[5], NULL, 10);
+	
+	int width = strtol(argv[3], NULL, 10);
+	int height = strtol(argv[4], NULL, 10);
+	int spp = strtol(argv[5], NULL, 10);
+	int max_depth = strtol(argv[6], NULL, 10);
 
-		Bitmap* image = bitmap_new(width, height);
-		if (!image)
-		{
-			goto exit_bitmap;
-		}
-		{
-			//Scene* scene = init_scene();
-			Scene* scene = scene_new("res/scenes/cornell_spheres/cornell_spheres.json");
+	Bitmap* image = bitmap_new(width, height);	
+	Scene* scene = scene_new(argv[2]);
+	Renderer renderer(scene, spp, max_depth);
 
-			if (!scene)
-			{
-				goto exit_scene;
-			}
+	renderer.render_to_bitmap(image);
+	
+	char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[3], argv[4], argv[5], argv[6]), sizeof(char));
+	sprintf(name, format, argv[1], argv[3], argv[4], argv[5], argv[6]);
+	bitmap_save_to_png(image, name);
+	printf("Saved to: %s\n", name);
+	free(name);
 
-			render_scene(scene, image, spp, max_depth);
-			char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[2], argv[3], argv[4], argv[5]), sizeof(char));
-			sprintf(name, format, argv[1], argv[2], argv[3], argv[4], argv[5]);
-			bitmap_save_to_png(image, name);
-			printf("Saved to: %s\n", name);
-			free(name);
-
-			scene_free(scene);
-		}
-exit_scene:
-		bitmap_free(image);
-	}
-exit_bitmap:
+	bitmap_free(image);
+	scene_free(scene);
+	
 	return 0;
 }

@@ -1,4 +1,4 @@
-#include "kernel.h"
+#include "renderer.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -31,6 +31,12 @@
 #define KERNEL_ARGS3(grid, block, sh_mem)
 #define KERNEL_ARGS4(grid, block, sh_mem, stream)
 #endif
+
+Renderer::Renderer(Scene* scene, int spp, int max_depth) : 
+	m_scene(scene), m_spp(spp), m_max_depth(max_depth)
+{
+
+}
 
 __global__ 
 void init_curand_states(curandState* states, uint32_t hash, int N)
@@ -500,13 +506,8 @@ uint32_t wang_hash(uint32_t a)
 	return a;
 }
 
-void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
+void Renderer::render_to_bitmap(Bitmap* bitmap)
 {
-	if (!scene)
-	{
-		return;
-	}
-
 	cudaEvent_t render_start;
 	cudaEvent_t render_stop;
 	start_timer(&render_start, &render_stop);
@@ -520,7 +521,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 
 	RenderInfo* d_info = 
-		allocate_render_info_gpu(bitmap->width, bitmap->height, scene->camera);
+		allocate_render_info_gpu(bitmap->width, bitmap->height, m_scene->camera);
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
@@ -536,15 +537,15 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	Ray* d_rays;
 	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
 
-	SceneReference ref = allocate_scene_gpu(scene);
+	SceneReference ref = allocate_scene_gpu(m_scene);
 
 	int* h_ray_statuses = (int *) calloc(pixels_amount, sizeof(int));
 
 	printf("Rendering...    "); fflush(stdout);
 	int last_progress = -1;
-	float progress_step = 100.0f / (float) samples;
+	float progress_step = 100.0f / (float) m_spp;
 	cudaEvent_t start, stop;
-	for (int i = 0; i < samples; i++)
+	for (int i = 0; i < m_spp; i++)
 	{
 		start_timer(&start, &stop);
 		init_curand_states KERNEL_ARGS2(blocks_amount, threads_per_block) (d_states, wang_hash(i), pixels_amount);
@@ -555,7 +556,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 		int active_pixels = pixels_amount;
 		int blocks = blocks_amount;
 
-		for (int j = 0; j < max_depth; j++)
+		for (int j = 0; j < m_max_depth; j++)
 		{
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
@@ -588,7 +589,7 @@ void render_scene(Scene* scene, Bitmap* bitmap, int samples, int max_depth)
 	HANDLE_ERROR( cudaMemcpy(d_pixels, h_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice) );
 
 	set_bitmap KERNEL_ARGS2(blocks_amount, threads_per_block) 
-		(d_final_colors, d_pixels, (float) samples, pixels_amount);
+		(d_final_colors, d_pixels, (float) m_spp, pixels_amount);
 	HANDLE_ERROR( cudaMemcpy(h_pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost) );
 
 	HANDLE_ERROR( cudaFree(d_final_colors) );

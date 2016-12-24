@@ -41,10 +41,6 @@ void scenebuilder_free(SceneBuilder* builder)
 		{
 			sphere_free((Sphere *) arraylist_get(builder->spheres, i));
 		}
-		for (int i = 0; i < builder->planes->length; i++)
-		{
-			plane_free((Plane *) arraylist_get(builder->planes, i));
-		}
 		for (int i = 0; i < builder->instances->length; i++)
 		{
 			mesh_instance_free((MeshInstance *) arraylist_get(builder->instances, i));
@@ -71,14 +67,6 @@ void scenebuilder_add_sphere(SceneBuilder* builder, Sphere* sphere)
 	if (builder && sphere)
 	{
 		arraylist_add(builder->spheres, sphere);
-	}
-}
-
-void scenebuilder_add_plane(SceneBuilder* builder, Plane* plane)
-{
-	if (builder && plane)
-	{
-		arraylist_add(builder->planes, plane);
 	}
 }
 
