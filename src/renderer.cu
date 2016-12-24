@@ -167,7 +167,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			Vector3 new_dir;
 			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
 			Vector3 new_origin = ray_position_along(r, min.d);
-			vector3_add_to(&new_origin, vector3_mul(norm_o, 10e-6));
+			vector3_add_to(&new_origin, vector3_mul(norm_o, 10e-2));
 
 			if (min.m.type == MATERIAL_EMISSIVE)
 			{

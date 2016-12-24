@@ -1,0 +1,135 @@
+{
+	"materials":
+	[
+		{
+			"name": "teal",
+			"type": "cooktorrance",
+			"color": [0.029, 0.6121, 0.6121],
+			"ior": 1.59,
+			"roughness": 0.2
+		},
+		{
+			"name": "white",
+			"type": "diffuse",
+			"color": [0.75, 0.75, 0.75]
+		},
+		{
+			"name": "red",
+			"type": "diffuse",
+			"color": [0.75, 0.25, 0.25]
+		},
+		{
+			"name": "blue",
+			"type": "diffuse",
+			"color": [0.25, 0.25, 0.75]
+		},
+		{
+			"name": "light",
+			"type": "emissive",
+			"color": [15, 12.5, 7.5]
+		}
+	],
+	"meshes":
+	[
+		{
+			"file": "res/quad.obj",
+			"name": "quad",
+			"z_up": 0,
+			"bvh_items_per_node": 4
+		},
+		{
+			"file": "res/xyzrgb_dragon.obj",
+			"name": "dragon",
+			"z_up": 1,
+			"bvh_items_per_node": 8
+		}
+	],
+	"primitives":
+	[
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [0, 1.5, 7.5],
+				"scale": [10, 10, 10],
+				"rotation": [0, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [0, -1, 5],
+				"scale": [10, 10, 10],
+				"rotation": [90, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [3, 1.5, 5],
+				"scale": [10, 10, 10],
+				"rotation": [0, 90, 0]
+			},
+			"material": "blue"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [-3, 1.5, 5],
+				"scale": [10, 10, 10],
+				"rotation": [0, 90, 0]
+			}, 
+			"material": "red"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [0, 3.5, 5],
+				"scale": [10, 10, 10],
+				"rotation": [90, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform": 
+			{
+				"translation": [0, 3.4999, 5],
+				"scale": [2.25, 1.25, 1],
+				"rotation": [90, 0, 0]
+			},
+			"material": "light"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "dragon",
+			"transform": 
+			{
+				"translation": [0.295, -1.01, 5],
+				"scale": [0.25, 0.25, 0.25],
+				"rotation": [0, -130, 0]
+			},
+			"material": "teal"
+		}
+	],
+	"camera":
+	{
+		"transform": [0, 1, 0.25],
+		"fov": 90,
+		"depth_of_field": 1,
+		"aperture_radius": 0
+	},
+	"bgcolor": [0, 0, 0]
+}

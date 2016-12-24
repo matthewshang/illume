@@ -1,6 +1,8 @@
 # illume
 CUDA C Pathtracer
 
+![Cornell Box](renders/cornell-1024x1024-100000spp-100md.png?raw=true "Title")
+Original cornell box with 100,000 samples per pixel. 
 ![Cornell Box](renders/box-960x720-25000spp-10md.png?raw=true "Title")
 Cornell box with a glass ball and a mirror ball, showcasing reflection, refraction, caustics, and GI
 ![xyzrgb dragon](renders/xyzrgb2-960x720-20000spp-10md.png?raw=true "Title")
