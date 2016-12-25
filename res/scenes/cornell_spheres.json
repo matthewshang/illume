@@ -130,5 +130,10 @@
 		"depth_of_field": 1,
 		"aperture_radius": 0
 	},
+	"render_settings":
+	{
+		"resolution": [960, 720],
+		"ray_bias": 0.000001
+	},
 	"bgcolor": [0, 0, 0]
 }

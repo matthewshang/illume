@@ -1,6 +1,8 @@
 #ifndef _SCENE_
 #define _SCENE_
 
+#include "rapidjson/document.h"
+
 #include "../primitives/sphere.h"
 #include "../primitives/mesh.h"
 #include "../primitives/mesh_instance.h"
@@ -25,7 +27,7 @@ Scene;
 extern "C" {
 #endif
 
-Scene*  scene_new   (const char* path);
+Scene*  scene_new   (rapidjson::Document& json);
 void    scene_free  (Scene* scene);
 
 #ifdef __cplusplus

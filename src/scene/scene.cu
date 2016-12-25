@@ -1,29 +1,16 @@
 #include "scene.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/error/en.h"
-
-#include <fstream>
-#include <sstream>
 #include <vector>
 #include <unordered_map>
+
+#include "rapidjson/document.h"
 
 #include "../arraylist.h"
 #include "../jsonutils.h"
 
-void scene_from_json(const char* path, Scene* scene)
+void scene_from_json(Scene* scene, rapidjson::Document& json)
 {
-	std::ifstream t(path);
-	std::stringstream buffer;
-	buffer << t.rdbuf();
-	rapidjson::Document document;
-	document.Parse(buffer.str().c_str());
-	if (document.HasParseError())
-	{
-		printf("Error parsing JSON(offset %u): %s\n", (unsigned) document.GetErrorOffset(), rapidjson::GetParseError_En(document.GetParseError()));
-	}
-
-	JsonUtils::from_json(document, "bgcolor", scene->sky_color);
+	JsonUtils::from_json(json, "bgcolor", scene->sky_color);
 
 	std::unordered_map<std::string, Material> mat_map;
 	std::unordered_map<std::string, int> mesh_index_map;
@@ -31,17 +18,17 @@ void scene_from_json(const char* path, Scene* scene)
 	std::vector<Sphere> spheres;
 	std::vector<MeshInstance> instances;
 
-	auto camera     = document.FindMember("camera");
-	auto materials  = document.FindMember("materials");
-	auto meshes_loc = document.FindMember("meshes");
-	auto primitives = document.FindMember("primitives");
+	auto camera     = json.FindMember("camera");
+	auto materials  = json.FindMember("materials");
+	auto meshes_loc = json.FindMember("meshes");
+	auto primitives = json.FindMember("primitives");
 
-	if (camera != document.MemberEnd())
+	if (camera != json.MemberEnd())
 	{
 		scene->camera = camera_from_json(camera->value);
 	}
 
-	if (materials != document.MemberEnd())
+	if (materials != json.MemberEnd())
 	{
 		for (auto& itr : materials->value.GetArray())
 		{
@@ -51,7 +38,7 @@ void scene_from_json(const char* path, Scene* scene)
 		}
 	}
 
-	if (meshes_loc != document.MemberEnd())
+	if (meshes_loc != json.MemberEnd())
 	{
 		for (auto& itr : meshes_loc->value.GetArray())
 		{
@@ -67,7 +54,7 @@ void scene_from_json(const char* path, Scene* scene)
 		}
 	}
 
-	if (primitives != document.MemberEnd())
+	if (primitives != json.MemberEnd())
 	{
 		for (auto& itr : primitives->value.GetArray())
 		{
@@ -101,11 +88,11 @@ void scene_from_json(const char* path, Scene* scene)
 	}
 }
 
-Scene* scene_new(const char* path)
+Scene* scene_new(rapidjson::Document& json)
 {
 	Scene* scene = (Scene *) calloc(1, sizeof(Scene));
 
-	scene_from_json(path, scene);
+	scene_from_json(scene, json);
 
 	return scene;
 }

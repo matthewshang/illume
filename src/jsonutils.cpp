@@ -1,6 +1,24 @@
 #include "jsonutils.h"
 
+#include <fstream>
+#include <sstream>
+
+#include "rapidjson/document.h"
+#include "rapidjson/error/en.h"
+
 #include "math/vector3.h"
+
+void JsonUtils::read_and_parse_json(const char* path, rapidjson::Document& ret)
+{
+	std::ifstream t(path);
+	std::stringstream buffer;
+	buffer << t.rdbuf();
+	ret.Parse(buffer.str().c_str());
+	if (ret.HasParseError())
+	{
+		printf("Error parsing JSON(offset %u): %s\n", (unsigned) ret.GetErrorOffset(), rapidjson::GetParseError_En(ret.GetParseError()));
+	}
+}
 
 void JsonUtils::object_from_json(rapidjson::Value& json, int& ret)
 {

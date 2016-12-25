@@ -135,5 +135,10 @@
 		"depth_of_field": 1,
 		"aperture_radius": 0
 	},
+	"render_settings":
+	{
+		"resolution": [1024, 1024],
+		"ray_bias": 0.01
+	},
 	"bgcolor": [0, 0, 0]
 }

@@ -19,6 +19,7 @@
 #include "math/constants.h"
 #include "math/matrix4.h"
 #include "accel/bvh.h"
+#include "jsonutils.h"
 
 #include "intellisense.h"
 
@@ -32,10 +33,26 @@
 #define KERNEL_ARGS4(grid, block, sh_mem, stream)
 #endif
 
-Renderer::Renderer(Scene* scene, int spp, int max_depth) : 
+Renderer::Renderer(rapidjson::Value& json, Scene* scene, int spp, int max_depth) : 
 	m_scene(scene), m_spp(spp), m_max_depth(max_depth)
 {
+	auto renderer = json.FindMember("render_settings");
+	if (renderer != json.MemberEnd())
+	{
+		JsonUtils::from_json(renderer->value, "ray_bias", m_ray_bias);
 
+		auto res = renderer->value.FindMember("resolution");
+		if (res != renderer->value.MemberEnd())
+		{
+			m_width = res->value.GetArray()[0].GetInt();
+			m_height = res->value.GetArray()[1].GetInt();
+		}
+		else
+		{
+			printf("Renderer: resolution not found. Defaulting to (512, 512)\n");
+			m_width = m_height = 512;
+		}
+	}
 }
 
 __global__ 
@@ -117,8 +134,8 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 }
 
 __global__
-void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
-					  Vector3* ray_colors, Medium* ray_mediums, int depth, Scene* scene, curandState* states, int N)
+void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vector3* ray_colors, 
+	Medium* ray_mediums, int depth, Scene* scene, curandState* states, float ray_bias, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
@@ -167,7 +184,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 			Vector3 new_dir;
 			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
 			Vector3 new_origin = ray_position_along(r, min.d);
-			vector3_add_to(&new_origin, vector3_mul(norm_o, 10e-2));
+			vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 
 			if (min.m.type == MATERIAL_EMISSIVE)
 			{
@@ -230,7 +247,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses,
 						ray_mediums[ray_index] = into ? min.m.medium : medium_air();
 						new_dir = vector3_add(vector3_mul(r.d, nr),
 											  vector3_mul(norm_o, nr * cosI - sqrtf(1.0f - sin2T)));
-						vector3_add_to(&new_origin, vector3_mul(norm_o, -10e-5));
+						vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias * 2.0f));
 					}
 				}
 			}
@@ -513,7 +530,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	start_timer(&render_start, &render_stop);
 
 	HANDLE_ERROR( cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1024 * 1024 * 1024) );
-	int pixels_amount = bitmap->width * bitmap->height;
+	int pixels_amount = m_width * m_height;
 	int threads_per_block = 256;
 	int blocks_amount = (pixels_amount + threads_per_block - 1) / threads_per_block;
 
@@ -521,7 +538,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 
 	RenderInfo* d_info = 
-		allocate_render_info_gpu(bitmap->width, bitmap->height, m_scene->camera);
+		allocate_render_info_gpu(m_width, m_height, m_scene->camera);
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
@@ -560,7 +577,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 		{
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
-				 j, ref.d_scene, d_states, active_pixels);		
+				 j, ref.d_scene, d_states, m_ray_bias, active_pixels);		
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
@@ -599,4 +616,14 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	end_timer(&render_start, &render_stop, &render_time);
 
 	printf("Render time: %f seconds\n", 1e-3 * (double) render_time);
+}
+
+int Renderer::get_width()
+{
+	return m_width;
+}
+
+int Renderer::get_height()
+{
+	return m_height;
 }

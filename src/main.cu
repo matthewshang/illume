@@ -2,21 +2,18 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "rapidjson/document.h"
+
+#include "jsonutils.h"
 #include "renderer.h"
 #include "bitmap.h"
-#include "material.h"
-#include "medium.h"
 #include "math/constants.h"
 #include "math/vector3.h"
 #include "math/transform.h"
 #include "math/matrix4.h"
-#include "primitives/sphere.h"
-#include "primitives/mesh.h"
-#include "primitives/mesh_instance.h"
-#include "scene/scenebuilder.h"
 #include "scene/scene.h"
 
-static char format[] = "%s-%sx%s-%sspp-%smd.png";
+static char format[] = "%s-%dx%d-%dspp-%dmd.png";
 
 //static Scene* init_scene()
 //{
@@ -64,25 +61,27 @@ static char format[] = "%s-%sx%s-%sspp-%smd.png";
 
 int main(int argc, char* argv[])
 {
-	if (argc < 7)
+	if (argc < 5)
 	{
-		printf("illume: usage - <save> <scene> <width> <height> <spp> <maxdepth>\n");
+		printf("illume: usage - <save> <scene> <spp> <maxdepth>\n");
 		return 0;
 	}
 	
-	int width = strtol(argv[3], NULL, 10);
-	int height = strtol(argv[4], NULL, 10);
-	int spp = strtol(argv[5], NULL, 10);
-	int max_depth = strtol(argv[6], NULL, 10);
+	int spp = strtol(argv[3], NULL, 10);
+	int max_depth = strtol(argv[4], NULL, 10);
 
-	Bitmap* image = bitmap_new(width, height);	
-	Scene* scene = scene_new(argv[2]);
-	Renderer renderer(scene, spp, max_depth);
+	rapidjson::Document d;
+	JsonUtils::read_and_parse_json(argv[2], d);
+	
+	Scene* scene = scene_new(d);
+	Renderer renderer(d, scene, spp, max_depth);
+	Bitmap* image = bitmap_new(renderer.get_width(), renderer.get_height());	
 
 	renderer.render_to_bitmap(image);
 	
-	char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, argv[1], argv[3], argv[4], argv[5], argv[6]), sizeof(char));
-	sprintf(name, format, argv[1], argv[3], argv[4], argv[5], argv[6]);
+	char* name = (char *)calloc(1 + _snprintf(NULL, 0, format, 
+		argv[1], renderer.get_width(), renderer.get_height(), spp, max_depth), sizeof(char));
+	sprintf(name, format, argv[1], renderer.get_width(), renderer.get_height(), spp, max_depth);
 	bitmap_save_to_png(image, name);
 	printf("Saved to: %s\n", name);
 	free(name);

@@ -6,6 +6,8 @@
 
 namespace JsonUtils
 {
+	void read_and_parse_json(const char* path, rapidjson::Document& ret);
+
 	void object_from_json(rapidjson::Value& json, int& ret);
 	void object_from_json(rapidjson::Value& json, float& ret);
 	void object_from_json(rapidjson::Value& json, Vector3& ret);
