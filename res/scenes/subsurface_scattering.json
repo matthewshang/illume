@@ -1,0 +1,155 @@
+{
+	"mediums":
+	[
+		{
+			"name": "sss_orange",
+			"absorption": [0.99999, 0.66667, 0.37255],
+			"scattering": 2.5,
+			"g": 0.4
+		}
+	],
+	"materials":
+	[
+		{
+			"name": "white",
+			"type": "diffuse",
+			"color": [0.725, 0.71, 0.68]
+		},
+		{
+			"name": "red",
+			"type": "diffuse",
+			"color": [0.63, 0.065, 0.05]
+		},
+		{
+			"name": "green",
+			"type": "diffuse",
+			"color": [0.14, 0.45, 0.091]
+		},
+		{
+			"name": "light",
+			"type": "emissive",
+			"color": [25.5, 18, 6]
+		},
+		{
+			"name": "glass",
+			"type": "refractive",
+			"color": [0.99, 0.99, 0.99],
+			"ior": 1.4,
+			"medium": "sss_orange"
+		}
+	],
+	"meshes":
+	[
+		{
+			"file": "res/cube.obj",
+			"name": "box",
+			"z_up": 0,
+			"bvh_items_per_node": 12
+		},
+		{
+			"file": "res/quad.obj",
+			"name": "quad",
+			"z_up": 0,
+			"bvh_items_per_node": 4
+		},
+		{
+			"file": "res/dragon.obj",
+			"name": "dragon",
+			"z_up": 1,
+			"bvh_items_per_node": 4
+		}
+	],
+	"primitives":
+	[
+		{
+			"type": "mesh_instance",
+			"mesh": "dragon",
+			"transform":
+			{
+				"translation": [27.7, 0, 27.75],
+				"scale": [3, 3, 3],
+				"rotation": [-90, 0, 0]
+			},
+			"material": "glass"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [27.75, 0, 27.75],
+				"scale": [55.5, 55.5, 55.5],
+				"rotation": [90, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [27.75, 27.75, 55.5],
+				"scale": [55.5, 55.5, 55.5],
+				"rotation": [0, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [27.75, 55.499, 27.75],
+				"scale": [16.25, 13.125, 1],
+				"rotation": [90, 0, 0]
+			},
+			"material": "light"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [27.75, 55.5, 27.75],
+				"scale": [55.5, 55.5, 55.5],
+				"rotation": [90, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [55.5, 27.75, 27.75],
+				"scale": [55.5, 55.5, 55.5],
+				"rotation": [0, 90, 0]
+			},
+			"material": "green"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [0, 27.75, 27.75],
+				"scale": [55.5, 55.5, 55.5],
+				"rotation": [0, 90, 0]
+			},
+			"material": "red"
+		}
+	],
+	"camera":
+	{
+		"transform": [27.8, 27.4, -80.0],
+		"fov": 39,
+		"depth_of_field": 1,
+		"aperture_radius": 0
+	},
+	"render_settings":
+	{
+		"resolution": [1024, 1024],
+		"ray_bias": 0.001
+	},
+	"bgcolor": [0, 0, 0]
+}

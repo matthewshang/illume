@@ -27,7 +27,7 @@ Material;
 extern "C" {
 #endif
 
-Material  material_from_json     (rapidjson::Value& json);
+Material  material_from_json     (rapidjson::Value& json, Medium m);
 Material  material_emissive      (Vector3 e);
 Material  material_diffuse       (Vector3 d);
 Material  material_specular      (Vector3 s);

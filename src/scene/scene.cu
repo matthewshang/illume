@@ -12,6 +12,7 @@ void scene_from_json(Scene* scene, rapidjson::Document& json)
 {
 	JsonUtils::from_json(json, "bgcolor", scene->sky_color);
 
+	std::unordered_map<std::string, Medium> medium_map;
 	std::unordered_map<std::string, Material> mat_map;
 	std::unordered_map<std::string, int> mesh_index_map;
 	std::vector<Mesh> meshes;
@@ -19,6 +20,7 @@ void scene_from_json(Scene* scene, rapidjson::Document& json)
 	std::vector<MeshInstance> instances;
 
 	auto camera     = json.FindMember("camera");
+	auto mediums    = json.FindMember("mediums");
 	auto materials  = json.FindMember("materials");
 	auto meshes_loc = json.FindMember("meshes");
 	auto primitives = json.FindMember("primitives");
@@ -28,13 +30,35 @@ void scene_from_json(Scene* scene, rapidjson::Document& json)
 		scene->camera = camera_from_json(camera->value);
 	}
 
+	if (mediums != json.MemberEnd())
+	{
+		for (auto& itr : mediums->value.GetArray())
+		{
+			std::string name;
+			JsonUtils::from_json(itr, "name", name);
+			medium_map.emplace(std::make_pair(name, medium_from_json(itr)));
+		}
+	}
+
 	if (materials != json.MemberEnd())
 	{
 		for (auto& itr : materials->value.GetArray())
 		{
-			std::string name;
-			JsonUtils::from_json(itr, "name", name);
-			mat_map.emplace(std::make_pair(name, material_from_json(itr)));
+			std::string name, medium_name;
+			JsonUtils::from_json(itr, "name",   name);
+			JsonUtils::from_json(itr, "medium", medium_name);
+			Medium medium;
+			auto medium_ref = medium_map.find(medium_name);
+			if (medium_ref == medium_map.end())
+			{
+				medium = medium_air();
+			}
+			else
+			{
+				medium = medium_ref->second;
+			}
+
+			mat_map.emplace(std::make_pair(name, material_from_json(itr, medium)));
 		}
 	}
 

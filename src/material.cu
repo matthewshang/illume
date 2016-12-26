@@ -2,7 +2,7 @@
 
 #include "jsonutils.h"
 
-Material material_from_json(rapidjson::Value& json)
+Material material_from_json(rapidjson::Value& json, Medium m)
 {
 	std::string type;
 	JsonUtils::from_json(json, "type", type);
@@ -25,7 +25,7 @@ Material material_from_json(rapidjson::Value& json)
 	{
 		float ior;
 		JsonUtils::from_json(json, "ior", ior);
-		return material_refractive(color, ior, medium_air());
+		return material_refractive(color, ior, m);
 	}
 	else if (type == "cooktorrance")
 	{

@@ -1,6 +1,8 @@
 #ifndef _MEDIUM_H_
 #define _MEDIUM_H_
 
+#include "rapidjson/document.h"
+
 #include "math/vector3.h"
 
 typedef struct Medium
@@ -15,8 +17,9 @@ typedef struct Medium
 extern "C" {
 #endif
 
-Medium medium_create(Vector3 absorption, float scattering, float g);
-__device__ __host__ Medium medium_air();
+	Medium medium_from_json(rapidjson::Value& json);
+	Medium medium_create(Vector3 absorption, float scattering, float g);
+	__device__ __host__ Medium medium_air();
 
 #ifdef __cplusplus
 }
