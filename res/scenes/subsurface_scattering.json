@@ -1,13 +1,13 @@
 {
-	"mediums":
-	[
-		{
-			"name": "sss_orange",
-			"absorption": [0.99999, 0.66667, 0.37255],
-			"scattering": 2.5,
-			"g": 0.4
-		}
-	],
+  "mediums": 
+  [
+    {
+      "name": "sss_orange",
+      "absorption": [ 0.99999, 0.66667, 0.37255 ],
+      "scattering": 2.5,
+      "g": 0.4
+    }
+  ],
 	"materials":
 	[
 		{
@@ -43,20 +43,18 @@
 		{
 			"file": "res/cube.obj",
 			"name": "box",
-			"z_up": 0,
 			"bvh_items_per_node": 12
 		},
 		{
 			"file": "res/quad.obj",
 			"name": "quad",
-			"z_up": 0,
 			"bvh_items_per_node": 4
 		},
 		{
-			"file": "res/dragon.obj",
+			"file": "res/dragon2.obj",
 			"name": "dragon",
-			"z_up": 1,
-			"bvh_items_per_node": 4
+		  "neg_z": true,
+			"bvh_items_per_node": 8
 		}
 	],
 	"primitives":
@@ -66,9 +64,9 @@
 			"mesh": "dragon",
 			"transform":
 			{
-				"translation": [27.7, 0, 27.75],
-				"scale": [3, 3, 3],
-				"rotation": [-90, 0, 0]
+				"translation": [26.4, 0.6, 27.75],
+				"scale": [3.5, 3.5, 3.5],
+				"rotation": [0, -90, 0]
 			},
 			"material": "glass"
 		},
@@ -148,7 +146,7 @@
 	},
 	"render_settings":
 	{
-		"resolution": [1024, 1024],
+		"resolution": [512, 512],
 		"ray_bias": 0.001
 	},
 	"bgcolor": [0, 0, 0]

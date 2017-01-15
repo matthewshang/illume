@@ -14,12 +14,6 @@ typedef struct
 }
 tmp_mesh;
 
-__device__ __host__
-static float tri_area_times_two(float ax, float ay, float bx, float by, float cx, float cy)
-{
-	return fabsf(ax * by + bx * cy + cx * ay - ay * bx - by * cx - cy * ax);
-}
-
 static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
 {
 	Triangle tri;
@@ -110,7 +104,7 @@ static void fix_aabb(AABB* aabb)
 	}
 }
 
-static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, int zUp)
+static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool negZ)
 {
 	FILE* file;
 	file = fopen(path, "rt");
@@ -142,7 +136,7 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, int zUp)
 			{
 				arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
 					strtof(tokens[2], NULL),
-					strtof(tokens[3], NULL)));
+					(negZ ? -1 : 1) * strtof(tokens[3], NULL)));
 			}
 			split_string_finish(tokens, VERTEX_COMPONENTS);
 		}
@@ -211,7 +205,7 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	}
 }
 
-Mesh mesh_create(const char * path, int zUp, int tris_per_node)
+Mesh mesh_create(const char * path, bool zUp, bool negZ, int tris_per_node)
 {
 	Mesh mesh;
 	mesh.triangle_amount = 0;
@@ -221,7 +215,7 @@ Mesh mesh_create(const char * path, int zUp, int tris_per_node)
 	tmp.vertices = arraylist_new(3);
 	tmp.triangles = arraylist_new(1);
 	tmp.aabbs = arraylist_new(1);
-	load_obj(&mesh, path, &tmp, zUp);
+	load_obj(&mesh, path, &tmp, zUp, negZ);
 	copy_triangles(&tmp, &mesh);
 	build_mesh_bounds(&tmp, &mesh);
 	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
@@ -266,7 +260,7 @@ Mesh* mesh_new(const char* path, int zUp, int tris_per_node)
 	tmp.vertices = arraylist_new(3);
 	tmp.triangles = arraylist_new(1);
 	tmp.aabbs = arraylist_new(1);
-	load_obj(mesh, path, &tmp, zUp);
+	load_obj(mesh, path, &tmp, zUp, false);
 	copy_triangles(&tmp, mesh);
 	build_mesh_bounds(&tmp, mesh);
 	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);

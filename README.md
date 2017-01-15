@@ -9,6 +9,7 @@ This is a unidirectional brute force pathtracer running on the GPU.
 - materials: emissive, lambert, mirror, refractive, microfacet cook-torrance
 - Monte Carlo subsurface scattering with Henyey-Greenstein phase function
 - spheres and OBJ file meshes
+- mesh instancing
 - BVH construction and caching
 - scene loading from human-readable JSON
 - saves renders to PNG
@@ -20,7 +21,7 @@ This is a unidirectional brute force pathtracer running on the GPU.
 - rapidjson (JSON scene file parsing)
 
 ## More Renders
-![sss dragon in box](renders/cornellsss-1024x1024-10000spp-50md.png?raw=true "Title")
+![sss dragon in box](renders/cornellsss-1024x1024-12500spp-50md.png?raw=true "Title")
 Stanford dragon with orange absorption and foward scattering
 ![xyzrgb dragon](renders/xyzrgb2-960x720-20000spp-10md.png?raw=true "Title")
 721k tri Stanford xyzrgb dragon, with Cook-Torrance teal surface

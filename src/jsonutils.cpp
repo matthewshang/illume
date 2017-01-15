@@ -39,3 +39,8 @@ void JsonUtils::object_from_json(rapidjson::Value& json, std::string& ret)
 {
 	ret = json.GetString();
 }
+
+void JsonUtils::object_from_json(rapidjson::Value& json, bool& ret)
+{
+	ret = json.GetBool();
+}
