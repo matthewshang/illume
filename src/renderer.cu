@@ -9,6 +9,7 @@
 
 #include "error_check.h"
 #include "material.h"
+#include "microfacet.h"
 #include "medium.h"
 #include "primitives/sphere.h"
 #include "primitives/mesh.h"
@@ -16,7 +17,7 @@
 #include "math/sample.h"
 #include "math/vector3.h"
 #include "math/ray.h"
-#include "math/constants.h"
+#include "math/mathutils.h"
 #include "math/matrix4.h"
 #include "accel/bvh.h"
 #include "jsonutils.h"
@@ -175,7 +176,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 									   expf(-1.0f * min.d * medium.absorption.y),
 									   expf(-1.0f * min.d * medium.absorption.z)));
 
-				}
+			}
 		}
 
 		if (min.is_intersect == 1)
@@ -184,7 +185,6 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			Vector3 new_dir;
 			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
 			Vector3 new_origin = ray_position_along(r, min.d);
-			vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 
 			if (min.m.type == MATERIAL_EMISSIVE)
 			{
@@ -200,58 +200,37 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				float u2 = curand_uniform(&states[ray_index]);
 				Vector3 sample = sample_hemisphere_cosine(u1, u2);
 				new_dir = vector3_to_basis(sample, norm_o);
-
+				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 			}
 			else if (min.m.type == MATERIAL_SPECULAR)
 			{
-				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
+				vector3_mul_vector_to(&ray_colors[ray_index], vector3_create(0.99f, 0.99f, 0.99f));
 				new_dir = vector3_reflect(r.d, norm_o);
+				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 			}
 			else if (min.m.type == MATERIAL_REFRACTIVE)
 			{
-				// http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
-				bool into = vector3_dot(min.normal, norm_o) > 0.0f;
-				float n1;
-				float n2;
-				float cosI = -vector3_dot(r.d, norm_o);
-				if (into)
-				{
-					n1 = 1.0f;
-					n2 = min.m.ior;
-				}
-				else
-				{
-					n1 = min.m.ior;
-					n2 = 1.0f;
-				}
-				float nr = n1 / n2;
-				float sin2T = nr * nr * (1.0f - cosI * cosI);
-				if (sin2T > 1.0f)
+				float cosI = -vector3_dot(r.d, min.normal);
+				float cosT = 0.0f;
+				float F = F_dielectric(cosI, min.m.ior, cosT);
+
+				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
 				{
 					new_dir = vector3_reflect(r.d, min.normal);
+					vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 				}
 				else
 				{
-					float cosT = sqrtf(1.0f - sin2T);
-					float rperp = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-					rperp *= rperp;
-					float rpar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
-					rpar *= rpar;
-					float R = (rperp + rpar) * 0.5f;
-					if (curand_uniform(&states[ray_index]) < R)
-					{
-						new_dir = vector3_reflect(r.d, min.normal);
-					}
-					else
-					{
-						ray_mediums[ray_index] = into ? min.m.medium : medium_air();
-						new_dir = vector3_add(vector3_mul(r.d, nr),
-											  vector3_mul(norm_o, nr * cosI - sqrtf(1.0f - sin2T)));
-						vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias * 2.0f));
-					}
+					float eta = cosI < 0.0f ? min.m.ior : 1.0f / min.m.ior;
+					ray_mediums[ray_index] = cosI > 0.0f ? min.m.medium : medium_air();
+					new_dir = vector3_add(vector3_mul(r.d, eta),
+						vector3_mul(norm_o, eta * fabsf(cosI) - cosT));
+					vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias));
 				}
+
+				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
 			}
-			else if (min.m.type = MATERIAL_COOKTORRANCE)
+			else if (min.m.type == MATERIAL_COOKTORRANCE)
 			{
 				//float a = (1.2f - 0.2f * sqrtf(fabsf(vector3_dot(r.d, norm_o)))) * min.m.roughness;
 				float a = min.m.roughness;
@@ -285,26 +264,55 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				Vector3 reflectance = vector3_mul(min.m.c, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
 				//Vector3 reflectance = vector3_mul(min.m.c, (F *  D * G) / (4.0f * NdotV));
 
-	/*			if (reflectance.x > 1.0f)
-				{
-					printf("%f %f %f %f\n", reflectance.x, NdotV, D, (F * D * G) / (4.0f * NdotV));
-
-				}*/
 				vector3_mul_vector_to(&ray_colors[ray_index], reflectance);
+				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
+			}
+			else if (min.m.type == MATERIAL_ROUGHREFRACTIVE)
+			{
+				Vector3 wi = vector3_mul(r.d, -1.0f);
+				float wiDotN = vector3_dot(wi, min.normal);
+				float a = min.m.roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+
+				float u1 = curand_uniform(&states[ray_index]);
+				float u2 = curand_uniform(&states[ray_index]);
+				Vector3 m = sample_beckmann(a, u1, u2);
+				m = vector3_to_basis(m, min.normal);
+
+				float wiDotT = 0.0f;
+				float wiDotM = vector3_dot(wi, m);
+				float F = F_dielectric(wiDotM, min.m.ior, wiDotT);
+
+				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
+				{
+					new_dir = vector3_reflect(r.d, m);
+					if (wiDotN * vector3_dot(new_dir, min.normal) <= 0.0f)
+					{
+						ray_statuses[index] = -1;
+						return;
+					}
+					vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
+				}
+				else
+				{
+					float eta = wiDotM < 0.0f ? min.m.ior : 1.0f / min.m.ior;
+					ray_mediums[ray_index] = wiDotM > 0.0f ? min.m.medium : medium_air();
+					new_dir = vector3_sub(
+						vector3_mul(m, wiDotM * eta - (wiDotM > 0.0f ? 1.0f : -1.0f) * wiDotT),
+						vector3_mul(wi, eta));
+					if (wiDotN * vector3_dot(new_dir, min.normal) >= 0.0f)
+					{
+						ray_statuses[index] = -1;
+						return;
+					}
+					vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias));
+				}
+
+				float G = G_Beckmann(wi, new_dir, m, a);
+				float weight = (G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
+				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(min.m.c, weight));
 			}
 
 			ray_set(&rays[ray_index], new_origin, new_dir);
-
-			//if (depth > 6)
-			//{
-			//	float p = fmaxf(ray_colors[ray_index].x, fmaxf(ray_colors[ray_index].y, ray_colors[ray_index].z));
-			//	if (curand_uniform(&states[ray_index]) > p)
-			//	{
-			//		ray_statuses[index] = -1;
-			//		return;
-			//	}
-			//	ray_colors[ray_index] = vector3_mul(ray_colors[ray_index], 1.0f / p);
-			//}
 		}
 		else
 		{

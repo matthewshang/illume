@@ -1,6 +1,6 @@
 #include "transform.h"
 
-#include "constants.h"
+#include "mathutils.h"
 #include "../jsonutils.h"
 
 Transform transform_create(Vector3 translation, Vector3 scale, Matrix4 rotation)
@@ -13,11 +13,6 @@ Transform transform_create(Vector3 translation, Vector3 scale, Matrix4 rotation)
 	transform.trans = matrix4_get_transpose(transform.mat);
 	transform.trans_inv = matrix4_get_transpose(transform.inv);
 	return transform;
-}
-
-float degtorad(float deg)
-{
-	return deg * ILLUME_PI / 180.0f;
 }
 
 Transform transform_from_json(rapidjson::Value& json)

@@ -34,6 +34,13 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 		JsonUtils::from_json(json, "roughness", roughness);
 		return material_cooktorrance(color, ior, roughness);
 	}
+	else if (type == "rough_glass")
+	{
+		float ior, roughness;
+		JsonUtils::from_json(json, "ior",       ior);
+		JsonUtils::from_json(json, "roughness", roughness);
+		return material_roughrefrac(color, ior, roughness, m);
+	}
 	printf("material_from_json: invalid material type %s\n", type.c_str());
 	return material_diffuse(vector3_create(0, 0, 0));
 }
@@ -90,5 +97,16 @@ Material material_cooktorrance(Vector3 r, float ior, float roughness)
 	material.ior = ior;
 	material.roughness = roughness * roughness;
 	material.medium = medium_air();
+	return material;
+}
+
+Material material_roughrefrac(Vector3 r, float ior, float roughness, Medium m)
+{
+	Material material;
+	material.c = r;
+	material.type = MATERIAL_ROUGHREFRACTIVE;
+	material.ior = ior;
+	material.roughness = roughness * roughness;
+	material.medium = m;
 	return material;
 }

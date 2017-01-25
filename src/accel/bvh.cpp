@@ -1,7 +1,7 @@
 #include "bvh.h"
 
 #include "../math/vector3.h"
-#include "../math/constants.h"
+#include "../math/mathutils.h"
 
 #include <stdio.h>
 #include <time.h>

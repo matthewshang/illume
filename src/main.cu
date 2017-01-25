@@ -7,7 +7,7 @@
 #include "jsonutils.h"
 #include "renderer.h"
 #include "bitmap.h"
-#include "math/constants.h"
+#include "math/mathutils.h"
 #include "math/vector3.h"
 #include "math/transform.h"
 #include "math/matrix4.h"

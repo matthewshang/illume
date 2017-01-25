@@ -8,7 +8,7 @@ Medium medium_from_json(rapidjson::Value& json)
 	JsonUtils::from_json(json, "absorption", ret.absorption);
 	ret.absorption = vector3_sub(vector3_create(1, 1, 1), ret.absorption);
 	JsonUtils::from_json(json, "scattering", ret.scattering);
-	JsonUtils::from_json(json, "g",          ret.g);
+	JsonUtils::from_json(json, "g",          ret.g, 0.0f);
 	ret.active = (vector3_length2(ret.absorption) > 1e-5 || ret.scattering > 0);
 	return ret;
 }

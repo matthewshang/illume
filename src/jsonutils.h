@@ -22,6 +22,10 @@ namespace JsonUtils
 		{
 			object_from_json(m->value, object);
 		}
+		else
+		{
+			printf("from_json: cannot find value %s\n", name);
+		}
 	}
 
 	template<typename T>
@@ -34,7 +38,7 @@ namespace JsonUtils
 		}
 		else
 		{
-			printf("from_json: cannot find value %s\n", name);
+			printf("from_json: cannot find value %s, defaulting\n", name);
 			object = default;
 		}
 	}

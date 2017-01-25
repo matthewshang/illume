@@ -6,7 +6,6 @@
 #include "../primitives/sphere.h"
 #include "../primitives/mesh.h"
 #include "../primitives/mesh_instance.h"
-#include "scenebuilder.h"
 #include "../camera.h"
 #include "../math/vector3.h"
 

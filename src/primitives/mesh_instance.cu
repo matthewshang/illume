@@ -6,7 +6,7 @@
 #include "../jsonutils.h"
 #include "../math/vector3.h"
 #include "../math/matrix4.h"
-#include "../math/constants.h"
+#include "../math/mathutils.h"
 
 MeshInstance mesh_instance_create(int mesh_index, Material m, Transform t)
 {

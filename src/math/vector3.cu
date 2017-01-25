@@ -85,16 +85,15 @@ __device__ __host__
 Vector3 vector3_to_basis(Vector3 v, Vector3 normal)
 {
 	Vector3 tangent;
-	if (fabsf(normal.x) > 0.1f)
+	if (fabsf(normal.x) > fabsf(normal.y))
 	{
-		tangent = vector3_create(0.0f, 1.0f, 0.0f);
+		tangent = vector3_create(normal.z, 0.0f, -normal.x);
 	}
 	else
 	{
-		tangent = vector3_create(1.0f, 0.0f, 0.0f);
+		tangent = vector3_create(0.0f, normal.z, -normal.y);
 	}
 	Vector3 bitangent = vector3_cross(normal, tangent);
-	vector3_normalize(&bitangent);
 	tangent = vector3_cross(bitangent, normal);
 	Vector3 b = vector3_add(vector3_add(vector3_mul(tangent, v.x), 
 								   vector3_mul(normal, v.y)), 

@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-#include "constants.h"
+#include "mathutils.h"
 
 __device__
 Vector3 sample_hemisphere_cosine(float u1, float u2)

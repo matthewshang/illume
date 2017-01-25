@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "../arraylist.h"
-#include "../math/constants.h"
+#include "../math/mathutils.h"
 
 typedef struct
 {
@@ -20,7 +20,9 @@ static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
 	tri.e1 = vector3_sub(v1, v0);
 	tri.e2 =  vector3_sub(v2, v0);
 	tri.v0 = v0;
+	//tri.n = vector3_cross(tri.e1, tri.e2);
 	tri.n = vector3_cross(tri.e2, tri.e1);
+
 	vector3_normalize(&tri.n);
 	return tri;
 }

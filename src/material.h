@@ -11,6 +11,7 @@ const int MATERIAL_DIFFUSE = 1;
 const int MATERIAL_SPECULAR = 2;
 const int MATERIAL_REFRACTIVE = 3;
 const int MATERIAL_COOKTORRANCE = 4;
+const int MATERIAL_ROUGHREFRACTIVE = 5;
 
 typedef struct
 {
@@ -33,6 +34,7 @@ Material  material_diffuse       (Vector3 d);
 Material  material_specular      (Vector3 s);
 Material  material_refractive    (Vector3 r, float ior, Medium m);
 Material  material_cooktorrance  (Vector3 r, float ior, float roughness);
+Material  material_roughrefrac   (Vector3 r, float ior, float roughness, Medium m);
 
 #ifdef __cplusplus
 }

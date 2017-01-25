@@ -33,3 +33,13 @@ Cornell box with a glass ball and a mirror ball, showcasing reflection, refracti
 Replication in this renderer of the image on the wikipedia article for raytracing
 ![sss bunny](renders/sss-960x720-5000spp-45md.png?raw=true "Title")
 Stanford bunny model with isotrophic scattering
+
+## Papers/Links
+
+http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+
+https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+
+https://www.mitsuba-renderer.org/
+
+http://photorealizer.blogspot.com/
