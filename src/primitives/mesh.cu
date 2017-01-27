@@ -5,6 +5,7 @@
 
 #include "../arraylist.h"
 #include "../math/mathutils.h"
+#include "../jsonutils.h"
 
 typedef struct
 {
@@ -27,14 +28,19 @@ static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
 	return tri;
 }
 
-static Triangle* triangle_new(Vector3 v0, Vector3 v1, Vector3 v2)
+static Triangle* triangle_new(Vector3 v0, Vector3 v1, Vector3 v2, bool flipNormals)
 {
 	Triangle* tri = (Triangle *) calloc(1, sizeof(Triangle));
 	if (!tri)
 	{
 		return NULL;
 	}
-	*tri = triangle_create(v0, v1, v2);
+	tri->e1 = vector3_sub(v1, v0);
+	tri->e2 = vector3_sub(v2, v0);
+	tri->v0 = v0;
+	tri->n = flipNormals ? vector3_cross(tri->e2, tri->e1) : 
+						   vector3_cross(tri->e1, tri->e2);
+	vector3_normalize(&tri->n);
 	return tri;
 }
 
@@ -106,7 +112,7 @@ static void fix_aabb(AABB* aabb)
 	}
 }
 
-static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool negZ)
+static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool negZ, bool flipNormals)
 {
 	FILE* file;
 	file = fopen(path, "rt");
@@ -158,7 +164,7 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool
 			aabb_update(aabb, v2);
 			fix_aabb(aabb);
 			arraylist_add(tmp->aabbs, aabb);
-			arraylist_add(tmp->triangles, triangle_new(v0, v1, v2));
+			arraylist_add(tmp->triangles, triangle_new(v0, v1, v2, flipNormals));
 			split_string_finish(tokens, FACE_COMPONENTS);
 			tris++;
 		}
@@ -207,7 +213,7 @@ static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 	}
 }
 
-Mesh mesh_create(const char * path, bool zUp, bool negZ, int tris_per_node)
+Mesh mesh_create(const char * path, bool zUp, bool negZ, bool flipNormals, int tris_per_node)
 {
 	Mesh mesh;
 	mesh.triangle_amount = 0;
@@ -217,7 +223,7 @@ Mesh mesh_create(const char * path, bool zUp, bool negZ, int tris_per_node)
 	tmp.vertices = arraylist_new(3);
 	tmp.triangles = arraylist_new(1);
 	tmp.aabbs = arraylist_new(1);
-	load_obj(&mesh, path, &tmp, zUp, negZ);
+	load_obj(&mesh, path, &tmp, zUp, negZ, flipNormals);
 	copy_triangles(&tmp, &mesh);
 	build_mesh_bounds(&tmp, &mesh);
 	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
@@ -248,49 +254,17 @@ Mesh mesh_create(const char * path, bool zUp, bool negZ, int tris_per_node)
 	return mesh;
 }
 
-Mesh* mesh_new(const char* path, int zUp, int tris_per_node)
+Mesh mesh_from_json(rapidjson::Value& json)
 {
-	Mesh* mesh = (Mesh *) calloc(1, sizeof(Mesh));
-	if (!mesh)
-	{
-		return NULL;
-	}
-	mesh->triangle_amount = 0;
-	mesh->triangles = NULL;
-
-	tmp_mesh tmp;
-	tmp.vertices = arraylist_new(3);
-	tmp.triangles = arraylist_new(1);
-	tmp.aabbs = arraylist_new(1);
-	load_obj(mesh, path, &tmp, zUp, false);
-	copy_triangles(&tmp, mesh);
-	build_mesh_bounds(&tmp, mesh);
-	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
-	int length = strlen(path);
-	char* filename = (char *) calloc(length + 1, sizeof(char));
-	memcpy(filename, path, length);
-	filename[length - 3] = 'b';
-	filename[length - 2] = 'v';
-	filename[length - 1] = 'h';
-	filename[length] = '\0';
-	mesh->bvh = bvh_create(tmp.aabbs, mesh->aabb, filename, tris_per_node);
-
-	for (int i = 0; i < tmp.aabbs->length; i++)
-	{
-		free((AABB *) arraylist_get(tmp.aabbs, i));
-	}
-	arraylist_free(tmp.aabbs);
-	for (int i = 0; i < tmp.vertices->length; i++)
-	{
-		free(arraylist_get(tmp.vertices, i));
-	}
-	arraylist_free(tmp.vertices);
-	for (int i = 0; i < tmp.triangles->length; i++)
-	{
-		free(arraylist_get(tmp.triangles, i));
-	}
-	arraylist_free(tmp.triangles);
-	return mesh;
+	std::string file;
+	int itemsPerNode;
+	bool zUp, negZ, flipNormals;
+	JsonUtils::from_json(json, "file",               file);
+	JsonUtils::from_json(json, "z_up",               zUp, false);
+	JsonUtils::from_json(json, "neg_z",              negZ, false);
+	JsonUtils::from_json(json, "flip_normals",       flipNormals, false);
+	JsonUtils::from_json(json, "bvh_items_per_node", itemsPerNode, 4);
+	return mesh_create(file.c_str(), zUp, negZ, flipNormals, itemsPerNode);
 }
 
 // Moller-trumbore method

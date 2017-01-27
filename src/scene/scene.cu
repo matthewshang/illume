@@ -66,17 +66,11 @@ void scene_from_json(Scene* scene, rapidjson::Document& json)
 	{
 		for (auto& itr : meshes_loc->value.GetArray())
 		{
-			std::string name, file;
-			int items_per_node;
-			bool z_up, neg_z;
-			JsonUtils::from_json(itr, "name",               name);
-			JsonUtils::from_json(itr, "file",               file);
-			JsonUtils::from_json(itr, "z_up",               z_up, false);
-			JsonUtils::from_json(itr, "neg_z",              neg_z, false);
-			JsonUtils::from_json(itr, "bvh_items_per_node", items_per_node);
+			std::string name;
+			JsonUtils::from_json(itr, "name", name);
 
 			mesh_index_map.emplace(std::make_pair(name, meshes.size()));
-			meshes.push_back(mesh_create(file.c_str(), z_up, neg_z, items_per_node));
+			meshes.push_back(mesh_from_json(itr));
 		}
 	}
 
