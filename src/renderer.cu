@@ -8,6 +8,7 @@
 #include <curand_kernel.h>
 
 #include "error_check.h"
+#include "fresnel.h"
 #include "material.h"
 #include "microfacet.h"
 #include "medium.h"
@@ -212,7 +213,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			{
 				float cosI = -vector3_dot(r.d, min.normal);
 				float cosT = 0.0f;
-				float F = F_dielectric(cosI, min.m.ior, cosT);
+				float F = Fresnel::dielectric(cosI, min.m.ior, cosT);
 
 				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
 				{
@@ -236,7 +237,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				float a = min.m.roughness;
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
-				Vector3 m = vector3_to_basis(sample_beckmann(a, u1, u2), norm_o);
+				Vector3 m = vector3_to_basis(Microfacet::sample_Beckmann(a, u1, u2), norm_o);
 				new_dir = vector3_reflect(r.d, m);
 
 				Vector3 H = vector3_sub(new_dir, r.d);
@@ -275,12 +276,12 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
-				Vector3 m = sample_beckmann(a, u1, u2);
+				Vector3 m = Microfacet::sample_Beckmann(a, u1, u2);
 				m = vector3_to_basis(m, min.normal);
 
 				float wiDotT = 0.0f;
 				float wiDotM = vector3_dot(wi, m);
-				float F = F_dielectric(wiDotM, min.m.ior, wiDotT);
+				float F = Fresnel::dielectric(wiDotM, min.m.ior, wiDotT);
 
 				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
 				{
@@ -307,7 +308,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 					vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias));
 				}
 
-				float G = G_Beckmann(wi, new_dir, m, a);
+				float G = Microfacet::G_Beckmann(wi, new_dir, m, a);
 				float weight = (G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
 				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(min.m.c, weight));
 			}

@@ -95,7 +95,7 @@ Material material_cooktorrance(Vector3 r, float ior, float roughness)
 	material.c = r;
 	material.type = MATERIAL_COOKTORRANCE;
 	material.ior = ior;
-	material.roughness = roughness * roughness;
+	material.roughness = roughness;
 	material.medium = medium_air();
 	return material;
 }
@@ -106,7 +106,7 @@ Material material_roughrefrac(Vector3 r, float ior, float roughness, Medium m)
 	material.c = r;
 	material.type = MATERIAL_ROUGHREFRACTIVE;
 	material.ior = ior;
-	material.roughness = roughness * roughness;
+	material.roughness = roughness;
 	material.medium = m;
 	return material;
 }

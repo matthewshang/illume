@@ -50,10 +50,3 @@ Vector3 sample_henyey_greenstein(float g, float u1, float u2)
 		return vector3_create(cosf(phi) * sinT, cosT, sinf(phi) * sinT);
 	}
 }
-
-__device__ Vector3 sample_beckmann(float a, float u1, float u2)
-{
-	float theta = atanf(sqrtf(-a * a * logf(1.0f - u1)));
-	float phi = 2.0f * ILLUME_PI * u2;
-	return vector3_create(sinf(theta) * cosf(phi), cosf(theta), sinf(theta) * sinf(phi));
-}

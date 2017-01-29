@@ -57,7 +57,7 @@
       "name": "roughglass",
       "type": "rough_glass",
       "ior": 1.504,
-      "roughness": 0.55,
+      "roughness": 0.3025,
       "color": [ 0.99, 0.99, 0.99 ]
     }
   ],
