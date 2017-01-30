@@ -1,10 +1,10 @@
 *.o
 *.png
 !renders/*.png
-x64/
-Debug/
-Release/
+build/
 illume.opensdf
 illume.sdf
 illume.v12.suo
 vc120.pdb
+vc140.pdb
+packages/*

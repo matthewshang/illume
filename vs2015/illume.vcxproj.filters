@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CudaCompile Include="..\src\math\aabb.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\math\matrix4.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\math\ray.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\math\sample.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\math\transform.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\math\vector3.cu">
+      <Filter>src\math</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\primitives\mesh.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\primitives\mesh_instance.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\primitives\sphere.cu">
+      <Filter>src\primitives</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\scene\scene.cu">
+      <Filter>src\scene</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\camera.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\hit.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\main.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\material.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\medium.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\microfacet.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\renderer.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\accel\bvh.cpp">
+      <Filter>src\accel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\arraylist.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\bitmap.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\jsonutils.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\accel\bvh.h">
+      <Filter>src\accel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\aabb.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\mathutils.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\matrix4.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\ray.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\sample.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\transform.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\vector3.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\primitives\mesh.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\primitives\mesh_instance.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\primitives\sphere.h">
+      <Filter>src\primitives</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\scene\scene.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\arraylist.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\bitmap.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\camera.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\error_check.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\fresnel.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hit.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\intellisense.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\jsonutils.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\material.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\medium.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\microfacet.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\renderer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{9c75af75-352f-49d8-b817-f4824474430f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\accel">
+      <UniqueIdentifier>{d347c109-3ea1-4b20-919b-5194e2fda3ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\math">
+      <UniqueIdentifier>{9c64aa30-7883-493a-88ab-0bae604e07a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\scene">
+      <UniqueIdentifier>{235d0f08-46f5-4a12-aa24-247a156b4b8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\primitives">
+      <UniqueIdentifier>{6716dc02-c611-44b2-907b-9f83654afd24}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\packages.config" />
+  </ItemGroup>
+</Project>
