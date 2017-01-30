@@ -7,4 +7,9 @@ illume.sdf
 illume.v12.suo
 vc120.pdb
 vc140.pdb
-packages/*
+illume.VC.db
+illume.VC.VC.opendb
+.vs/
+*.suo
+*.log
+vs2015/Debug/
