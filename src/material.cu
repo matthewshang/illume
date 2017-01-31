@@ -1,6 +1,7 @@
 #include "material.h"
 
 #include "jsonutils.h"
+#include "conductor.h"
 
 Material material_from_json(rapidjson::Value& json, Medium m)
 {
@@ -41,72 +42,77 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 		JsonUtils::from_json(json, "roughness", roughness);
 		return material_roughrefrac(color, ior, roughness, m);
 	}
+	else if (type == "conductor")
+	{
+		std::string material;
+		JsonUtils::from_json(json, "material", material);
+		Vector3 eta, k;
+		if (!Conductor::get(material, eta, k))
+		{
+			printf("material_from_json: invalid conductor material %s, defaulting to copper\n", material.c_str());
+			return material_conductor(vector3_create(0.21249f, 0.97909f, 1.3343f), vector3_create(4.1005f, 2.3691f, 2.2965f));
+		}
+		return material_conductor(eta, k);
+	}
 	printf("material_from_json: invalid material type %s\n", type.c_str());
 	return material_diffuse(vector3_create(0, 0, 0));
 }
 
-Material material_emissive(Vector3 e)
+Material material_base(Vector3 c, int type)
 {
 	Material material;
-	material.c = e;
-	material.type = MATERIAL_EMISSIVE;
+	material.c = c;
+	material.type = type;
 	material.ior = 0.f;
 	material.roughness = 0.f;
 	material.medium = medium_air();
+	material.k = vector3_create(0, 0, 0);
 	return material;
+}
+
+Material material_emissive(Vector3 e)
+{
+	return material_base(e, MATERIAL_EMISSIVE);
 }
 
 Material material_diffuse(Vector3 d)
 {
-	Material material;
-	material.c = d;
-	material.type = MATERIAL_DIFFUSE;
-	material.ior = 0.f;
-	material.roughness = 0.f;
-	material.medium = medium_air();
-	return material;
+	return material_base(d, MATERIAL_DIFFUSE);
 }
 
 Material material_specular(Vector3 s)
 {
-	Material material;
-	material.c = s;
-	material.type = MATERIAL_SPECULAR;
-	material.ior = 0.f;
-	material.roughness = 0.f;
-	material.medium = medium_air();
-	return material;
+	return material_base(s, MATERIAL_SPECULAR);
 }
 
 Material material_refractive(Vector3 r, float ior, Medium medium)
 {
-	Material material;
-	material.c = r;
-	material.type = MATERIAL_REFRACTIVE;
+	Material material = material_base(r, MATERIAL_REFRACTIVE);
 	material.ior = ior;
-	material.roughness = 0.f;
 	material.medium = medium;
 	return material;
 }
 
 Material material_cooktorrance(Vector3 r, float ior, float roughness)
 {
-	Material material;
-	material.c = r;
-	material.type = MATERIAL_COOKTORRANCE;
+	Material material = material_base(r, MATERIAL_COOKTORRANCE);
 	material.ior = ior;
 	material.roughness = roughness;
-	material.medium = medium_air();
 	return material;
 }
 
 Material material_roughrefrac(Vector3 r, float ior, float roughness, Medium m)
 {
-	Material material;
-	material.c = r;
-	material.type = MATERIAL_ROUGHREFRACTIVE;
+	Material material = material_base(r, MATERIAL_ROUGHREFRACTIVE);
 	material.ior = ior;
 	material.roughness = roughness;
 	material.medium = m;
+	return material;
+}
+
+Material material_conductor(Vector3 eta, Vector3 k)
+{
+	Material material = material_base(eta, MATERIAL_CONDUCTOR);
+	material.k = k;
 	return material;
 }

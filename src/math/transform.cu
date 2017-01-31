@@ -17,7 +17,6 @@ Transform transform_create(Vector3 translation, Vector3 scale, Matrix4 rotation)
 
 Transform transform_from_json(rapidjson::Value& json)
 {
-	Transform ret;
 	Vector3 translation, scale, rotation;
 	JsonUtils::from_json(json, "translation", translation);
 	JsonUtils::from_json(json, "scale", scale);

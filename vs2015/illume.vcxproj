@@ -29,6 +29,7 @@
     <ClInclude Include="..\src\arraylist.h" />
     <ClInclude Include="..\src\bitmap.h" />
     <ClInclude Include="..\src\camera.h" />
+    <ClInclude Include="..\src\conductor.h" />
     <ClInclude Include="..\src\error_check.h" />
     <ClInclude Include="..\src\fresnel.h" />
     <ClInclude Include="..\src\hit.h" />
@@ -71,6 +72,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\packages.config" />
+    <None Include="..\res\scenes\conductor.json" />
+    <None Include="..\res\scenes\cornell_box.json" />
+    <None Include="..\res\scenes\cornell_spheres.json" />
+    <None Include="..\res\scenes\roughglass.json" />
+    <None Include="..\res\scenes\subsurface_scattering.json" />
+    <None Include="..\res\scenes\xyzrgb_dragon.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FA92EC51-96B8-43E3-BEB8-CF938B1C3D4E}</ProjectGuid>

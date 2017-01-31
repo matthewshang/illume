@@ -312,6 +312,18 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				float weight = (G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
 				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(min.m.c, weight));
 			}
+			else if (min.m.type == MATERIAL_CONDUCTOR)
+			{
+				float cosI = -vector3_dot(r.d, min.normal);
+				if (cosI <= 0)
+				{
+					ray_statuses[index] = -1;
+					return;
+				}
+				new_dir = vector3_reflect(r.d, norm_o);
+				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
+				vector3_mul_vector_to(&ray_colors[ray_index], Fresnel::conductor(min.m.c, min.m.k, cosI));
+			}
 
 			ray_set(&rays[ray_index], new_origin, new_dir);
 		}
