@@ -13,6 +13,7 @@ const int MATERIAL_REFRACTIVE      = 3;
 const int MATERIAL_COOKTORRANCE    = 4;
 const int MATERIAL_ROUGHREFRACTIVE = 5;
 const int MATERIAL_CONDUCTOR       = 6;
+const int MATERIAL_ROUGHCONDUCTOR  = 7;
 
 typedef struct
 {
@@ -38,6 +39,7 @@ Material  material_refractive    (Vector3 r, float ior, Medium m);
 Material  material_cooktorrance  (Vector3 r, float ior, float roughness);
 Material  material_roughrefrac   (Vector3 r, float ior, float roughness, Medium m);
 Material  material_conductor     (Vector3 eta, Vector3 k);
+Material  material_roughconductor(Vector3 eta, Vector3 k, float roughness);
 
 #ifdef __cplusplus
 }

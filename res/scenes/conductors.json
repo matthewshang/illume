@@ -1,0 +1,201 @@
+{
+	"materials":
+	[
+		{
+			"name": "white",
+			"type": "diffuse",
+			"color": [0.725, 0.71, 0.68]
+		},
+		{
+			"name": "red",
+			"type": "diffuse",
+			"color": [0.63, 0.065, 0.05]
+		},
+		{
+			"name": "green",
+			"type": "diffuse",
+			"color": [0.14, 0.45, 0.091]
+		},
+    {
+      "name": "leftlight",
+      "type": "emissive",
+      "color": [ 2.85, 3.613, 5 ]
+    },
+    {
+      "name": "rightlight",
+      "type": "emissive",
+      "color": [ 5, 4.1386, 2.8657 ]
+    },
+    {
+      "name": "toplight",
+      "type": "emissive",
+      "color": [ 2, 2, 2 ]
+    },
+    {
+      "name": "gold",
+      "type": "rough_conductor",
+      "material": "Au",
+      "roughness": 0.2
+    },
+    {
+      "name": "copper",
+      "type": "rough_conductor",
+      "material": "Cu",
+      "roughness": 0.25
+    }
+	],
+	"meshes":
+	[
+		{
+			"file": "res/cube.obj",
+			"name": "box",
+			"z_up": 0,
+			"bvh_items_per_node": 12
+		},
+    {
+      "file": "res/quad.obj",
+      "name": "quad",
+      "z_up": 0,
+      "bvh_items_per_node": 4
+    },
+    {
+      "file": "res/lucy.obj",
+      "name": "lucy",
+      "flip_normals": true
+    },
+    {
+      "file": "res/dragon2.obj",
+      "name": "dragon",
+      "flip_normals": true,
+      "neg_z": true
+    }
+	],
+  "primitives": [
+    {
+      "type": "mesh_instance",
+      "mesh": "lucy",
+      "transform": {
+        "translation": [ 257.5, 0, 207.5 ],
+        "scale": [ -20, 20, 20 ],
+        "rotation": [ 0, -5, 0 ]
+      },
+      "material": "gold"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "dragon",
+      "transform": {
+        "translation": [ 307.5, 0, 177.5 ],
+        "scale": [ 6.5, 6.5, 6.5 ],
+        "rotation": [ 0, -108, 0 ]
+      },
+      "material": "copper" 
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 0, 277.5 ],
+        "scale": [ 1110, 1110, 555 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 277.5, 555 ],
+        "scale": [ 1110, 555, 555 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 277.5, -277.5 ],
+        "scale": [ 1110, 555, 555 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 555, 277.5 ],
+        "scale": [ 1110, 1110, 555 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 832.5, 277.5, 277.5 ],
+        "scale": [ 1110, 555, 555 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ -277.5, 277.5, 277.5 ],
+        "scale": [ 1110, 555, 555 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 832.4, 277.5, 277.5 ],
+        "scale": [ 277.5, 277.5, 277.5 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "rightlight"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ -277.4, 277.5, 277.5 ],
+        "scale": [ 277.5, 277.5, 277.5 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "leftlight"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 554.9, 277.5 ],
+        "scale": [ 555, 555, 277.5 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "toplight"
+    }
+  ],
+	"camera":
+	{
+    "transform": {
+      "translation": [ 288, 100, -50 ],
+      "rotation": [ 10, 0, 0 ]
+    },
+		"fov": 35,
+		"depth_of_field": 239,
+		"aperture_radius": 2.5
+	},
+	"render_settings":
+	{
+		"resolution": [1024, 1024],
+		"ray_bias": 0.01
+	},
+  "bgcolor": [ 0, 0, 0 ]
+}

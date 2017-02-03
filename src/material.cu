@@ -39,7 +39,7 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 	{
 		float ior, roughness;
 		JsonUtils::from_json(json, "ior",       ior);
-		JsonUtils::from_json(json, "roughness", roughness);
+		JsonUtils::from_json(json, "roughness", roughness, 0.1f);
 		return material_roughrefrac(color, ior, roughness, m);
 	}
 	else if (type == "conductor")
@@ -50,9 +50,23 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 		if (!Conductor::get(material, eta, k))
 		{
 			printf("material_from_json: invalid conductor material %s, defaulting to copper\n", material.c_str());
-			return material_conductor(vector3_create(0.21249f, 0.97909f, 1.3343f), vector3_create(4.1005f, 2.3691f, 2.2965f));
+			Conductor::get("Cu", eta, k);
 		}
 		return material_conductor(eta, k);
+	}
+	else if (type == "rough_conductor")
+	{
+		std::string material;
+		float roughness;
+		JsonUtils::from_json(json, "material",  material);
+		JsonUtils::from_json(json, "roughness", roughness, 0.1f);
+		Vector3 eta, k;
+		if (!Conductor::get(material, eta, k))
+		{
+			printf("material_from_json: invalid conductor material %s, defaulting to copper\n", material.c_str());
+			Conductor::get("Cu", eta, k);
+		}
+		return material_roughconductor(eta, k, roughness);
 	}
 	printf("material_from_json: invalid material type %s\n", type.c_str());
 	return material_diffuse(vector3_create(0, 0, 0));
@@ -114,5 +128,13 @@ Material material_conductor(Vector3 eta, Vector3 k)
 {
 	Material material = material_base(eta, MATERIAL_CONDUCTOR);
 	material.k = k;
+	return material;
+}
+
+Material material_roughconductor(Vector3 eta, Vector3 k, float roughness)
+{
+	Material material = material_base(eta, MATERIAL_ROUGHCONDUCTOR);
+	material.k = k;
+	material.roughness = roughness;
 	return material;
 }

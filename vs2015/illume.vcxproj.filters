@@ -189,5 +189,9 @@
     <None Include="..\res\scenes\subsurface_scattering.json">
       <Filter>res\scenes</Filter>
     </None>
+    <None Include="..\README.md" />
+    <None Include="..\res\scenes\studio.json">
+      <Filter>res\scenes</Filter>
+    </None>
   </ItemGroup>
 </Project>

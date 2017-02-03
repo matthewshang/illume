@@ -72,10 +72,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\packages.config" />
+    <None Include="..\README.md" />
     <None Include="..\res\scenes\conductor.json" />
     <None Include="..\res\scenes\cornell_box.json" />
     <None Include="..\res\scenes\cornell_spheres.json" />
     <None Include="..\res\scenes\roughglass.json" />
+    <None Include="..\res\scenes\studio.json" />
     <None Include="..\res\scenes\subsurface_scattering.json" />
     <None Include="..\res\scenes\xyzrgb_dragon.json" />
   </ItemGroup>

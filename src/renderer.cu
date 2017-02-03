@@ -324,6 +324,36 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 				vector3_mul_vector_to(&ray_colors[ray_index], Fresnel::conductor(min.m.c, min.m.k, cosI));
 			}
+			else if (min.m.type == MATERIAL_ROUGHCONDUCTOR)
+			{
+				Vector3 wi = vector3_mul(r.d, -1.0f);
+				float wiDotN = vector3_dot(wi, min.normal);
+				if (wiDotN <= 0)
+				{
+					ray_statuses[index] = -1;
+					return;
+				}
+				float a = min.m.roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+
+				float u1 = curand_uniform(&states[ray_index]);
+				float u2 = curand_uniform(&states[ray_index]);
+				Vector3 m = Microfacet::sample_Beckmann(a, u1, u2);
+				m = vector3_to_basis(m, min.normal);
+
+				Vector3 F = Fresnel::conductor(min.m.c, min.m.k, wiDotN);
+
+				new_dir = vector3_reflect(r.d, m);
+				if (wiDotN * vector3_dot(new_dir, min.normal) <= 0.0f)
+				{
+					ray_statuses[index] = -1;
+					return;
+				}
+				float wiDotM = vector3_dot(wi, m);
+				float G = Microfacet::G_Beckmann(wi, new_dir, m, a);
+				float weight = (G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
+				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(F, weight));
+				vector3_add_to(&new_origin, vector3_mul(m, ray_bias));
+			}
 
 			ray_set(&rays[ray_index], new_origin, new_dir);
 		}

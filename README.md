@@ -6,7 +6,8 @@ Original cornell box with 100,000 samples per pixel.
 This is a unidirectional brute force pathtracer running on the GPU. 
 ### Features:
 - GPU rendering
-- materials: emissive, lambert, mirror, refractive, microfacet reflection and refraction
+- materials: emissive, lambert, mirror, refractive, microfacet reflection and refraction,
+			 smooth and rough conductor
 - Monte Carlo subsurface scattering with Henyey-Greenstein phase function
 - spheres and OBJ file meshes
 - mesh instancing
@@ -27,14 +28,14 @@ Stanford dragon with orange absorption and foward scattering
 ![rough glass](renders/lucy-rough-dielectric-1024x1024-70000spp-25md.png?raw=true "")
 525k Stanford lucy with ground glass
 
+![conductors](renders/conductor-1024x1024-25000spp-25md.png?raw=true "")
+Rough gold lucy and rough copper Stanford dragon
+
 ![xyzrgb dragon](renders/xyzrgb2-960x720-20000spp-10md.png?raw=true "Title")
 721k tri Stanford xyzrgb dragon, with Cook-Torrance teal surface
 
 ![Cornell Box](renders/box-960x720-25000spp-10md.png?raw=true "Title")
 Cornell box with a glass ball and a mirror ball, showcasing reflection, refraction, caustics, and GI
-
-![sss dragon](renders/hgdragonback4-1440x1080-4000spp-40md.png?raw=true "Title")
-100k tri Stanford dragon model with moderate backscattering and a IOR of 1.68, making it kind of look like jade
 
 ![spheres](renders/spheres-1440x1080-15000spp-15md.png?raw=true "Title")
 Replication in this renderer of the image on the wikipedia article for raytracing
@@ -44,9 +45,13 @@ Stanford bunny model with isotrophic scattering
 
 ## Papers/Links
 
-http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+Reflection/refraction, fresnel: http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 
-https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+Rough Dielectric: https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
+
+Complex iors: refractiveindex.info/?shelf=3d&book=metals
+
+Conductor fresnel equations: seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/#more-1921
 
 https://www.mitsuba-renderer.org/
 
