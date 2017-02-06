@@ -130,11 +130,14 @@
 	],
 	"camera":
 	{
-		"transform": [278, 273, -800],
-		"fov": 39,
-		"depth_of_field": 1,
-		"aperture_radius": 0
-	},
+    "transform": {
+      "translation": [ 278, 273, -800 ],
+      "rotation": [ 0, 0, 0 ]
+    },
+    "fov": 39,
+    "depth_of_field": 1,
+    "aperture_radius": 0
+  },
 	"render_settings":
 	{
 		"resolution": [1024, 1024],

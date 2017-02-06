@@ -139,8 +139,10 @@
 	],
 	"camera":
 	{
-		"transform": [27.8, 27.4, -80.0],
-		"fov": 39,
+    "transform": {
+      "translation": [ 27.8, 27.4, -80.0 ]
+    },
+    "fov": 39,
 		"depth_of_field": 1,
 		"aperture_radius": 0
 	},
