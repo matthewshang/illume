@@ -23,6 +23,7 @@
     <ClCompile Include="..\src\arraylist.c" />
     <ClCompile Include="..\src\bitmap.c" />
     <ClCompile Include="..\src\jsonutils.cpp" />
+    <ClCompile Include="..\src\scene\gpuscene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\accel\bvh.h" />
@@ -49,6 +50,7 @@
     <ClInclude Include="..\src\primitives\mesh_instance.h" />
     <ClInclude Include="..\src\primitives\sphere.h" />
     <ClInclude Include="..\src\renderer.h" />
+    <ClInclude Include="..\src\scene\gpuscene.h" />
     <ClInclude Include="..\src\scene\scene.h" />
   </ItemGroup>
   <ItemGroup>
@@ -74,6 +76,7 @@
     <None Include="..\packages.config" />
     <None Include="..\README.md" />
     <None Include="..\res\scenes\conductor.json" />
+    <None Include="..\res\scenes\conductors.json" />
     <None Include="..\res\scenes\cornell_box.json" />
     <None Include="..\res\scenes\cornell_spheres.json" />
     <None Include="..\res\scenes\roughglass.json" />

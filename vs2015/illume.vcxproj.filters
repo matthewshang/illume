@@ -66,6 +66,9 @@
     <ClCompile Include="..\src\jsonutils.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\scene\gpuscene.cpp">
+      <Filter>src\scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\accel\bvh.h">
@@ -143,6 +146,9 @@
     <ClInclude Include="..\src\conductor.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\scene\gpuscene.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -191,6 +197,9 @@
     </None>
     <None Include="..\README.md" />
     <None Include="..\res\scenes\studio.json">
+      <Filter>res\scenes</Filter>
+    </None>
+    <None Include="..\res\scenes\conductors.json">
       <Filter>res\scenes</Filter>
     </None>
   </ItemGroup>

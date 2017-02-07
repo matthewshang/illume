@@ -35,24 +35,19 @@ Vector3 vector3_create(float x, float y, float z)
 __device__ __host__
 void vector3_set(Vector3* v, float x, float y, float z)
 {
-	if (v)
-	{
-		v->x = x;
-		v->y = y;
-		v->z = z;
-	}
+	v->x = x;
+	v->y = y;
+	v->z = z;
 }
 
 __device__ __host__
 void vector3_normalize(Vector3* v)
 {
-	if (v)
-	{
-		float length = vector3_length(*v);
-		v->x /= length;
-		v->y /= length;
-		v->z /= length;
-	}
+
+	float invLength = 1.0f / vector3_length(*v);
+	v->x *= invLength;
+    v->y *= invLength;
+	v->z *= invLength;
 }
 
 __device__ __host__  
@@ -129,51 +124,37 @@ Vector3 vector3_reflect(Vector3 v, Vector3 n)
 __device__ __host__
 Vector3 vector3_add(Vector3 a, Vector3 b)
 {
-	return vector3_create(a.x + b.x, 
-						  a.y + b.y, 
-						  a.z + b.z);		
+	return vector3_create(a.x + b.x, a.y + b.y, a.z + b.z);		
 }
 
 __device__ __host__
 void vector3_add_to(Vector3* a, Vector3 b)
 {
-	if (a)
-	{
-		a->x += b.x; 
-		a->y += b.y;
-		a->z += b.z;		
-	}
+	a->x += b.x; 
+	a->y += b.y;
+	a->z += b.z;		
 }
 
 __device__ __host__
 Vector3 vector3_sub(Vector3 a, Vector3 b)
 {
-	return vector3_create(a.x - b.x, 
-						  a.y - b.y, 
-						  a.z - b.z);		
+	return vector3_create(a.x - b.x, a.y - b.y, a.z - b.z);		
 }
 
 __device__ __host__
 Vector3 vector3_mul(Vector3 v, float m)
 {
-	return vector3_create(v.x * m, 
-						  v.y * m, 
-						  v.z * m);
+	return vector3_create(v.x * m, v.y * m, v.z * m);
 }
 
 __device__ __host__
 Vector3 vector3_mul_vector(Vector3 a, Vector3 b)
 {
-	return vector3_create(a.x * b.x, 
-						  a.y * b.y, 
-						  a.z * b.z);
+	return vector3_create(a.x * b.x, a.y * b.y, a.z * b.z);
 }
 
 __device__ __host__
 void vector3_mul_vector_to(Vector3* a, Vector3 b)
 {
-	if (a)
-	{
-		vector3_set(a, a->x * b.x, a->y * b.y, a->z * b.z);
-	}
+	vector3_set(a, a->x * b.x, a->y * b.y, a->z * b.z);
 }
