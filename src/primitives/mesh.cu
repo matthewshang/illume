@@ -386,7 +386,7 @@ void mesh_ray_intersect(Mesh* mesh, Ray ray, Hit* hit)
 				{
 					hit->d = d;
 					hit->normal = tri.n;
-					hit->is_intersect = 1;
+					hit->is_intersect = true;
 				}
 			}
 		}

@@ -6,6 +6,7 @@
 #include "../math/ray.h"
 #include "../math/aabb.h"
 #include "../math/vector3.h"
+#include "../math/vector2.h"
 #include "../hit.h"
 #include "../accel/bvh.h"
 

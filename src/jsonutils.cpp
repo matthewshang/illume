@@ -35,6 +35,11 @@ void JsonUtils::object_from_json(rapidjson::Value& json, Vector3& ret)
 	ret = vector3_create(json[0].GetFloat(), json[1].GetFloat(), json[2].GetFloat());
 }
 
+void JsonUtils::object_from_json(rapidjson::Value& json, Vec2f& ret)
+{
+    ret = Vec2f(json[0].GetFloat(), json[1].GetFloat());
+}
+
 void JsonUtils::object_from_json(rapidjson::Value& json, std::string& ret)
 {
 	ret = json.GetString();

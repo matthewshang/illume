@@ -116,10 +116,10 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 	Hit inter;
 	for (int i = 0; i < scene->sphere_amount; i++)
 	{
-		sphere_ray_intersect(scene->spheres[i], ray, &inter);
+		sphere_ray_intersect(&scene->spheres[i], ray, &inter);
 
-		if (inter.is_intersect == 1 && inter.d < min->d)
-		{
+		if (inter.is_intersect && inter.d < min->d)
+        {
 			*min = inter;
 		}
 	}
@@ -129,7 +129,7 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 		int mesh_index = scene->instances[i].mesh_index;
 		mesh_instance_ray_intersect(scene->instances + i, scene->meshes + mesh_index, ray, &inter);
 
-		if (inter.is_intersect == 1 && inter.d < min->d)
+		if (inter.is_intersect && inter.d < min->d)
 		{
 			*min = inter;
 		}
@@ -181,40 +181,42 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			}
 		}
 
-		if (min.is_intersect == 1)
+		if (min.is_intersect)
 		{
 			Ray r = rays[ray_index];
 			Vector3 new_dir;
 			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
 			Vector3 new_origin = ray_position_along(r, min.d);
+            Vector3 albedo = min.m->albedo.eval(min.uv);
+            //Vector3 albedo = vector3_create(0.5, 0.5, 0.5);
 
-			if (min.m.type == MATERIAL_EMISSIVE)
+			if (min.m->type == MATERIAL_EMISSIVE)
 			{
-				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
+				vector3_mul_vector_to(&ray_colors[ray_index], albedo);
 				vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 				ray_statuses[index] = -1;
 				new_dir = vector3_create(0, 0, 0);
 			}
-			else if (min.m.type == MATERIAL_DIFFUSE)
+			else if (min.m->type == MATERIAL_DIFFUSE)
 			{
-				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
+				vector3_mul_vector_to(&ray_colors[ray_index], albedo);
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
 				Vector3 sample = sample_hemisphere_cosine(u1, u2);
 				new_dir = vector3_to_basis(sample, norm_o);
 				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 			}
-			else if (min.m.type == MATERIAL_SPECULAR)
+			else if (min.m->type == MATERIAL_SPECULAR)
 			{
 				vector3_mul_vector_to(&ray_colors[ray_index], vector3_create(0.99f, 0.99f, 0.99f));
 				new_dir = vector3_reflect(r.d, norm_o);
 				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 			}
-			else if (min.m.type == MATERIAL_REFRACTIVE)
+			else if (min.m->type == MATERIAL_REFRACTIVE)
 			{
 				float cosI = -vector3_dot(r.d, min.normal);
 				float cosT = 0.0f;
-				float F = Fresnel::dielectric(cosI, min.m.ior, cosT);
+				float F = Fresnel::dielectric(cosI, min.m->ior, cosT);
 
 				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
 				{
@@ -223,19 +225,19 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				}
 				else
 				{
-					float eta = cosI < 0.0f ? min.m.ior : 1.0f / min.m.ior;
-					ray_mediums[ray_index] = cosI > 0.0f ? min.m.medium : medium_air();
+					float eta = cosI < 0.0f ? min.m->ior : 1.0f / min.m->ior;
+					ray_mediums[ray_index] = cosI > 0.0f ? min.m->medium : medium_air();
 					new_dir = vector3_add(vector3_mul(r.d, eta),
 						vector3_mul(norm_o, eta * fabsf(cosI) - cosT));
 					vector3_add_to(&new_origin, vector3_mul(norm_o, -ray_bias));
 				}
 
-				vector3_mul_vector_to(&ray_colors[ray_index], min.m.c);
+				vector3_mul_vector_to(&ray_colors[ray_index], albedo);
 			}
-			else if (min.m.type == MATERIAL_COOKTORRANCE)
+			else if (min.m->type == MATERIAL_COOKTORRANCE)
 			{
-				//float a = (1.2f - 0.2f * sqrtf(fabsf(vector3_dot(r.d, norm_o)))) * min.m.roughness;
-				float a = min.m.roughness;
+				//float a = (1.2f - 0.2f * sqrtf(fabsf(vector3_dot(r.d, norm_o)))) * min.m->roughness;
+				float a = min.m->roughness;
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
 				Vector3 m = vector3_to_basis(Microfacet::sample_Beckmann(a, u1, u2), norm_o);
@@ -245,7 +247,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				vector3_normalize(&H);
 
 				float n1 = 1.0f;
-				float n2 = min.m.ior;
+				float n2 = min.m->ior;
 				float nr = n1 / n2;
 				float cosI = fabsf(vector3_dot(r.d, norm_o));
 				float cosT = sqrtf(1.0f - nr * nr * (1.0f - cosI * cosI));
@@ -263,17 +265,17 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				float G = fminf(1.0f, fminf(2.0f * NdotH * NdotV / VdotH, 2.0f * NdotH * NdotL / VdotH));
 
 				float D = fminf(1.0f, fmaxf(0.0f, NdotH)) * expf((NdotH * NdotH - 1.0f) / (a * a * NdotH * NdotH)) / (ILLUME_PI * a * a * NdotH * NdotH * NdotH * NdotH);
-				Vector3 reflectance = vector3_mul(min.m.c, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
-				//Vector3 reflectance = vector3_mul(min.m.c, (F *  D * G) / (4.0f * NdotV));
+				Vector3 reflectance = vector3_mul(albedo, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
+				//Vector3 reflectance = vector3_mul(albedo, (F *  D * G) / (4.0f * NdotV));
 
 				vector3_mul_vector_to(&ray_colors[ray_index], reflectance);
 				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 			}
-			else if (min.m.type == MATERIAL_ROUGHREFRACTIVE)
+			else if (min.m->type == MATERIAL_ROUGHREFRACTIVE)
 			{
 				Vector3 wi = vector3_mul(r.d, -1.0f);
 				float wiDotN = vector3_dot(wi, min.normal);
-				float a = min.m.roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+				float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
@@ -282,7 +284,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 
 				float wiDotT = 0.0f;
 				float wiDotM = vector3_dot(wi, m);
-				float F = Fresnel::dielectric(wiDotM, min.m.ior, wiDotT);
+				float F = Fresnel::dielectric(wiDotM, min.m->ior, wiDotT);
 
 				if (F == 1.0f || curand_uniform(&states[ray_index]) < F)
 				{
@@ -296,8 +298,8 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				}
 				else
 				{
-					float eta = wiDotM < 0.0f ? min.m.ior : 1.0f / min.m.ior;
-					ray_mediums[ray_index] = wiDotM > 0.0f ? min.m.medium : medium_air();
+					float eta = wiDotM < 0.0f ? min.m->ior : 1.0f / min.m->ior;
+					ray_mediums[ray_index] = wiDotM > 0.0f ? min.m->medium : medium_air();
 					new_dir = vector3_sub(
 						vector3_mul(m, wiDotM * eta - (wiDotM > 0.0f ? 1.0f : -1.0f) * wiDotT),
 						vector3_mul(wi, eta));
@@ -311,10 +313,11 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 
 				float G = Microfacet::G_Beckmann(wi, new_dir, m, a);
 				float weight = (G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
-				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(min.m.c, weight));
+				vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(albedo, weight));
 			}
-			else if (min.m.type == MATERIAL_CONDUCTOR)
+			else if (min.m->type == MATERIAL_CONDUCTOR)
 			{
+                // albedo used to store eta
 				float cosI = -vector3_dot(r.d, min.normal);
 				if (cosI <= 0)
 				{
@@ -323,9 +326,9 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 				}
 				new_dir = vector3_reflect(r.d, norm_o);
 				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
-				vector3_mul_vector_to(&ray_colors[ray_index], Fresnel::conductor(min.m.c, min.m.k, cosI));
+				vector3_mul_vector_to(&ray_colors[ray_index], Fresnel::conductor(min.m->eta, min.m->k, cosI));
 			}
-			else if (min.m.type == MATERIAL_ROUGHCONDUCTOR)
+			else if (min.m->type == MATERIAL_ROUGHCONDUCTOR)
 			{
 				Vector3 wi = vector3_mul(r.d, -1.0f);
 				float wiDotN = vector3_dot(wi, min.normal);
@@ -334,14 +337,14 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 					ray_statuses[index] = -1;
 					return;
 				}
-				float a = min.m.roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+				float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
 				float u1 = curand_uniform(&states[ray_index]);
 				float u2 = curand_uniform(&states[ray_index]);
 				Vector3 m = Microfacet::sample_Beckmann(a, u1, u2);
 				m = vector3_to_basis(m, min.normal);
 
-				Vector3 F = Fresnel::conductor(min.m.c, min.m.k, wiDotN);
+				Vector3 F = Fresnel::conductor(min.m->eta, min.m->k, wiDotN);
 
 				new_dir = vector3_reflect(r.d, m);
 				if (wiDotN * vector3_dot(new_dir, min.normal) <= 0.0f)
@@ -364,8 +367,6 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 			ray_statuses[index] = -1;
 		}
-
-
 	}
 }
 

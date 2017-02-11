@@ -8,39 +8,52 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 	std::string type;
 	JsonUtils::from_json(json, "type", type);
 
-	Vector3 color;
-	JsonUtils::from_json(json, "color", color);
+    Texture albedo;
+    auto albedo_ref = json.FindMember("albedo");
+    if (albedo_ref != json.MemberEnd())
+    {
+        albedo = texture_from_json(albedo_ref->value);
+        if (albedo.type == TextureType::CHECKERBOARD)
+        {
+            printf("%f %f\n", albedo.checkerboard.on.x, albedo.checkerboard.off.x);
+        }
+    }
+    else
+    {
+        albedo = texture_constant(vector3_create(0, 0, 0));
+    }
+
 	if (type == "emissive")
 	{
-		return material_emissive(color);
+		return material_emissive(albedo);
 	}
 	else if (type == "diffuse")
 	{
-		return material_diffuse(color);
+		return material_diffuse(albedo);
 	}
 	else if (type == "specular")
 	{
-		return material_specular(color);
+		return material_specular(albedo);
 	}
 	else if (type == "refractive")
 	{
 		float ior;
 		JsonUtils::from_json(json, "ior", ior);
-		return material_refractive(color, ior, m);
+		return material_refractive(albedo, ior, m);
 	}
 	else if (type == "cooktorrance")
 	{
 		float ior, roughness;
 		JsonUtils::from_json(json, "ior",       ior);
 		JsonUtils::from_json(json, "roughness", roughness);
-		return material_cooktorrance(color, ior, roughness);
+		return material_cooktorrance(albedo, ior, roughness);
 	}
 	else if (type == "rough_glass")
 	{
 		float ior, roughness;
 		JsonUtils::from_json(json, "ior",       ior);
 		JsonUtils::from_json(json, "roughness", roughness, 0.1f);
-		return material_roughrefrac(color, ior, roughness, m);
+		return material_roughrefrac(albedo, ior, roughness, m);
 	}
 	else if (type == "conductor")
 	{
@@ -69,37 +82,38 @@ Material material_from_json(rapidjson::Value& json, Medium m)
 		return material_roughconductor(eta, k, roughness);
 	}
 	printf("material_from_json: invalid material type %s\n", type.c_str());
-	return material_diffuse(vector3_create(0, 0, 0));
+	return material_diffuse(texture_constant(vector3_create(0, 0, 0)));
 }
 
-Material material_base(Vector3 c, int type)
+Material material_base(Texture albedo, int type)
 {
 	Material material;
-	material.c = c;
+	material.albedo = albedo;
 	material.type = type;
 	material.ior = 0.f;
 	material.roughness = 0.f;
 	material.medium = medium_air();
+    material.eta = vector3_create(0, 0, 0);
 	material.k = vector3_create(0, 0, 0);
 	return material;
 }
 
-Material material_emissive(Vector3 e)
+Material material_emissive(Texture emission)
 {
-	return material_base(e, MATERIAL_EMISSIVE);
+	return material_base(emission, MATERIAL_EMISSIVE);
 }
 
-Material material_diffuse(Vector3 d)
+Material material_diffuse(Texture albedo)
 {
-	return material_base(d, MATERIAL_DIFFUSE);
+	return material_base(albedo, MATERIAL_DIFFUSE);
 }
 
-Material material_specular(Vector3 s)
+Material material_specular(Texture s)
 {
 	return material_base(s, MATERIAL_SPECULAR);
 }
 
-Material material_refractive(Vector3 r, float ior, Medium medium)
+Material material_refractive(Texture r, float ior, Medium medium)
 {
 	Material material = material_base(r, MATERIAL_REFRACTIVE);
 	material.ior = ior;
@@ -107,7 +121,7 @@ Material material_refractive(Vector3 r, float ior, Medium medium)
 	return material;
 }
 
-Material material_cooktorrance(Vector3 r, float ior, float roughness)
+Material material_cooktorrance(Texture r, float ior, float roughness)
 {
 	Material material = material_base(r, MATERIAL_COOKTORRANCE);
 	material.ior = ior;
@@ -115,7 +129,7 @@ Material material_cooktorrance(Vector3 r, float ior, float roughness)
 	return material;
 }
 
-Material material_roughrefrac(Vector3 r, float ior, float roughness, Medium m)
+Material material_roughrefrac(Texture r, float ior, float roughness, Medium m)
 {
 	Material material = material_base(r, MATERIAL_ROUGHREFRACTIVE);
 	material.ior = ior;
@@ -126,14 +140,16 @@ Material material_roughrefrac(Vector3 r, float ior, float roughness, Medium m)
 
 Material material_conductor(Vector3 eta, Vector3 k)
 {
-	Material material = material_base(eta, MATERIAL_CONDUCTOR);
+	Material material = material_base(texture_constant(vector3_create(0, 0, 0)), MATERIAL_CONDUCTOR);
+    material.eta = eta;
 	material.k = k;
 	return material;
 }
 
 Material material_roughconductor(Vector3 eta, Vector3 k, float roughness)
 {
-	Material material = material_base(eta, MATERIAL_ROUGHCONDUCTOR);
+	Material material = material_base(texture_constant(vector3_create(0, 0, 0)), MATERIAL_ROUGHCONDUCTOR);
+    material.eta = eta;
 	material.k = k;
 	material.roughness = roughness;
 	return material;

@@ -26,7 +26,6 @@ namespace Conductor
 
 	static bool get(std::string name, Vector3& eta, Vector3& k)
 	{
-		printf("hi");
 		for (int i = 0; i < conductorsAmount; i++)
 		{
 			if (conductors[i].name == name)

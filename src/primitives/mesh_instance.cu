@@ -102,6 +102,6 @@ void mesh_instance_ray_intersect(MeshInstance* instance, Mesh* mesh, Ray ray, Hi
 	{
 		hit->normal = matrix4_mul_vector3(&instance->t.trans_inv, hit->normal, 0);
 		vector3_normalize(&hit->normal);
-		hit->m = instance->m;
+		hit->m = &instance->m;
 	}
 }  

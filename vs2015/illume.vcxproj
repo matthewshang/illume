@@ -43,6 +43,7 @@
     <ClInclude Include="..\src\math\ray.h" />
     <ClInclude Include="..\src\math\sample.h" />
     <ClInclude Include="..\src\math\transform.h" />
+    <ClInclude Include="..\src\math\vector2.h" />
     <ClInclude Include="..\src\math\vector3.h" />
     <ClInclude Include="..\src\medium.h" />
     <ClInclude Include="..\src\microfacet.h" />
@@ -52,6 +53,7 @@
     <ClInclude Include="..\src\renderer.h" />
     <ClInclude Include="..\src\scene\gpuscene.h" />
     <ClInclude Include="..\src\scene\scene.h" />
+    <ClInclude Include="..\src\texture.h" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\src\camera.cu" />
@@ -71,6 +73,7 @@
     <CudaCompile Include="..\src\primitives\sphere.cu" />
     <CudaCompile Include="..\src\renderer.cu" />
     <CudaCompile Include="..\src\scene\scene.cu" />
+    <CudaCompile Include="..\src\texture.cu" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\packages.config" />
@@ -82,6 +85,7 @@
     <None Include="..\res\scenes\roughglass.json" />
     <None Include="..\res\scenes\studio.json" />
     <None Include="..\res\scenes\subsurface_scattering.json" />
+    <None Include="..\res\scenes\texture.json" />
     <None Include="..\res\scenes\xyzrgb_dragon.json" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -141,11 +145,17 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>..\include\;$(IncludePath)</IncludePath>
+    <OutDir>..\build</OutDir>
+    <IntDir>..\build\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>..\include\;$(IncludePath)</IncludePath>
     <OutDir>..\build</OutDir>
     <IntDir>..\build\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>..\include\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

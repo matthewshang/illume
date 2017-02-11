@@ -52,6 +52,9 @@
     <CudaCompile Include="..\src\renderer.cu">
       <Filter>src</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\src\texture.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\accel\bvh.cpp">
@@ -149,6 +152,12 @@
     <ClInclude Include="..\src\scene\gpuscene.h">
       <Filter>src\scene</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\texture.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\math\vector2.h">
+      <Filter>src\math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -200,6 +209,9 @@
       <Filter>res\scenes</Filter>
     </None>
     <None Include="..\res\scenes\conductors.json">
+      <Filter>res\scenes</Filter>
+    </None>
+    <None Include="..\res\scenes\texture.json">
       <Filter>res\scenes</Filter>
     </None>
   </ItemGroup>

@@ -23,7 +23,7 @@ extern "C" {
             void     sphere_free           (Sphere* sphere);
 			Sphere   sphere_from_json      (rapidjson::Value& json, Material m);
 			Sphere   sphere_create         (float r, Vector3 center, Material m);
-__device__  void     sphere_ray_intersect  (Sphere sphere, Ray ray, Hit* hit);
+__device__  void     sphere_ray_intersect  (Sphere* sphere, Ray ray, Hit* hit);
 
 #ifdef __cplusplus
 }

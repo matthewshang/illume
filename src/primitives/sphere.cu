@@ -1,6 +1,7 @@
 #include "sphere.h"
 
 #include "../jsonutils.h"
+#include "../math/mathutils.h"
 
 Sphere* sphere_new(float r, Vector3 center, Material m)
 {
@@ -40,12 +41,12 @@ Sphere sphere_create(float r, Vector3 center, Material m)
 }
 
 __device__
-void sphere_ray_intersect(Sphere sphere, Ray ray, Hit* hit)
+void sphere_ray_intersect(Sphere* sphere, Ray ray, Hit* hit)
 {
-	Vector3 l = vector3_sub(sphere.center, ray.o);
+	Vector3 l = vector3_sub(sphere->center, ray.o);
 	float s = vector3_dot(l, ray.d);
 	float ls = vector3_dot(l, l);
-	float rs = sphere.r * sphere.r;
+	float rs = sphere->r * sphere->r;
 	if (s < 0 && ls > rs)
 	{
 		hit_set_no_intersect(hit);
@@ -68,7 +69,9 @@ void sphere_ray_intersect(Sphere sphere, Ray ray, Hit* hit)
 		t += q;
 	}
 	Vector3 pos = ray_position_along(ray, t);
-	Vector3 normal = vector3_sub(pos, sphere.center);
+	Vector3 normal = vector3_sub(pos, sphere->center);
 	vector3_normalize(&normal);
-	hit_set(hit, t, normal, sphere.m);
+    float u = atan2f(normal.z, normal.x) * 0.5f * ILLUME_INV_PI + 0.5f;
+    float v = 0.5f - asinf(normal.y) * ILLUME_INV_PI;
+    hit_set(hit, t, normal, &sphere->m, Vec2f(u, v));
 }

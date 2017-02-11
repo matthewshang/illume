@@ -3,6 +3,7 @@
 #include "rapidjson/document.h"
 
 #include "math/vector3.h"
+#include "math/vector2.h"
 
 namespace JsonUtils
 {
@@ -11,6 +12,7 @@ namespace JsonUtils
 	void object_from_json(rapidjson::Value& json, int& ret);
 	void object_from_json(rapidjson::Value& json, float& ret);
 	void object_from_json(rapidjson::Value& json, Vector3& ret);
+    void object_from_json(rapidjson::Value& json, Vec2f& ret);
 	void object_from_json(rapidjson::Value& json, std::string& ret);
 	void object_from_json(rapidjson::Value& json, bool& ret);
 

@@ -3,13 +3,12 @@
 
 #include "../intellisense.h"
 
-typedef struct
+struct Vector3
 {
 	float x;
 	float y;
 	float z;
-} 
-Vector3;
+};
 
 #ifdef __cplusplus
 extern "C" {
