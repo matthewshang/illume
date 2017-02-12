@@ -19,19 +19,11 @@ typedef struct
 }
 MeshInstance;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 			MeshInstance   mesh_instance_create         (int mesh_index, Material m, Transform t);
             MeshInstance*  mesh_instance_new            (int mesh_index, Material m, Transform t);
 			MeshInstance   mesh_instance_from_json      (rapidjson::Value& json, Material m, int mesh_index, Mesh* mesh);
 			void           mesh_instance_free           (MeshInstance* instance);
 			void           mesh_instance_build_aabb     (MeshInstance* instance, Mesh* mesh);
 __device__  void           mesh_instance_ray_intersect  (MeshInstance* instance, Mesh* mesh, Ray ray, Hit* hit);  
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

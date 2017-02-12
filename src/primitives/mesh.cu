@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 #include "../arraylist.h"
 #include "../math/mathutils.h"
@@ -9,38 +10,26 @@
 
 typedef struct
 {
-	ArrayList* vertices;
-	ArrayList* triangles;
-	ArrayList* aabbs;
+    std::vector<Vector3> vertices;
+    std::vector<Triangle> triangles;
+    std::vector<AABB> aabbs;
+    std::vector<Vec2f> texcoords;
 }
 tmp_mesh;
 
-static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2)
+static Triangle triangle_create(Vector3 v0, Vector3 v1, Vector3 v2, 
+                                int i0, int i1, int i2, bool flip_normals)
 {
 	Triangle tri;
 	tri.e1 = vector3_sub(v1, v0);
 	tri.e2 =  vector3_sub(v2, v0);
 	tri.v0 = v0;
-	//tri.n = vector3_cross(tri.e1, tri.e2);
-	tri.n = vector3_cross(tri.e2, tri.e1);
-
+    tri.n = flip_normals ? vector3_cross(tri.e2, tri.e1) :
+        vector3_cross(tri.e1, tri.e2);
 	vector3_normalize(&tri.n);
-	return tri;
-}
-
-static Triangle* triangle_new(Vector3 v0, Vector3 v1, Vector3 v2, bool flipNormals)
-{
-	Triangle* tri = (Triangle *) calloc(1, sizeof(Triangle));
-	if (!tri)
-	{
-		return NULL;
-	}
-	tri->e1 = vector3_sub(v1, v0);
-	tri->e2 = vector3_sub(v2, v0);
-	tri->v0 = v0;
-	tri->n = flipNormals ? vector3_cross(tri->e2, tri->e1) : 
-						   vector3_cross(tri->e1, tri->e2);
-	vector3_normalize(&tri->n);
+    tri.indices[0] = i0;
+    tri.indices[1] = i1;
+    tri.indices[2] = i2;
 	return tri;
 }
 
@@ -71,14 +60,14 @@ static void obj_get_token(char* line, char** ret)
 	free(dup);
 }
 
-static void split_string(const char* string, const char* delim, int tokens, char** ret)
+static void split_string(const char* string, const char* delim, int tokens, char** ret, int offset = 0)
 {
 	char* dup = strdup(string);
 	char* p = strtok(dup, delim);
 	int i = 0;
 	while (i < tokens && p != NULL)
 	{
-		ret[i++] = strdup(p);
+		ret[offset + i++] = strdup(p);
 		p = strtok(NULL, delim);
 	}
 
@@ -112,7 +101,8 @@ static void fix_aabb(AABB* aabb)
 	}
 }
 
-static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool negZ, bool flipNormals)
+static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, 
+    bool negZ, bool flipNormals, bool hasTexcoords)
 {
 	FILE* file;
 	file = fopen(path, "rt");
@@ -136,35 +126,55 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool
 			split_string(line, " ", VERTEX_COMPONENTS, tokens);
 			if (zUp)
 			{
-				arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
-					strtof(tokens[3], NULL),
-					strtof(tokens[2], NULL)));
+                tmp->vertices.push_back(vector3_create(strtof(tokens[1], NULL),
+                    strtof(tokens[3], NULL),
+                    strtof(tokens[2], NULL)));
 			}
 			else
 			{
-				arraylist_add(tmp->vertices, vector3_new(strtof(tokens[1], NULL),
-					strtof(tokens[2], NULL),
-					(negZ ? -1 : 1) * strtof(tokens[3], NULL)));
+                tmp->vertices.push_back(vector3_create(strtof(tokens[1], NULL),
+                    strtof(tokens[2], NULL),
+                    strtof(tokens[3], NULL)));
 			}
 			split_string_finish(tokens, VERTEX_COMPONENTS);
 		}
+        else if (strcmp(token, TOKEN_TEXCOORDS) == 0)
+        {
+            split_string(line, " ", TEXCOORDS_COMPONENTS, tokens);
+            tmp->texcoords.push_back(Vec2f(strtof(tokens[1], NULL), strtof(tokens[2], NULL)));
+            split_string_finish(tokens, TEXCOORDS_COMPONENTS);
+        }
 		else if (strcmp(token, TOKEN_FACE) == 0)
 		{
 			split_string(line, " ", FACE_COMPONENTS, tokens);
-			int i0 = strtol(tokens[1], NULL, 10) - 1;
-			int i1 = strtol(tokens[2], NULL, 10) - 1;
-			int i2 = strtol(tokens[3], NULL, 10) - 1;
-			Vector3 v0 = *((Vector3 *) arraylist_get(tmp->vertices, i0));
-			Vector3 v1 = *((Vector3 *) arraylist_get(tmp->vertices, i1));
-			Vector3 v2 = *((Vector3 *) arraylist_get(tmp->vertices, i2));
-			AABB* aabb = (AABB *) calloc(1, sizeof(AABB));
-			*aabb = aabb_create();
-			aabb_update(aabb, v0);
-			aabb_update(aabb, v1);
-			aabb_update(aabb, v2);
-			fix_aabb(aabb);
-			arraylist_add(tmp->aabbs, aabb);
-			arraylist_add(tmp->triangles, triangle_new(v0, v1, v2, flipNormals));
+            int i0, i1, i2;
+            if (hasTexcoords)
+            {
+                char** texindices = (char**)calloc(6, sizeof(char *));
+                for (int i = 1; i < 4; i++)
+                {
+                    split_string(tokens[i], "/", 2, texindices, i * 2 - 2);
+                }
+                i0 = strtol(texindices[1], NULL, 10) - 1;
+                i1 = strtol(texindices[3], NULL, 10) - 1;
+                i2 = strtol(texindices[5], NULL, 10) - 1;
+                split_string_finish(texindices, 6);
+                free(texindices);
+            }
+            else
+            {
+                i0 = i1 = i2 = -1;
+            }
+			Vector3 v0 = tmp->vertices[strtol(tokens[1], NULL, 10) - 1];
+			Vector3 v1 = tmp->vertices[strtol(tokens[2], NULL, 10) - 1];
+			Vector3 v2 = tmp->vertices[strtol(tokens[3], NULL, 10) - 1];
+			AABB aabb = aabb_create();
+			aabb_update(&aabb, v0);
+			aabb_update(&aabb, v1);
+			aabb_update(&aabb, v2);
+			fix_aabb(&aabb);
+            tmp->aabbs.push_back(aabb);
+            tmp->triangles.push_back(triangle_create(v0, v1, v2, i0, i1, i2, flipNormals));
 			split_string_finish(tokens, FACE_COMPONENTS);
 			tris++;
 		}
@@ -184,47 +194,52 @@ static void load_obj(Mesh* mesh, const char* path, tmp_mesh* tmp, bool zUp, bool
 	printf("Triangles: %d\n", tris);
 }
 
-static void copy_triangles(tmp_mesh* tmp, Mesh* mesh)
+static void copy_data(tmp_mesh* tmp, Mesh* mesh, bool hasTexcoords)
 {
-	mesh->triangles = (Triangle *) calloc(tmp->triangles->length, sizeof(Triangle));
+	mesh->triangles = (Triangle *) calloc(tmp->triangles.size(), sizeof(Triangle));
 	if (mesh->triangles)
 	{
-		for (int i = 0; i < tmp->triangles->length; i++)
-		{
-			Triangle* triangle = (Triangle *) arraylist_get(tmp->triangles, i);
-			mesh->triangles[i] = *triangle;
-		}
-		mesh->triangle_amount = tmp->triangles->length;
+        std::copy(tmp->triangles.begin(), tmp->triangles.end(), mesh->triangles);
+		mesh->triangle_amount = tmp->triangles.size();
 	}
 	else
 	{
-		printf("mesh_load_obj: allocation of mesh tris failed");
+		printf("copy_triangles: allocation of mesh tris failed\n");
 	}
 
+    if (hasTexcoords)
+    {
+        mesh->texcoords = (Vec2f *)calloc(tmp->texcoords.size(), sizeof(Vec2f));
+        if (mesh->texcoords)
+        {
+            std::copy(tmp->texcoords.begin(), tmp->texcoords.end(), mesh->texcoords);
+            mesh->vertex_amount = tmp->texcoords.size();
+        }
+        else
+        {
+            printf("copy_texcoords: allocation of texcoords failed\n");
+        }
+    }
 }
 
 static void build_mesh_bounds(tmp_mesh* tmp, Mesh* mesh)
 {
 	mesh->aabb = aabb_create();
-	for (int i = 0; i < tmp->vertices->length; i++)
+	for (int i = 0; i < tmp->vertices.size(); i++)
 	{
-		Vector3* v = (Vector3 *) arraylist_get(tmp->vertices, i);
-		aabb_update(&mesh->aabb, *v);
+		aabb_update(&mesh->aabb, tmp->vertices[i]);
 	}
 }
 
-Mesh mesh_create(const char * path, bool zUp, bool negZ, bool flipNormals, int tris_per_node)
+Mesh mesh_create(const char* path, bool zUp, bool negZ, bool flipNormals, bool hasTexcoords, int tris_per_node)
 {
 	Mesh mesh;
 	mesh.triangle_amount = 0;
 	mesh.triangles = NULL;
 
 	tmp_mesh tmp;
-	tmp.vertices = arraylist_new(3);
-	tmp.triangles = arraylist_new(1);
-	tmp.aabbs = arraylist_new(1);
-	load_obj(&mesh, path, &tmp, zUp, negZ, flipNormals);
-	copy_triangles(&tmp, &mesh);
+	load_obj(&mesh, path, &tmp, zUp, negZ, flipNormals, hasTexcoords);
+	copy_data(&tmp, &mesh, hasTexcoords);
 	build_mesh_bounds(&tmp, &mesh);
 	//printf("mesh bounds: \nmin: %f %f %f\nmax: %f %f %f\n", mesh->aabb.min.x, mesh->aabb.min.y, mesh->aabb.min.z, mesh->aabb.max.x, mesh->aabb.max.y, mesh->aabb.max.z);
 	int length = strlen(path);
@@ -235,22 +250,7 @@ Mesh mesh_create(const char * path, bool zUp, bool negZ, bool flipNormals, int t
 	filename[length - 1] = 'h';
 	filename[length] = '\0';
 	mesh.bvh = bvh_create(tmp.aabbs, mesh.aabb, filename, tris_per_node);
-
-	for (int i = 0; i < tmp.aabbs->length; i++)
-	{
-		free((AABB *)arraylist_get(tmp.aabbs, i));
-	}
-	arraylist_free(tmp.aabbs);
-	for (int i = 0; i < tmp.vertices->length; i++)
-	{
-		free(arraylist_get(tmp.vertices, i));
-	}
-	arraylist_free(tmp.vertices);
-	for (int i = 0; i < tmp.triangles->length; i++)
-	{
-		free(arraylist_get(tmp.triangles, i));
-	}
-	arraylist_free(tmp.triangles);
+    mesh.has_texcoords = hasTexcoords;
 	return mesh;
 }
 
@@ -258,91 +258,51 @@ Mesh mesh_from_json(rapidjson::Value& json)
 {
 	std::string file;
 	int itemsPerNode;
-	bool zUp, negZ, flipNormals;
+	bool zUp, negZ, flipNormals, hasTexcoords;
 	JsonUtils::from_json(json, "file",               file);
 	JsonUtils::from_json(json, "z_up",               zUp, false);
 	JsonUtils::from_json(json, "neg_z",              negZ, false);
 	JsonUtils::from_json(json, "flip_normals",       flipNormals, false);
+    JsonUtils::from_json(json, "has_texcoords",      hasTexcoords, false);
 	JsonUtils::from_json(json, "bvh_items_per_node", itemsPerNode, 4);
-	return mesh_create(file.c_str(), zUp, negZ, flipNormals, itemsPerNode);
+	return mesh_create(file.c_str(), zUp, negZ, flipNormals, hasTexcoords, itemsPerNode);
 }
 
 // Moller-trumbore method
 __device__
-static float triangle_ray_intersect(Triangle tri, Ray ray)
+static float triangle_ray_intersect(Triangle* tri, Ray ray, float& u_, float& v_)
 {
 	Vector3 P, Q, T;
 	float det, u, v;
 
-	P = vector3_cross(ray.d, tri.e2);
-	det = vector3_dot(tri.e1, P);
+	P = vector3_cross(ray.d, tri->e2);
+	det = vector3_dot(tri->e1, P);
 	if (fabsf(det) < FLT_EPSILON)
 	{
 		return -1;
 	}
 	det = 1.f / det;
-	T = vector3_sub(ray.o, tri.v0);
+	T = vector3_sub(ray.o, tri->v0);
 	u = vector3_dot(T, P) * det;
 	if (u < 0.f || u > 1.f)
 	{
 		return -1;
 	}
-	Q = vector3_cross(T, tri.e1);
+	Q = vector3_cross(T, tri->e1);
 	v = vector3_dot(ray.d, Q) * det;
 	if (v < 0.f || u + v > 1.f)
 	{
 		return -1;
 	}
-	return vector3_dot(tri.e2, Q) * det;
+    u_ = u;
+    v_ = v;
+
+	return vector3_dot(tri->e2, Q) * det;
 }
 
 // Based on method described at http://raytracey.blogspot.com/2016/01/gpu-path-tracing-tutorial-3-take-your.html
-//__device__
-//Hit bvh_ray_intersect(Triangle* tris, BVH* bvh, Ray ray)
-//{
-//	int stack[BVH_STACK_SIZE];
-//	int stack_idx = 0;
-//	stack[stack_idx++] = 0;
-//	Hit min = hit_create_no_intersect();
-//	min.d = FLT_MAX;
-//
-//	while (stack_idx > 0)
-//	{
-//		GPUNode node = bvh->nodes[stack[stack_idx - 1]];
-//		stack_idx--;
-//		if (node.u.leaf.tri_amount & 0x80000000)
-//		{
-//			for (unsigned i = node.u.leaf.tri_start;
-//				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
-//				i++)
-//				{
-//					Triangle tri = tris[bvh->tri_indices[i]];
-//					float d = triangle_ray_intersect(tri, ray);
-//					if (d > 0 && d < min.d)
-//					{
-//						min.d = d;
-//						min.normal = tri.n;
-//						min.is_intersect = 1;
-//					}
-//				}
-//		}
-//		else
-//		{
-//			if (aabb_ray_intersect(node.bounds, ray) != -FLT_MAX)
-//			{
-//				stack[stack_idx++] = node.u.node.right_node;
-//				stack[stack_idx++] = node.u.node.left_node;
-//				if (stack_idx > BVH_STACK_SIZE)
-//				{
-//					return hit_create_no_intersect();
-//				}
-//			}
-//		}
-//	}
-//	return min;
-//}
 
-__device__
+__device__ 
 void mesh_ray_intersect(Mesh* mesh, Ray ray, Hit* hit)
 {
 	//Hit min = hit_create_no_intersect();
@@ -380,12 +340,20 @@ void mesh_ray_intersect(Mesh* mesh, Ray ray, Hit* hit)
 				i < node.u.leaf.tri_start + (node.u.leaf.tri_amount & 0x7fffffff);
 				i++)
 			{
-				Triangle tri = tris[bvh->tri_indices[i]];
-				float d = triangle_ray_intersect(tri, ray);
+				Triangle* tri = &tris[bvh->tri_indices[i]];
+                float u, v = 0;
+				float d = triangle_ray_intersect(tri, ray, u, v);
 				if (d > 0 && d < hit->d)
 				{
+                    if (mesh->has_texcoords)
+                    {
+                        Vec2f uv0 = mesh->texcoords[tri->indices[0]];
+                        Vec2f uv1 = mesh->texcoords[tri->indices[1]];
+                        Vec2f uv2 = mesh->texcoords[tri->indices[2]];
+                        hit->uv = uv0 * (1.0f - u - v) + uv1 * u + uv2 * v;
+                    }
 					hit->d = d;
-					hit->normal = tri.n;
+					hit->normal = tri->n;
 					hit->is_intersect = true;
 				}
 			}

@@ -15,6 +15,9 @@ GPUScene::GPUScene(Scene* scene)
     GPUNode** tmp_nodes = new GPUNode*[scene->mesh_amount];
     m_bvh_indices = new int*[scene->mesh_amount];
     int** tmp_indices = new int*[scene->mesh_amount];
+    m_texcoords = new Vec2f*[scene->mesh_amount];
+    m_has_texcoords = new bool[scene->mesh_amount];
+    Vec2f** tmp_texcoords = new Vec2f*[scene->mesh_amount];
 
     for (int i = 0; i < scene->mesh_amount; i++)
     {
@@ -36,6 +39,16 @@ GPUScene::GPUScene(Scene* scene)
         HANDLE_ERROR( cudaMemcpy(m_bvh_indices[i], mesh->bvh.tri_indices, indices_size, cudaMemcpyHostToDevice) );
         tmp_indices[i] = mesh->bvh.tri_indices;
         mesh->bvh.tri_indices = m_bvh_indices[i];
+
+        m_has_texcoords[i] = mesh->has_texcoords;
+        if (mesh->has_texcoords)
+        {
+            int texcoords_size = mesh->vertex_amount * sizeof(Vec2f);
+            HANDLE_ERROR( cudaMalloc(&m_texcoords[i], texcoords_size) );
+            HANDLE_ERROR( cudaMemcpy(m_texcoords[i], mesh->texcoords, texcoords_size, cudaMemcpyHostToDevice) );
+            tmp_texcoords[i] = mesh->texcoords;
+            mesh->texcoords = m_texcoords[i];
+        }
     }
 
     // scene
@@ -69,10 +82,12 @@ GPUScene::GPUScene(Scene* scene)
         scene->meshes[i].triangles = tmp_triangles[i];
         scene->meshes[i].bvh.nodes = tmp_nodes[i];
         scene->meshes[i].bvh.tri_indices = tmp_indices[i];
+        if (scene->meshes[i].has_texcoords) scene->meshes[i].texcoords = tmp_texcoords[i];
     }
     delete tmp_triangles;
     delete tmp_nodes;
     delete tmp_indices;
+    delete tmp_texcoords;
 }
 
 GPUScene::~GPUScene()
@@ -86,8 +101,11 @@ GPUScene::~GPUScene()
         HANDLE_ERROR( cudaFree(m_triangles[i]) );
         HANDLE_ERROR( cudaFree(m_bvh_nodes[i]) );
         HANDLE_ERROR( cudaFree(m_bvh_indices[i]) );
+        if (m_has_texcoords[i]) HANDLE_ERROR( cudaFree(m_texcoords[i]) );
     }
     delete m_triangles;
     delete m_bvh_nodes;
     delete m_bvh_indices;
+    delete m_texcoords;
+    delete m_has_texcoords;
 }

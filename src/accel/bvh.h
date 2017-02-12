@@ -1,6 +1,8 @@
 #ifndef _BVH_
 #define _BVH_
 
+#include <vector>
+
 #include "../arraylist.h"
 #include "../math/aabb.h"
 
@@ -37,7 +39,7 @@ typedef struct
 extern "C" {
 #endif
 
-BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename, int tris_per_node);
+BVH bvh_create(std::vector<AABB> aabbs, AABB bounds, char* filename, int tris_per_node);
 void bvh_free(BVH* bvh);
 
 #ifdef __cplusplus

@@ -360,16 +360,16 @@ void print_gpu_tree(BVH* bvh, int node_amount, int tri_amount)
 	}
 }
 
-BVH build_bvh(ArrayList* aabbs, AABB bounds, int tris_per_node)
+BVH build_bvh(std::vector<AABB> aabbs, AABB bounds, int tris_per_node)
 {
 	clock_t start = clock();
 	clock_t diff;
 
-	BVHWork* work = (BVHWork *) calloc(aabbs->length, sizeof(BVHWork));
-	ArrayList* work_list = arraylist_new(aabbs->length);
-	for (int i = 0; i < aabbs->length; i++)
+	BVHWork* work = (BVHWork *) calloc(aabbs.size(), sizeof(BVHWork));
+	ArrayList* work_list = arraylist_new(aabbs.size());
+	for (int i = 0; i < aabbs.size(); i++)
 	{
-		work[i] = bvhwork_create(*((AABB *) arraylist_get(aabbs, i)), i);
+		work[i] = bvhwork_create(aabbs[i], i);
 		arraylist_add(work_list, &work[i]);
 	}
 	printf("Building BVH...    "); fflush(stdout);
@@ -396,7 +396,7 @@ BVH build_bvh(ArrayList* aabbs, AABB bounds, int tris_per_node)
 	return bvh;
 }
 
-BVH bvh_create(ArrayList* aabbs, AABB bounds, char* filename, int tris_per_node)
+BVH bvh_create(std::vector<AABB> aabbs, AABB bounds, char* filename, int tris_per_node)
 {
 	FILE* fp = fopen(filename, "rb");
 	if (!fp)

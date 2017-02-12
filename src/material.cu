@@ -13,10 +13,6 @@ Material material_from_json(rapidjson::Value& json, Medium m)
     if (albedo_ref != json.MemberEnd())
     {
         albedo = texture_from_json(albedo_ref->value);
-        if (albedo.type == TextureType::CHECKERBOARD)
-        {
-            printf("%f %f\n", albedo.checkerboard.on.x, albedo.checkerboard.off.x);
-        }
     }
     else
     {

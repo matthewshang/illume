@@ -20,6 +20,8 @@ private:
     MeshInstance* m_instances;
 
     Triangle** m_triangles;
+    bool* m_has_texcoords;
+    Vec2f** m_texcoords;
     GPUNode** m_bvh_nodes;
     int** m_bvh_indices;
 };

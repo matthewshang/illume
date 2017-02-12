@@ -4,44 +4,52 @@
 		{
 			"name": "white",
 			"type": "diffuse",
-			"color": [0.725, 0.71, 0.68]
+			"albedo": [0.725, 0.71, 0.68]
 		},
 		{
 			"name": "red",
 			"type": "diffuse",
-			"color": [0.63, 0.065, 0.05]
+			"albedo": [0.63, 0.065, 0.05]
 		},
 		{
 			"name": "green",
 			"type": "diffuse",
-			"color": [0.14, 0.45, 0.091]
+			"albedo": [0.14, 0.45, 0.091]
 		},
     {
       "name": "leftlight",
       "type": "emissive",
-      "color": [ 2.85, 3.613, 5 ]
+      "albedo": [ 2.85, 3.613, 5 ]
     },
     {
       "name": "rightlight",
       "type": "emissive",
-      "color": [ 5, 4.1386, 2.8657 ]
+      "albedo": [ 5, 4.1386, 2.8657 ]
     },
     {
       "name": "toplight",
       "type": "emissive",
-      "color": [ 2, 2, 2 ]
+      "albedo": [ 2, 2, 2 ]
     },
     {
-      "name": "gold",
-      "type": "rough_conductor",
-      "material": "Au",
-      "roughness": 0.2
+      "name": "checkers",
+      "type": "diffuse",
+      "albedo": {
+        "type": "checkerboard",
+        "on_color": [ 0.9, 0.9, 0.9 ],
+        "off_color": [ 0.1, 0.1, 0.1 ],
+        "scale": [ 5, 5 ]
+      }
     },
     {
-      "name": "copper",
-      "type": "rough_conductor",
-      "material": "Cu",
-      "roughness": 0.25
+      "name": "checkers2",
+      "type": "diffuse",
+      "albedo": {
+        "type": "checkerboard",
+        "on_color": [ 0.9, 0.9, 0.9 ],
+        "off_color": [ 0.1, 0.1, 0.1 ],
+        "scale": [ 15, 15 ]
+      }
     }
 	],
 	"meshes":
@@ -50,46 +58,33 @@
 			"file": "res/cube.obj",
 			"name": "box",
 			"z_up": 0,
-			"bvh_items_per_node": 12
+      "bvh_items_per_node": 12,
+      "has_texcoords": true
 		},
     {
       "file": "res/quad.obj",
       "name": "quad",
       "z_up": 0,
-      "bvh_items_per_node": 4
-    },
-    {
-      "file": "res/lucy.obj",
-      "name": "lucy",
-      "flip_normals": true
-    },
-    {
-      "file": "res/dragon2.obj",
-      "name": "dragon",
-      "flip_normals": true,
-      "neg_z": true
+      "bvh_items_per_node": 4,
+      "has_texcoords": true
     }
 	],
   "primitives": [
     {
-      "type": "mesh_instance",
-      "mesh": "lucy",
-      "transform": {
-        "translation": [ 257.5, 0, 207.5 ],
-        "scale": [ -20, 20, 20 ],
-        "rotation": [ 0, -5, 0 ]
-      },
-      "material": "gold"
+      "type": "sphere",
+      "radius": 20,
+      "center": [ 247, 20, 180 ],
+      "material": "checkers2"
     },
     {
       "type": "mesh_instance",
-      "mesh": "dragon",
+      "mesh": "cube",
       "transform": {
-        "translation": [ 307.5, 0, 177.5 ],
-        "scale": [ 6.5, 6.5, 6.5 ],
-        "rotation": [ 0, -108, 0 ]
+        "translation": [ 307.5, 20, 180 ],
+        "scale": [ 40, 40, 40 ],
+        "rotation": [ 0, 22, 0 ]
       },
-      "material": "copper" 
+      "material": "checkers"
     },
     {
       "type": "mesh_instance",
@@ -185,12 +180,12 @@
 	"camera":
 	{
     "transform": {
-      "translation": [ 288, 100, -50 ],
+      "translation": [ 277.5, 100, -50 ],
       "rotation": [ 10, 0, 0 ]
     },
 		"fov": 35,
-		"depth_of_field": 239,
-		"aperture_radius": 2.5
+		"depth_of_field": 220,
+		"aperture_radius": 2.1
 	},
 	"render_settings":
 	{
