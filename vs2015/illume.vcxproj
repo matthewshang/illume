@@ -22,6 +22,7 @@
     <ClCompile Include="..\src\accel\bvh.cpp" />
     <ClCompile Include="..\src\arraylist.c" />
     <ClCompile Include="..\src\bitmap.c" />
+    <ClCompile Include="..\src\imageio.cpp" />
     <ClCompile Include="..\src\jsonutils.cpp" />
     <ClCompile Include="..\src\scene\gpuscene.cpp" />
   </ItemGroup>
@@ -34,6 +35,7 @@
     <ClInclude Include="..\src\error_check.h" />
     <ClInclude Include="..\src\fresnel.h" />
     <ClInclude Include="..\src\hit.h" />
+    <ClInclude Include="..\src\imageio.h" />
     <ClInclude Include="..\src\intellisense.h" />
     <ClInclude Include="..\src\jsonutils.h" />
     <ClInclude Include="..\src\material.h" />

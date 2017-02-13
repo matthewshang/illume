@@ -128,6 +128,10 @@ void scene_free(Scene* scene)
 
 		if (scene->instances)
 		{
+            for (int i = 0; i < scene->instance_amount; i++)
+            {
+                scene->instances[i].m.albedo.destroy();
+            }
 			free(scene->instances);
 		}
 

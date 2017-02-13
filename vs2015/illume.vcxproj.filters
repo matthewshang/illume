@@ -72,6 +72,9 @@
     <ClCompile Include="..\src\scene\gpuscene.cpp">
       <Filter>src\scene</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\imageio.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\accel\bvh.h">
@@ -157,6 +160,9 @@
     </ClInclude>
     <ClInclude Include="..\src\math\vector2.h">
       <Filter>src\math</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\imageio.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
