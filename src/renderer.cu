@@ -22,7 +22,7 @@
 #include "math/matrix4.h"
 #include "accel/bvh.h"
 #include "jsonutils.h"
-#include "scene/gpuscene.h"
+#include "scene/sceneref.h"
 
 #include "intellisense.h"
 
@@ -36,7 +36,7 @@
 #define KERNEL_ARGS4(grid, block, sh_mem, stream)
 #endif
 
-Renderer::Renderer(rapidjson::Value& json, Scene* scene, int spp, int max_depth) : 
+Renderer::Renderer(rapidjson::Value& json, HostScene& scene, int spp, int max_depth) : 
 	m_scene(scene), m_spp(spp), m_max_depth(max_depth)
 {
 	auto renderer = json.FindMember("render_settings");
@@ -110,7 +110,7 @@ void init_rays(Ray* rays, int* ray_statuses, Vector3* ray_colors, Medium* ray_me
 }
 
 __device__
-static void get_min_hit(Scene* scene, Ray ray, Hit* min)
+static void get_min_hit(DeviceScene* scene, Ray ray, Hit* min)
 {
 	min->d = FLT_MAX;
 	Hit inter;
@@ -138,17 +138,16 @@ static void get_min_hit(Scene* scene, Ray ray, Hit* min)
 
 __global__
 void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vector3* ray_colors, 
-	Medium* ray_mediums, int depth, Scene* scene, curandState* states, float ray_bias, int N)
+	Medium* ray_mediums, int depth, DeviceScene* scene, curandState* states, float ray_bias, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	int ray_index = ray_statuses[index];
 
 	if (index < N && ray_index != -1)
 	{
-		Scene local_scene = *scene;
 		Hit min;
 		hit_set_no_intersect(&min);
-		get_min_hit(&local_scene, rays[ray_index], &min);
+		get_min_hit(scene, rays[ray_index], &min);
 
 		if (ray_mediums[ray_index].active)
 		{
@@ -188,7 +187,6 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
 			Vector3 new_origin = ray_position_along(r, min.d);
             Vector3 albedo = min.m->albedo.eval(min.uv);
-            //Vector3 albedo = vector3_create(0.5, 0.5, 0.5);
 
 			if (min.m->type == MATERIAL_EMISSIVE)
 			{
@@ -422,7 +420,7 @@ void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
 	}
 }
 
-static RenderInfo* allocate_render_info_gpu(int width, int height, Camera camera)
+static RenderInfo* allocate_render_info_gpu(int width, int height, Camera& camera)
 {
 	RenderInfo i;
 	i.image_width = width;
@@ -492,7 +490,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	HANDLE_ERROR( cudaMalloc(&d_states, sizeof(curandState) * threads_per_block * blocks_amount) );
 
 	RenderInfo* d_info = 
-		allocate_render_info_gpu(m_width, m_height, m_scene->camera);
+		allocate_render_info_gpu(m_width, m_height, m_scene.get_camera());
 
 	Vector3* d_final_colors = allocate_final_colors_gpu(pixels_amount);
 
@@ -508,7 +506,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	Ray* d_rays;
 	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
 
-    GPUScene device_scene(m_scene);
+    SceneRef device_scene(m_scene);
 
 	int* h_ray_statuses = (int *) calloc(pixels_amount, sizeof(int));
 
@@ -531,7 +529,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 		{
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
-				 j, device_scene.getDeviceScene(), d_states, m_ray_bias, active_pixels);		
+				 j, device_scene.getScene(), d_states, m_ray_bias, active_pixels);		
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}

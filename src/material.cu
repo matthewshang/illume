@@ -3,7 +3,7 @@
 #include "jsonutils.h"
 #include "conductor.h"
 
-Material material_from_json(rapidjson::Value& json, Medium m)
+Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Texture>& texture_cache)
 {
 	std::string type;
 	JsonUtils::from_json(json, "type", type);
@@ -13,12 +13,12 @@ Material material_from_json(rapidjson::Value& json, Medium m)
     if (albedo_ref != json.MemberEnd())
     {
         albedo = texture_from_json(albedo_ref->value);
+        texture_cache.push_back(albedo);
     }
     else
     {
         albedo = texture_constant(vector3_create(0, 0, 0));
     }
-
 	if (type == "emissive")
 	{
 		return material_emissive(albedo);

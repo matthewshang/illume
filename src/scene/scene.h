@@ -1,5 +1,4 @@
-#ifndef _SCENE_
-#define _SCENE_
+#pragma once
 
 #include "rapidjson/document.h"
 
@@ -9,7 +8,26 @@
 #include "../camera.h"
 #include "../math/vector3.h"
 
-typedef struct
+class HostScene
+{
+friend class SceneRef;
+public:
+    HostScene(rapidjson::Document& json);
+    ~HostScene();
+
+    inline Camera& get_camera() { return m_camera; }
+
+private:
+    std::vector<Mesh> m_meshes;
+    std::vector<Sphere> m_spheres;
+    std::vector<MeshInstance> m_instances;
+    std::vector<Texture> m_textures;
+
+    Vector3 m_environment;
+    Camera m_camera;
+};
+
+struct DeviceScene
 {
 	Sphere* spheres;
 	int sphere_amount;
@@ -19,18 +37,4 @@ typedef struct
 	int instance_amount;
 	Camera camera;
 	Vector3 sky_color;
-} 
-Scene;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-Scene*  scene_new   (rapidjson::Document& json);
-void    scene_free  (Scene* scene);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
+};

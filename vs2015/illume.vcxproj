@@ -24,7 +24,7 @@
     <ClCompile Include="..\src\bitmap.c" />
     <ClCompile Include="..\src\imageio.cpp" />
     <ClCompile Include="..\src\jsonutils.cpp" />
-    <ClCompile Include="..\src\scene\gpuscene.cpp" />
+    <ClCompile Include="..\src\scene\sceneref.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\accel\bvh.h" />
@@ -53,7 +53,7 @@
     <ClInclude Include="..\src\primitives\mesh_instance.h" />
     <ClInclude Include="..\src\primitives\sphere.h" />
     <ClInclude Include="..\src\renderer.h" />
-    <ClInclude Include="..\src\scene\gpuscene.h" />
+    <ClInclude Include="..\src\scene\sceneref.h" />
     <ClInclude Include="..\src\scene\scene.h" />
     <ClInclude Include="..\src\texture.h" />
   </ItemGroup>

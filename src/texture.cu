@@ -103,7 +103,7 @@ Texture texture_bitmap(void* data, int width, int height, int channels, size_t i
     free(data);
     return t;
 }
-#include "cuda_texture_types.h"
+
 __device__
 Vector3 Texture::eval(Vec2f uv)
 {

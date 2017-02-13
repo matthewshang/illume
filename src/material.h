@@ -1,6 +1,8 @@
 #ifndef _MATERIAL_
 #define _MATERIAL_
 
+#include <vector>
+
 #include "rapidjson/document.h"
 
 #include "math/vector3.h"
@@ -33,7 +35,7 @@ Material;
 extern "C" {
 #endif
 
-Material  material_from_json     (rapidjson::Value& json, Medium m);
+Material  material_from_json     (rapidjson::Value& json, Medium m, std::vector<Texture>& texture_cache);
 Material  material_emissive      (Texture e);
 Material  material_diffuse       (Texture d);
 Material  material_specular      (Texture s);

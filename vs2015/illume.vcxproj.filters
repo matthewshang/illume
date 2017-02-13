@@ -69,11 +69,11 @@
     <ClCompile Include="..\src\jsonutils.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\scene\gpuscene.cpp">
-      <Filter>src\scene</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\imageio.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\scene\sceneref.cpp">
+      <Filter>src\scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,9 +109,6 @@
     </ClInclude>
     <ClInclude Include="..\src\primitives\sphere.h">
       <Filter>src\primitives</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\scene\scene.h">
-      <Filter>src\scene</Filter>
     </ClInclude>
     <ClInclude Include="..\src\arraylist.h">
       <Filter>src</Filter>
@@ -152,9 +149,6 @@
     <ClInclude Include="..\src\conductor.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\scene\gpuscene.h">
-      <Filter>src\scene</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\texture.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -163,6 +157,12 @@
     </ClInclude>
     <ClInclude Include="..\src\imageio.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\scene\sceneref.h">
+      <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\scene\scene.h">
+      <Filter>src\scene</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

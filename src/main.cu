@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 	rapidjson::Document d;
 	JsonUtils::read_and_parse_json(argv[2], d);
 	
-	Scene* scene = scene_new(d);
+	HostScene scene(d);
 	Renderer renderer(d, scene, spp, max_depth);
 	Bitmap* image = bitmap_new(renderer.get_width(), renderer.get_height());	
 
@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
 	free(name);
 
 	bitmap_free(image);
-	scene_free(scene);
 	
 	return 0;
 }

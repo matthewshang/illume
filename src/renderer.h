@@ -8,14 +8,14 @@
 class Renderer
 {
 public:
-	Renderer(rapidjson::Value& json, Scene* scene, int spp, int max_depth);
+	Renderer(rapidjson::Value& json, HostScene& scene, int spp, int max_depth);
 	void render_to_bitmap(Bitmap* bitmap);
 
 	int get_width();
 	int get_height();
 
 private:
-	Scene* m_scene;
+	HostScene& m_scene;
 	int m_width;
 	int m_height;
 	float m_ray_bias;
