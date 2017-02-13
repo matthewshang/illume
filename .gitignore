@@ -16,3 +16,4 @@ vs2015/Debug/
 vs2015/src/*
 vs2015/x64
 vs2015/hit.cu.deps
+*.hdr

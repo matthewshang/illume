@@ -23,7 +23,7 @@ private:
     std::vector<MeshInstance> m_instances;
     std::vector<Texture> m_textures;
 
-    Vector3 m_environment;
+    Texture m_environment;
     Camera m_camera;
 };
 
@@ -36,5 +36,5 @@ struct DeviceScene
 	MeshInstance* instances;
 	int instance_amount;
 	Camera camera;
-	Vector3 sky_color;
+	Texture envmap;
 };

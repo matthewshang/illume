@@ -66,6 +66,11 @@
         "type": "bitmap",
         "file": "res/earth.png"
       }
+    },
+    {
+      "name": "mirror",
+      "type": "specular",
+      "albedo": [ 0.99, 0.99, 0.99 ]
     }
 	],
 	"meshes":
@@ -90,7 +95,7 @@
       "type": "sphere",
       "radius": 20,
       "center": [ 247, 20, 180 ],
-      "material": "earth"
+      "material": "mirror"
     },
     {
       "type": "mesh_instance",
@@ -100,7 +105,7 @@
         "scale": [ 40, 40, 40 ],
         "rotation": [ 0, 22, 0 ]
       },
-      "material": "checkers"
+      "material": "checkers2"
     },
     {
       "type": "mesh_instance",
@@ -111,86 +116,6 @@
         "rotation": [ 90, 0, 0 ]
       },
       "material": "blenderground"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 277.5, 277.5, 555 ],
-        "scale": [ 1110, 555, 555 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 277.5, 277.5, -277.5 ],
-        "scale": [ 1110, 555, 555 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 277.5, 555, 277.5 ],
-        "scale": [ 1110, 1110, 555 ],
-        "rotation": [ 90, 0, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 832.5, 277.5, 277.5 ],
-        "scale": [ 1110, 555, 555 ],
-        "rotation": [ 0, 90, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ -277.5, 277.5, 277.5 ],
-        "scale": [ 1110, 555, 555 ],
-        "rotation": [ 0, 90, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 832.4, 277.5, 277.5 ],
-        "scale": [ 277.5, 277.5, 277.5 ],
-        "rotation": [ 0, 90, 0 ]
-      },
-      "material": "rightlight"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ -277.4, 277.5, 277.5 ],
-        "scale": [ 277.5, 277.5, 277.5 ],
-        "rotation": [ 0, 90, 0 ]
-      },
-      "material": "leftlight"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "quad",
-      "transform": {
-        "translation": [ 277.5, 554.9, 277.5 ],
-        "scale": [ 555, 555, 277.5 ],
-        "rotation": [ 90, 0, 0 ]
-      },
-      "material": "toplight"
     }
   ],
 	"camera":
@@ -201,12 +126,14 @@
     },
 		"fov": 35,
 		"depth_of_field": 220,
-		"aperture_radius": 2.1
+		"aperture_radius": 1.5
 	},
-	"render_settings":
-	{
-		"resolution": [1024, 1024],
-		"ray_bias": 0.01
-	},
-  "bgcolor": [ 0, 0, 0 ]
+  "render_settings": {
+    "resolution": [ 1024, 1024 ],
+    "ray_bias": 0.01
+  },
+  "environment_map": {
+    "type": "bitmap",
+    "file": "res/envmap.hdr",
+  }
 }

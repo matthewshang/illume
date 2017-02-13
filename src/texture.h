@@ -31,6 +31,7 @@ struct Texture
             cudaTextureObject_t texObj;
             int width, height;
             cudaArray* devBuffer;
+            bool is_hdr;
         } bitmap;
     };
 
@@ -49,4 +50,6 @@ Texture texture_from_json(rapidjson::Value& json);
 
 Texture texture_constant(Vector3 c);
 Texture texture_checkerboard(Vector3 on, Vector3 off, Vec2f scale);
-Texture texture_bitmap(void* data, int width, int height, int channels, size_t item_size);
+
+template <typename T>
+Texture texture_bitmap(void* data, int width, int height, int channels, size_t item_size, bool is_hdr);

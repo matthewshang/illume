@@ -28,9 +28,6 @@
     <CudaCompile Include="..\src\primitives\sphere.cu">
       <Filter>src\primitives</Filter>
     </CudaCompile>
-    <CudaCompile Include="..\src\scene\scene.cu">
-      <Filter>src\scene</Filter>
-    </CudaCompile>
     <CudaCompile Include="..\src\camera.cu">
       <Filter>src</Filter>
     </CudaCompile>
@@ -54,6 +51,9 @@
     </CudaCompile>
     <CudaCompile Include="..\src\texture.cu">
       <Filter>src</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\src\scene\scene.cpp">
+      <Filter>src\scene</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>

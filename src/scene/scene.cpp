@@ -10,17 +10,22 @@
 
 HostScene::HostScene(rapidjson::Document& json)
 {
-    JsonUtils::from_json(json, "bgcolor", m_environment);
-
     std::unordered_map<std::string, Medium> medium_map;
     std::unordered_map<std::string, Material> mat_map;
     std::unordered_map<std::string, int> mesh_index_map;
 
+    auto envmap = json.FindMember("environment_map");
     auto camera = json.FindMember("camera");
     auto mediums = json.FindMember("mediums");
     auto materials = json.FindMember("materials");
     auto meshes_loc = json.FindMember("meshes");
     auto primitives = json.FindMember("primitives");
+
+    if (envmap != json.MemberEnd())
+    {
+        m_environment = texture_from_json(envmap->value);
+        m_textures.push_back(m_environment);
+    }
 
     if (camera != json.MemberEnd())
     {

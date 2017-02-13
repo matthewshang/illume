@@ -37,12 +37,25 @@ Texture texture_from_json(rapidjson::Value& json)
             printf("texture_from_json: filepath not specified\n");
             return texture_constant(vector3_create(0, 0, 0));
         }
-        unsigned char* data;
-        int width, height, channels;
-        ImageIO::load_image(path, (void **) &data, &width, &height, &channels);
-        printf("%u %u %u %u\n", data[0], data[1], data[2], data[3]);
-        if (!data) return texture_constant(vector3_create(0, 0, 0));
-        return texture_bitmap(data, width, height, channels, 1);
+       
+        if (path.substr(path.length() - 3) == "hdr")
+        {
+            float* data;
+            int width, height, channels;
+            ImageIO::load_hdr(path, &data, &width, &height, &channels);
+            printf("%f %f %f %f\n", data[0], data[1], data[2], data[3]);
+            if (!data) return texture_constant(vector3_create(0, 0, 0));
+            return texture_bitmap<float4>(data, width, height, channels, sizeof(float), true);
+        }
+        else
+        {
+            unsigned char* data;
+            int width, height, channels;
+            ImageIO::load_ldr(path, &data, &width, &height, &channels);
+            printf("%u %u %u %u\n", data[0], data[1], data[2], data[3]);
+            if (!data) return texture_constant(vector3_create(0, 0, 0));
+            return texture_bitmap<uchar4>(data, width, height, channels, sizeof(unsigned char), false);
+        }
     }
     else
     {
@@ -69,17 +82,16 @@ Texture texture_checkerboard(Vector3 on, Vector3 off, Vec2f scale)
     return t;
 }
 
-Texture texture_bitmap(void* data, int width, int height, int channels, size_t item_size)
+template <typename T>
+Texture texture_bitmap(void* data, int width, int height, int channels, size_t item_size, bool is_hdr)
 {
     Texture t;
     t.type = TextureType::BITMAP;
     size_t size = width * height * channels * item_size;
-    printf("%d %d\n", sizeof(unsigned char), item_size);
     printf("%d %d %d\n", width, height, channels);
-    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<uchar4>();
+    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<T>();
     HANDLE_ERROR( cudaMallocArray(&t.bitmap.devBuffer, &channelDesc, width, height) );
     HANDLE_ERROR( cudaMemcpyToArray(t.bitmap.devBuffer, 0, 0, data, size, cudaMemcpyHostToDevice) );
-
 
     cudaResourceDesc resDesc;
     memset(&resDesc, 0, sizeof(resDesc));
@@ -90,13 +102,14 @@ Texture texture_bitmap(void* data, int width, int height, int channels, size_t i
     memset(&texDesc, 0, sizeof(texDesc));
     texDesc.addressMode[0]   = cudaAddressModeWrap;
     texDesc.addressMode[1]   = cudaAddressModeWrap;
-    texDesc.filterMode       = cudaFilterModePoint;
+    texDesc.filterMode       = is_hdr ? cudaFilterModeLinear : cudaFilterModePoint;
     texDesc.readMode         = cudaReadModeElementType;
     texDesc.normalizedCoords = 1;
 
     t.bitmap.texObj = 0;
     HANDLE_ERROR( cudaCreateTextureObject(&t.bitmap.texObj, &resDesc, &texDesc, NULL) );
-
+    
+    t.bitmap.is_hdr = is_hdr;
     t.bitmap.width = width;
     t.bitmap.height = height;
 
@@ -123,8 +136,16 @@ Vector3 Texture::eval(Vec2f uv)
     }
     case TextureType::BITMAP:
     {
-        uchar4 test = tex2D<uchar4>(bitmap.texObj, uv.x, uv.y);
-        return vector3_create((float) test.x / 255.0f, (float) test.y / 255.0f, (float) test.z / 255.0f);
+        if (bitmap.is_hdr)
+        {
+            float4 tex = tex2D<float4>(bitmap.texObj, uv.x, uv.y);
+            return vector3_create(tex.x, tex.y, tex.z);
+        }
+        else
+        {
+            uchar4 tex = tex2D<uchar4>(bitmap.texObj, uv.x, uv.y);
+            return vector3_create((float)tex.x / 255.0f, (float)tex.y / 255.0f, (float)tex.z / 255.0f);
+        }
     }
     }
     return vector3_create(0, 0, 0);

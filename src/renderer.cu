@@ -361,7 +361,10 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 		}
 		else
 		{
-			vector3_mul_vector_to(&ray_colors[ray_index], scene->sky_color);
+            float u = atan2f(rays[ray_index].d.z, rays[ray_index].d.x) * 0.5f * ILLUME_INV_PI + 0.5f;
+            float v = 0.5f - asinf(rays[ray_index].d.y) * ILLUME_INV_PI;
+
+			vector3_mul_vector_to(&ray_colors[ray_index], scene->envmap.eval(Vec2f(u, v)));
 			vector3_add_to(&final_colors[ray_index], ray_colors[ray_index]);
 			ray_statuses[index] = -1;
 		}

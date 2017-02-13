@@ -74,7 +74,7 @@
     <CudaCompile Include="..\src\primitives\mesh_instance.cu" />
     <CudaCompile Include="..\src\primitives\sphere.cu" />
     <CudaCompile Include="..\src\renderer.cu" />
-    <CudaCompile Include="..\src\scene\scene.cu" />
+    <CudaCompile Include="..\src\scene\scene.cpp" />
     <CudaCompile Include="..\src\texture.cu" />
   </ItemGroup>
   <ItemGroup>

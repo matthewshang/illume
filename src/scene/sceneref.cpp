@@ -54,7 +54,7 @@ SceneRef::SceneRef(HostScene& scene)
     // scene
     DeviceScene tmp_scene;
     tmp_scene.camera = scene.m_camera;
-    tmp_scene.sky_color = scene.m_environment;
+    tmp_scene.envmap = scene.m_environment;
     tmp_scene.sphere_amount = scene.m_spheres.size();
     tmp_scene.mesh_amount = scene.m_meshes.size();
     tmp_scene.instance_amount = scene.m_instances.size();
