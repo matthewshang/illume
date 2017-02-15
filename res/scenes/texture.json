@@ -52,11 +52,12 @@
       }
     },
     {
-      "name": "blenderground",
+      "name": "ground",
       "type": "diffuse",
       "albedo": {
         "type": "bitmap",
-        "file": "res/test2.png"
+        "file": "res/grid.png",
+        "scale": [ 4, 4]
       }
     },
     {
@@ -105,7 +106,7 @@
         "scale": [ 40, 40, 40 ],
         "rotation": [ 0, 22, 0 ]
       },
-      "material": "checkers2"
+      "material": "checkers"
     },
     {
       "type": "mesh_instance",
@@ -115,18 +116,18 @@
         "scale": [ 1110, 1110, 555 ],
         "rotation": [ 90, 0, 0 ]
       },
-      "material": "blenderground"
+      "material": "ground"
     }
   ],
 	"camera":
 	{
     "transform": {
-      "translation": [ 277.5, 100, -50 ],
-      "rotation": [ 10, 0, 0 ]
+      "translation": [ 257.5, 150, -90 ],
+      "rotation": [ 25, 4, 0 ]
     },
-		"fov": 35,
+		"fov": 30,
 		"depth_of_field": 220,
-		"aperture_radius": 1.5
+		"aperture_radius": 0.5
 	},
   "render_settings": {
     "resolution": [ 1024, 1024 ],
@@ -134,6 +135,6 @@
   },
   "environment_map": {
     "type": "bitmap",
-    "file": "res/envmap.hdr",
+    "file": "res/envmap.hdr"
   }
 }

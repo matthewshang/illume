@@ -20,4 +20,10 @@ struct Vec2f
     {
         return Vec2f(x * s, y * s);
     }
+
+    __device__ __host__
+    Vec2f operator*(Vec2f& v)
+    {
+        return Vec2f(x * v.x, y * v.y);
+    }
 };

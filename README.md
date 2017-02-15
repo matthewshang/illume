@@ -5,15 +5,17 @@ Original cornell box with 100,000 samples per pixel.
 ## About
 This is a unidirectional brute force pathtracer running on the GPU. 
 ### Features:
-- GPU rendering
+- GPU rendering with CUDA
 - materials: emissive, lambert, mirror, refractive, microfacet reflection and refraction,
 			 smooth and rough conductor
+- textures: constant, checkerboard, and bitmap
+- HDR environment maps
 - Monte Carlo subsurface scattering with Henyey-Greenstein phase function
-- spheres and OBJ file meshes
+- primitives: spheres, trimeshes
+- OBJ loading
 - mesh instancing
 - BVH construction and caching
 - scene loading from human-readable JSON
-- saves renders to PNG
 
 ### Dependencies/External Libraries
 - CUDA 8.0

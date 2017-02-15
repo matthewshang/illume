@@ -32,6 +32,7 @@ struct Texture
             int width, height;
             cudaArray* devBuffer;
             bool is_hdr;
+            Vec2f scale;
         } bitmap;
     };
 
@@ -52,4 +53,4 @@ Texture texture_constant(Vector3 c);
 Texture texture_checkerboard(Vector3 on, Vector3 off, Vec2f scale);
 
 template <typename T>
-Texture texture_bitmap(void* data, int width, int height, int channels, size_t item_size, bool is_hdr);
+Texture texture_bitmap(void* data, int width, int height, Vec2f scale, bool is_hdr);
