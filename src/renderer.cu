@@ -36,14 +36,14 @@
 #define KERNEL_ARGS4(grid, block, sh_mem, stream)
 #endif
 
-Renderer::Renderer(rapidjson::Value& json, HostScene& scene, int spp, int max_depth) : 
-	m_scene(scene), m_spp(spp), m_max_depth(max_depth)
+Renderer::Renderer(rapidjson::Value& json, HostScene& scene, int spp, int max_depth) :
+    m_scene(scene), m_spp(spp), m_max_depth(max_depth)
 {
 	auto renderer = json.FindMember("render_settings");
 	if (renderer != json.MemberEnd())
 	{
 		JsonUtils::from_json(renderer->value, "ray_bias", m_ray_bias);
-
+        m_tonemapper = Tonemapper(renderer->value);
 		auto res = renderer->value.FindMember("resolution");
 		if (res != renderer->value.MemberEnd())
 		{
@@ -408,18 +408,19 @@ static void compact_pixels(int* d_ray_statuses, int* h_ray_statuses, int* active
 }
 
 __global__
-void set_bitmap(Vector3* final_colors, Pixel* pixels, float samples, int N)
+void tonemap(Vector3* final_colors, Pixel* pixels, float samples, Tonemapper op, int N)
 {
 	int index = blockDim.x * blockIdx.x + threadIdx.x;
 	if (index < N)
 	{
-		float gamma = 1 / 2.2;
-		Vector3 corrected = vector3_mul(final_colors[index], 1 / samples);
-		corrected = vector3_max(vector3_min(corrected, 1), 0);
-		corrected = vector3_pow(corrected, gamma);
-		pixels[index].red = (int) (255 * corrected.x);
-		pixels[index].green = (int) (255 * corrected.y);
-		pixels[index].blue = (int) (255 * corrected.z);
+		Vector3 avg = vector3_mul(final_colors[index], 1 / samples);
+		//avg = vector3_max(vector3_min(corrected, 1), 0);
+		//corrected = vector3_pow(corrected, gamma);
+        avg = op.eval(avg);
+        avg = vector3_max(vector3_min(avg, 1), 0);
+		pixels[index].red = (int) (255 * avg.x);
+		pixels[index].green = (int) (255 * avg.y);
+		pixels[index].blue = (int) (255 * avg.z);
 	}
 }
 
@@ -558,8 +559,8 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	HANDLE_ERROR( cudaMalloc(&d_pixels, sizeof(Pixel) * pixels_amount) );
 	HANDLE_ERROR( cudaMemcpy(d_pixels, bitmap->pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyHostToDevice) );
 
-	set_bitmap KERNEL_ARGS2(blocks_amount, threads_per_block) 
-		(d_final_colors, d_pixels, (float) m_spp, pixels_amount);
+	tonemap KERNEL_ARGS2(blocks_amount, threads_per_block) 
+		(d_final_colors, d_pixels, (float) m_spp, m_tonemapper, pixels_amount);
 	HANDLE_ERROR( cudaMemcpy(bitmap->pixels, d_pixels, sizeof(Pixel) * pixels_amount, cudaMemcpyDeviceToHost) );
 
 	HANDLE_ERROR( cudaFree(d_final_colors) );

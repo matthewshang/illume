@@ -127,6 +127,11 @@ Vector3 vector3_add(Vector3 a, Vector3 b)
 	return vector3_create(a.x + b.x, a.y + b.y, a.z + b.z);		
 }
 
+__device__ __host__ Vector3 vector3_add(const Vector3& a, float value)
+{
+    return vector3_create(value + a.x, value + a.y, value + a.z);
+}
+
 __device__ __host__
 void vector3_add_to(Vector3* a, Vector3 b)
 {
@@ -148,7 +153,7 @@ Vector3 vector3_mul(Vector3 v, float m)
 }
 
 __device__ __host__
-Vector3 vector3_mul_vector(Vector3 a, Vector3 b)
+Vector3 vector3_mul(const Vector3& a, const Vector3& b)
 {
 	return vector3_create(a.x * b.x, a.y * b.y, a.z * b.z);
 }
@@ -157,4 +162,9 @@ __device__ __host__
 void vector3_mul_vector_to(Vector3* a, Vector3 b)
 {
 	vector3_set(a, a->x * b.x, a->y * b.y, a->z * b.z);
+}
+
+__device__ __host__ Vector3 vector3_div(const Vector3& a, const Vector3& b)
+{
+    return vector3_create(a.x / b.x, a.y / b.y, a.z / b.z);
 }

@@ -55,6 +55,9 @@
     <CudaCompile Include="..\src\scene\scene.cpp">
       <Filter>src\scene</Filter>
     </CudaCompile>
+    <CudaCompile Include="..\src\tonemapper.cu">
+      <Filter>src</Filter>
+    </CudaCompile>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\accel\bvh.cpp">
@@ -163,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="..\src\scene\scene.h">
       <Filter>src\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tonemapper.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

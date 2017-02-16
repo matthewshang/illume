@@ -10,6 +10,7 @@ This is a unidirectional brute force pathtracer running on the GPU.
 			 smooth and rough conductor
 - textures: constant, checkerboard, and bitmap
 - HDR environment maps
+- Tonemapping operators: linear, Reinhard, filmic, and Uncharted2
 - Monte Carlo subsurface scattering with Henyey-Greenstein phase function
 - primitives: spheres, trimeshes
 - OBJ loading
@@ -54,6 +55,8 @@ Rough Dielectric: https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.pdf
 Complex iors: refractiveindex.info/?shelf=3d&book=metals
 
 Conductor fresnel equations: seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/#more-1921
+
+Tonemapping: http://filmicworlds.com/blog/filmic-tonemapping-operators/
 
 https://www.mitsuba-renderer.org/
 

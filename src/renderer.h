@@ -4,6 +4,7 @@
 
 #include "bitmap.h"
 #include "scene/scene.h"
+#include "tonemapper.h"
 
 class Renderer
 {
@@ -16,6 +17,7 @@ public:
 
 private:
 	HostScene& m_scene;
+    Tonemapper m_tonemapper;
 	int m_width;
 	int m_height;
 	float m_ray_bias;

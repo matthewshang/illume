@@ -131,7 +131,8 @@
 	},
   "render_settings": {
     "resolution": [ 1024, 1024 ],
-    "ray_bias": 0.01
+    "ray_bias": 0.01,
+    "tonemapper": "Uncharted"
   },
   "environment_map": {
     "type": "bitmap",

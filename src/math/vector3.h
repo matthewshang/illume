@@ -10,9 +10,6 @@ struct Vector3
 	float z;
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
                      Vector3*  vector3_new            (float x, float y, float z);
                      void      vector3_free           (Vector3* vector);
@@ -32,13 +29,12 @@ __device__ __host__  Vector3   vector3_pow            (Vector3 v, float p);
 __device__ __host__  Vector3   vector3_reflect        (Vector3 v, Vector3 n);
 
 __device__ __host__  Vector3   vector3_add            (Vector3 a, Vector3 b);
+__device__ __host__  Vector3   vector3_add            (const Vector3& a, float value);
 __device__ __host__  void      vector3_add_to         (Vector3* a, Vector3 b);
 __device__ __host__  Vector3   vector3_sub            (Vector3 a, Vector3 b);
 __device__ __host__  Vector3   vector3_mul            (Vector3 v, float m);
+__device__ __host__  Vector3   vector3_mul            (const Vector3& a, const Vector3& b);
 __device__ __host__  void      vector3_mul_vector_to  (Vector3* a, Vector3 b);
-
-#ifdef __cplusplus
-}
-#endif
+__device__ __host__  Vector3   vector3_div            (const Vector3& a, const Vector3& b);
 
 #endif
