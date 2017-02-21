@@ -107,10 +107,6 @@ HostScene::~HostScene()
 
     for (Mesh& m : m_meshes)
     {
-        if (m.triangles)
-        {
-            free(m.triangles);
-        }
-        bvh_free(&m.bvh);
+        mesh_destroy(m);
     }
 }

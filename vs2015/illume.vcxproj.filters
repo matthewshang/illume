@@ -226,5 +226,8 @@
     <None Include="..\res\scenes\texture.json">
       <Filter>res\scenes</Filter>
     </None>
+    <None Include="..\res\scenes\bunny.json">
+      <Filter>res\scenes</Filter>
+    </None>
   </ItemGroup>
 </Project>

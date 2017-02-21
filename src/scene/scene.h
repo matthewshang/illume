@@ -16,7 +16,7 @@ public:
     ~HostScene();
 
     inline Camera& get_camera() { return m_camera; }
-
+    inline std::vector<Mesh>& get_meshes() { return m_meshes; }
 private:
     std::vector<Mesh> m_meshes;
     std::vector<Sphere> m_spheres;

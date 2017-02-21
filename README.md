@@ -25,7 +25,7 @@ This is a unidirectional brute force pathtracer running on the GPU.
 - rapidjson (JSON scene file parsing)
 
 ## More Renders
-![sss dragon in box](renders/cornellsss-1024x1024-12500spp-50md.png?raw=true "Title")
+![sss dragon in box](renders/cornellsss-1024x1024-12500spp-50md.png?raw=true "")
 Stanford dragon with orange absorption and foward scattering
 
 ![rough glass](renders/lucy-rough-dielectric-1024x1024-70000spp-25md.png?raw=true "")
@@ -34,16 +34,16 @@ Stanford dragon with orange absorption and foward scattering
 ![conductors](renders/conductor-1024x1024-25000spp-25md.png?raw=true "")
 Rough gold lucy and rough copper Stanford dragon
 
-![xyzrgb dragon](renders/xyzrgb2-960x720-20000spp-10md.png?raw=true "Title")
+![xyzrgb dragon](renders/xyzrgb2-960x720-20000spp-10md.png?raw=true "")
 721k tri Stanford xyzrgb dragon, with Cook-Torrance teal surface
 
-![Cornell Box](renders/box-960x720-25000spp-10md.png?raw=true "Title")
-Cornell box with a glass ball and a mirror ball, showcasing reflection, refraction, caustics, and GI
+![textures](renders/bunny6-1024x1024-10000spp-10md.png?raw=true "")
+Rough gold stanford bunny lit by HDR environment map. The ground texture is from LuxRender, the cube texture is from Blender, and the environment is from Bernhard Vogl
 
-![spheres](renders/spheres-1440x1080-15000spp-15md.png?raw=true "Title")
+![spheres](renders/spheres-1440x1080-15000spp-15md.png?raw=true "")
 Replication in this renderer of the image on the wikipedia article for raytracing
 
-![sss bunny](renders/sss-960x720-5000spp-45md.png?raw=true "Title")
+![sss bunny](renders/sss-960x720-5000spp-45md.png?raw=true "")
 Stanford bunny model with isotrophic scattering
 
 ## Papers/Links
@@ -57,6 +57,9 @@ Complex iors: refractiveindex.info/?shelf=3d&book=metals
 Conductor fresnel equations: seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/#more-1921
 
 Tonemapping: http://filmicworlds.com/blog/filmic-tonemapping-operators/
+
+HDR Maps: Bernhard Vogl - http://dativ.at/lightprobes/index.html
+          USC Institute - http://gl.ict.usc.edu/Data/HighResProbes/
 
 https://www.mitsuba-renderer.org/
 

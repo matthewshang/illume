@@ -10,38 +10,32 @@
 #include "../hit.h"
 #include "../accel/bvh.h"
 
-static const int OBJ_TOKENS = 4;
-static const int VERTEX_COMPONENTS = 4;
-static const int FACE_COMPONENTS = 4;
-static const int TEXCOORDS_COMPONENTS = 3;
-static const char* TOKEN_VERTEX = "v";
-static const char* TOKEN_FACE = "f";
-static const char* TOKEN_TEXCOORDS = "vt";
-
-typedef struct
+struct Triangle
 {
-	Vector3 e1;
-	Vector3 e2;
-	Vector3 v0;
-	Vector3 n;
     int indices[3];
-}
-Triangle;
+};
 
-typedef struct
+struct Mesh
 {
-    bool has_texcoords;
+    AABB aabb;
+    BVH bvh;
+
 	int triangle_amount;
 	Triangle* triangles;
-    int vertex_amount;
-    Vec2f* texcoords;
-	AABB aabb;
-	BVH bvh;
-}
-Mesh;
 
-Mesh   mesh_create         (const char* path, bool zUp, bool negZ, bool flipNormals, bool hasTexcoords, int tris_per_node);
+    bool has_texcoords;
+    bool face_normals;
+    int vertex_amount;
+    Vector3* positions;
+    Vector3* normals;
+    Vec2f* texcoords;
+    //bool a;
+};
+
+Mesh   mesh_create         (const char* path, bool zUp, bool negZ, bool flipNormals, 
+                            bool hasTexcoords, bool faceNormals, int tris_per_node);
 Mesh   mesh_from_json      (rapidjson::Value& json);
+void   mesh_destroy        (Mesh& mesh);
 void   mesh_free           (Mesh* mesh);
 __device__
 void   mesh_ray_intersect  (Mesh* mesh, Ray ray, Hit* hit);

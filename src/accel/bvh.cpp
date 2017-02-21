@@ -440,6 +440,6 @@ BVH bvh_create(std::vector<AABB> aabbs, AABB bounds, char* filename, int tris_pe
 
 void bvh_free(BVH* bvh)
 {
-	free(bvh->nodes);
-	free(bvh->tri_indices);
+	if (bvh->nodes) free(bvh->nodes);
+	if (bvh->tri_indices) free(bvh->tri_indices);
 }

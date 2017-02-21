@@ -82,6 +82,7 @@
   <ItemGroup>
     <None Include="..\packages.config" />
     <None Include="..\README.md" />
+    <None Include="..\res\scenes\bunny.json" />
     <None Include="..\res\scenes\conductor.json" />
     <None Include="..\res\scenes\conductors.json" />
     <None Include="..\res\scenes\cornell_box.json" />
@@ -150,8 +151,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>..\include\;$(IncludePath)</IncludePath>
-    <OutDir>..\build</OutDir>
-    <IntDir>..\build\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>..\debug</OutDir>
+    <IntDir>..\debug\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>..\include\;$(IncludePath)</IncludePath>
@@ -247,6 +248,7 @@ XCOPY "..\res\*" "$(TargetDir)res\" /Y /E </Command>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
       <CodeGeneration>compute_50,sm_50</CodeGeneration>
+      <GPUDebugInfo>false</GPUDebugInfo>
     </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

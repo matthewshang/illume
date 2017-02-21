@@ -61,16 +61,35 @@
       }
     },
     {
-      "name": "earth",
+      "name": "blender",
       "type": "diffuse",
       "albedo": {
         "type": "bitmap",
-        "file": "res/earth.png"
+        "file": "res/test2.png"
       }
     },
     {
       "name": "mirror",
       "type": "specular",
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "gold",
+      "type": "rough_conductor",
+      "material": "Au",
+      "roughness": 0.1
+    },
+    {
+      "name": "roughglass",
+      "type": "rough_glass",
+      "ior": 1.5,
+      "roughness": 0.1,
+      "albedo": [ 0.9999, 0.9999, 0.9999 ]
+    },
+    {
+      "name": "glass",
+      "type": "refractive",
+      "ior": 1.5,
       "albedo": [ 0.99, 0.99, 0.99 ]
     }
 	],
@@ -89,24 +108,37 @@
       "z_up": 0,
       "bvh_items_per_node": 4,
       "has_texcoords": true
+    },
+    {
+      "file": "res/bunny.obj",
+      "z_up": false,
+      "name": "bunny",
+      "flip_normals": false,
+      "face_normals": false,
+      "has_texcoords": false,
+      "bvh_items_per_node": 4
     }
 	],
   "primitives": [
     {
-      "type": "sphere",
-      "radius": 20,
-      "center": [ 247, 20, 180 ],
-      "material": "mirror"
+      "type": "mesh_instance",
+      "mesh": "bunny",
+      "transform": {
+        "translation": [ 257, 6.805, 180 ],
+        "scale": [ 20, 20, -20 ],
+        "rotation": [ 0, -30, 0 ]
+      },
+      "material": "gold"
     },
     {
       "type": "mesh_instance",
       "mesh": "cube",
       "transform": {
-        "translation": [ 307.5, 20, 180 ],
+        "translation": [ 307.5, 20, 220 ],
         "scale": [ 40, 40, 40 ],
         "rotation": [ 0, 22, 0 ]
       },
-      "material": "checkers"
+      "material": "blender"
     },
     {
       "type": "mesh_instance",
@@ -122,8 +154,8 @@
 	"camera":
 	{
     "transform": {
-      "translation": [ 257.5, 150, -90 ],
-      "rotation": [ 25, 4, 0 ]
+      "translation": [ 277.5, 100, -70 ],
+      "rotation": [ 15, 0, 0 ]
     },
 		"fov": 30,
 		"depth_of_field": 220,

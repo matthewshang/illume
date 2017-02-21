@@ -46,7 +46,6 @@ Texture texture_from_json(rapidjson::Value& json)
             float* data;
             int width, height, channels;
             ImageIO::load_hdr(path, &data, &width, &height, &channels);
-            printf("%f %f %f %f\n", data[0], data[1], data[2], data[3]);
             if (!data) return texture_constant(vector3_create(0, 0, 0));
             return texture_bitmap<float4>(data, width, height, scale, true);
         }
@@ -55,7 +54,6 @@ Texture texture_from_json(rapidjson::Value& json)
             unsigned char* data;
             int width, height, channels;
             ImageIO::load_ldr(path, &data, &width, &height, &channels);
-            printf("%u %u %u %u\n", data[0], data[1], data[2], data[3]);
             if (!data) return texture_constant(vector3_create(0, 0, 0));
             return texture_bitmap<uchar4>(data, width, height, scale, false);
         }
@@ -92,7 +90,7 @@ Texture texture_bitmap(void* data, int width, int height, Vec2f scale, bool is_h
     t.type = TextureType::BITMAP;
     //size_t size = width * height * channels * item_size;
     size_t size = width * height * sizeof(T);
-    printf("%d %d\n", width, height);
+    //printf("%d %d\n", width, height);
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<T>();
     HANDLE_ERROR( cudaMallocArray(&t.bitmap.devBuffer, &channelDesc, width, height) );
     HANDLE_ERROR( cudaMemcpyToArray(t.bitmap.devBuffer, 0, 0, data, size, cudaMemcpyHostToDevice) );

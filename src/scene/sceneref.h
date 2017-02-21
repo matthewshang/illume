@@ -30,4 +30,7 @@ private:
     Vec2f** m_texcoords;
     GPUNode** m_bvh_nodes;
     int** m_bvh_indices;
+    Vector3** m_vertices;
+    bool* m_face_normals;
+    Vector3** m_normals;
 };

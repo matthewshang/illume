@@ -330,6 +330,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 			{
 				Vector3 wi = vector3_mul(r.d, -1.0f);
 				float wiDotN = vector3_dot(wi, min.normal);
+                
 				if (wiDotN <= 0)
 				{
 					ray_statuses[index] = -1;
@@ -509,7 +510,6 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 
 	Ray* d_rays;
 	HANDLE_ERROR( cudaMalloc(&d_rays, sizeof(Ray) * pixels_amount) );
-
     SceneRef device_scene(m_scene);
 
 	int* h_ray_statuses = (int *) calloc(pixels_amount, sizeof(int));
@@ -533,7 +533,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 		{
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
-				 j, device_scene.getScene(), d_states, m_ray_bias, active_pixels);		
+				 j, device_scene.getScene(), d_states, m_ray_bias, active_pixels);
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
