@@ -232,42 +232,32 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
 
 				vector3_mul_vector_to(&ray_colors[ray_index], albedo);
 			}
-			else if (min.m->type == MATERIAL_COOKTORRANCE)
+			else if (min.m->type == MATERIAL_ROUGHREFLECTIVE)
 			{
-				//float a = (1.2f - 0.2f * sqrtf(fabsf(vector3_dot(r.d, norm_o)))) * min.m->roughness;
-				float a = min.m->roughness;
-				float u1 = curand_uniform(&states[ray_index]);
-				float u2 = curand_uniform(&states[ray_index]);
-				Vector3 m = vector3_to_basis(Microfacet::sample_Beckmann(a, u1, u2), norm_o);
-				new_dir = vector3_reflect(r.d, m);
+                Vector3 wi = vector3_mul(r.d, -1.0f);
+                float wiDotN = vector3_dot(wi, min.normal);
+                float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
-				Vector3 H = vector3_sub(new_dir, r.d);
-				vector3_normalize(&H);
+                float u1 = curand_uniform(&states[ray_index]);
+                float u2 = curand_uniform(&states[ray_index]);
+                Vector3 m = Microfacet::sample_Beckmann(a, u1, u2);
+                m = vector3_to_basis(m, min.normal);
 
-				float n1 = 1.0f;
-				float n2 = min.m->ior;
-				float nr = n1 / n2;
-				float cosI = fabsf(vector3_dot(r.d, norm_o));
-				float cosT = sqrtf(1.0f - nr * nr * (1.0f - cosI * cosI));
-				float rperp = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-				rperp *= rperp;
-				float rpar = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
-				rpar *= rpar;
-				float F = (rperp + rpar) * 0.5f;
+                float wiDotT = 0.0f;
+                float wiDotM = vector3_dot(wi, m);
+                float F = Fresnel::dielectric(wiDotM, min.m->ior, wiDotT);
 
-				float NdotL = fabsf(vector3_dot(norm_o, new_dir));
-				float NdotV = cosI;
-				float NdotH = fabsf(vector3_dot(norm_o, H));
-				float VdotH = fabsf(vector3_dot(r.d, H));
+                new_dir = vector3_reflect(r.d, m);
+                if (wiDotN * vector3_dot(new_dir, min.normal) <= 0.0f)
+                {
+                    ray_statuses[index] = -1;
+                    return;
+                }
+                vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
 
-				float G = fminf(1.0f, fminf(2.0f * NdotH * NdotV / VdotH, 2.0f * NdotH * NdotL / VdotH));
-
-				float D = fminf(1.0f, fmaxf(0.0f, NdotH)) * expf((NdotH * NdotH - 1.0f) / (a * a * NdotH * NdotH)) / (ILLUME_PI * a * a * NdotH * NdotH * NdotH * NdotH);
-				Vector3 reflectance = vector3_mul(albedo, fminf(1.0f, (F *  D * G) / (4.0f * NdotV)));
-				//Vector3 reflectance = vector3_mul(albedo, (F *  D * G) / (4.0f * NdotV));
-
-				vector3_mul_vector_to(&ray_colors[ray_index], reflectance);
-				vector3_add_to(&new_origin, vector3_mul(norm_o, ray_bias));
+                float G = Microfacet::G_Beckmann(wi, new_dir, m, a);
+                float weight = (F * G * fabsf(wiDotM)) / (fabsf(wiDotN) * fabsf(vector3_dot(m, min.normal)));
+                vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(albedo, weight));
 			}
 			else if (min.m->type == MATERIAL_ROUGHREFRACTIVE)
 			{

@@ -23,11 +23,11 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 	{
 		return material_emissive(albedo);
 	}
-	else if (type == "diffuse")
+	else if (type == "lambert")
 	{
 		return material_diffuse(albedo);
 	}
-	else if (type == "specular")
+	else if (type == "reflective")
 	{
 		return material_specular(albedo);
 	}
@@ -37,14 +37,14 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 		JsonUtils::from_json(json, "ior", ior);
 		return material_refractive(albedo, ior, m);
 	}
-	else if (type == "cooktorrance")
+	else if (type == "roughreflective")
 	{
 		float ior, roughness;
 		JsonUtils::from_json(json, "ior",       ior);
 		JsonUtils::from_json(json, "roughness", roughness);
-		return material_cooktorrance(albedo, ior, roughness);
+		return material_roughreflec(albedo, ior, roughness);
 	}
-	else if (type == "rough_glass")
+	else if (type == "roughrefractive")
 	{
 		float ior, roughness;
 		JsonUtils::from_json(json, "ior",       ior);
@@ -63,7 +63,7 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 		}
 		return material_conductor(eta, k);
 	}
-	else if (type == "rough_conductor")
+	else if (type == "roughconductor")
 	{
 		std::string material;
 		float roughness;
@@ -117,9 +117,9 @@ Material material_refractive(Texture r, float ior, Medium medium)
 	return material;
 }
 
-Material material_cooktorrance(Texture r, float ior, float roughness)
+Material material_roughreflec(Texture r, float ior, float roughness)
 {
-	Material material = material_base(r, MATERIAL_COOKTORRANCE);
+	Material material = material_base(r, MATERIAL_ROUGHREFLECTIVE);
 	material.ior = ior;
 	material.roughness = roughness;
 	return material;
