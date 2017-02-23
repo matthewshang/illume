@@ -87,6 +87,7 @@
     <None Include="..\res\scenes\conductors.json" />
     <None Include="..\res\scenes\cornell_box.json" />
     <None Include="..\res\scenes\cornell_spheres.json" />
+    <None Include="..\res\scenes\materials.json" />
     <None Include="..\res\scenes\roughglass.json" />
     <None Include="..\res\scenes\studio.json" />
     <None Include="..\res\scenes\subsurface_scattering.json" />

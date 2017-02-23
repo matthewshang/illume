@@ -1,5 +1,6 @@
 #include "material.h"
 
+#include "fresnel.h"
 #include "jsonutils.h"
 #include "conductor.h"
 
@@ -77,6 +78,12 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 		}
 		return material_roughconductor(eta, k, roughness);
 	}
+    else if (type == "plastic")
+    {
+        float ior;
+        JsonUtils::from_json(json, "ior", ior);
+        return material_plastic(albedo, ior);
+    }
 	printf("material_from_json: invalid material type %s\n", type.c_str());
 	return material_diffuse(texture_constant(vector3_create(0, 0, 0)));
 }
@@ -149,4 +156,12 @@ Material material_roughconductor(Vector3 eta, Vector3 k, float roughness)
 	material.k = k;
 	material.roughness = roughness;
 	return material;
+}
+
+Material material_plastic(Texture specular, float ior)
+{
+    Material material = material_base(specular, MATERIAL_PLASTIC);
+    material.ior = ior;
+    material.roughness = Fresnel::diffuse_fresnel(1.0f / ior, 1000000);
+    return material;
 }

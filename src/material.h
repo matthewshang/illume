@@ -17,8 +17,9 @@ const int MATERIAL_ROUGHREFLECTIVE = 4;
 const int MATERIAL_ROUGHREFRACTIVE = 5;
 const int MATERIAL_CONDUCTOR       = 6;
 const int MATERIAL_ROUGHCONDUCTOR  = 7;
+const int MATERIAL_PLASTIC         = 8;
 
-typedef struct
+struct Material
 {
     Texture albedo;
 	int type;
@@ -28,8 +29,7 @@ typedef struct
 	Medium medium;
     Vector3 eta;
 	Vector3 k;
-}
-Material;
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +44,7 @@ Material  material_roughreflec   (Texture r, float ior, float roughness);
 Material  material_roughrefrac   (Texture r, float ior, float roughness, Medium m);
 Material  material_conductor     (Vector3 eta, Vector3 k);
 Material  material_roughconductor(Vector3 eta, Vector3 k, float roughness);
+Material  material_plastic       (Texture specular, float ior);
 
 #ifdef __cplusplus
 }

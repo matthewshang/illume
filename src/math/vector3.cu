@@ -115,6 +115,11 @@ Vector3 vector3_pow(Vector3 v, float p)
 	return vector3_create(powf(v.x, p), powf(v.y, p), powf(v.z, p));
 }
 
+__device__ __host__ Vector3 vector3_exp(const Vector3 & v)
+{
+    return vector3_create(expf(v.x), expf(v.y), expf(v.z));
+}
+
 __device__ __host__
 Vector3 vector3_reflect(Vector3 v, Vector3 n)
 {
@@ -167,4 +172,9 @@ void vector3_mul_vector_to(Vector3* a, Vector3 b)
 __device__ __host__ Vector3 vector3_div(const Vector3& a, const Vector3& b)
 {
     return vector3_create(a.x / b.x, a.y / b.y, a.z / b.z);
+}
+
+__device__ __host__ Vector3 vector3_div(const Vector3& a, float s)
+{
+    return vector3_create(a.x / s, a.y / s, a.z / s);
 }

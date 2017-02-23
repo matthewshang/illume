@@ -7,7 +7,7 @@
 
 namespace Fresnel
 {
-	__device__ 
+	__device__ __host__
 	inline float dielectric(float cosI, float ior, float& cosT)
 	{
 		float eta = cosI < 0.0f ? ior : 1.0f / ior;
@@ -55,4 +55,20 @@ namespace Fresnel
 							  conductor(eta.y, k.y, cosI),
 							  conductor(eta.z, k.z, cosI));
 	}
+
+    // Approximates the integral over the hemisphere for Fresnel::dielectric, from Tungsten
+    inline float diffuse_fresnel(float ior, int samples)
+    {
+        float cosT;
+        double ret = 0.0;
+        float fb = dielectric(0.0, ior, cosT);
+        for (int i = 1; i <= samples; i++)
+        {
+            float cosTSq = (float) i / samples;
+            float fa = dielectric(ior, sqrtf(cosTSq), cosT);
+            ret += (double)(fa + fb) * (0.5 / samples);
+            fb = fa;
+        }
+        return (float)ret;
+    }
 }

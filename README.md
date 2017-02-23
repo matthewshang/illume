@@ -7,7 +7,7 @@ This is a unidirectional brute force pathtracer running on the GPU.
 ### Features:
 - GPU rendering with CUDA
 - materials: emissive, lambert, mirror, refractive, microfacet reflection and refraction,
-			 smooth and rough conductor
+			 smooth and rough conductor, smooth plastic
 - textures: constant, checkerboard, and bitmap
 - HDR environment maps
 - Tonemapping operators: linear, Reinhard, filmic, and Uncharted2
@@ -64,3 +64,5 @@ HDR Maps: Bernhard Vogl - http://dativ.at/lightprobes/index.html
 https://www.mitsuba-renderer.org/
 
 http://photorealizer.blogspot.com/
+
+https://github.com/tunabrain/tungsten
