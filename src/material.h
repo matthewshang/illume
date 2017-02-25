@@ -25,7 +25,8 @@ struct Material
 	int type;
 	
 	float ior;
-	float roughness;
+    float diffuse_fresnel;
+	Texture roughness;
 	Medium medium;
     Vector3 eta;
 	Vector3 k;
@@ -40,10 +41,10 @@ Material  material_emissive      (Texture e);
 Material  material_diffuse       (Texture d);
 Material  material_specular      (Texture s);
 Material  material_refractive    (Texture r, float ior, Medium m);
-Material  material_roughreflec   (Texture r, float ior, float roughness);
-Material  material_roughrefrac   (Texture r, float ior, float roughness, Medium m);
+Material  material_roughreflec   (Texture r, float ior, Texture roughness);
+Material  material_roughrefrac   (Texture r, float ior, Texture roughness, Medium m);
 Material  material_conductor     (Vector3 eta, Vector3 k);
-Material  material_roughconductor(Vector3 eta, Vector3 k, float roughness);
+Material  material_roughconductor(Vector3 eta, Vector3 k, Texture roughness);
 Material  material_plastic       (Texture specular, float ior);
 
 #ifdef __cplusplus

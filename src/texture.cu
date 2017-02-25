@@ -6,6 +6,11 @@
 
 Texture texture_from_json(rapidjson::Value& json)
 {
+    if (json.IsFloat())
+    {
+        float val = json.GetFloat();
+        return texture_constant(vector3_create(val, val, val));
+    }
     if (json.IsArray())
     {
         return texture_constant(vector3_create(json[0].GetFloat(), json[1].GetFloat(), json[2].GetFloat()));
@@ -133,7 +138,7 @@ Vector3 Texture::eval(Vec2f uv)
 
     case TextureType::CHECKERBOARD:
     {
-        int x = (int) checkerboard.scale.x * uv.x;
+        int x = (int) checkerboard.scale.x * (uv.x + 0.25f);
         int y = (int) checkerboard.scale.y * uv.y;
         bool on = (x + y) % 2 == 0;
         return on ? checkerboard.on : checkerboard.off;

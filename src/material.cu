@@ -9,8 +9,10 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 	std::string type;
 	JsonUtils::from_json(json, "type", type);
 
-    Texture albedo;
+    Texture albedo, roughness;
     auto albedo_ref = json.FindMember("albedo");
+    auto roughness_ref = json.FindMember("roughness");
+
     if (albedo_ref != json.MemberEnd())
     {
         albedo = texture_from_json(albedo_ref->value);
@@ -19,6 +21,16 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
     else
     {
         albedo = texture_constant(vector3_create(0, 0, 0));
+    }
+
+    if (roughness_ref != json.MemberEnd())
+    {
+        roughness = texture_from_json(roughness_ref->value);
+        texture_cache.push_back(roughness);
+    }
+    else
+    {
+        roughness = texture_constant(vector3_create(1e-4, 1e-4, 1e-4));
     }
 	if (type == "emissive")
 	{
@@ -40,16 +52,14 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 	}
 	else if (type == "roughreflective")
 	{
-		float ior, roughness;
+        float ior;
 		JsonUtils::from_json(json, "ior",       ior);
-		JsonUtils::from_json(json, "roughness", roughness);
 		return material_roughreflec(albedo, ior, roughness);
 	}
 	else if (type == "roughrefractive")
 	{
-		float ior, roughness;
+		float ior;
 		JsonUtils::from_json(json, "ior",       ior);
-		JsonUtils::from_json(json, "roughness", roughness, 0.1f);
 		return material_roughrefrac(albedo, ior, roughness, m);
 	}
 	else if (type == "conductor")
@@ -67,9 +77,7 @@ Material material_from_json(rapidjson::Value& json, Medium m, std::vector<Textur
 	else if (type == "roughconductor")
 	{
 		std::string material;
-		float roughness;
 		JsonUtils::from_json(json, "material",  material);
-		JsonUtils::from_json(json, "roughness", roughness, 0.1f);
 		Vector3 eta, k;
 		if (!Conductor::get(material, eta, k))
 		{
@@ -94,7 +102,8 @@ Material material_base(Texture albedo, int type)
 	material.albedo = albedo;
 	material.type = type;
 	material.ior = 0.f;
-	material.roughness = 0.f;
+    material.diffuse_fresnel = 0.0f;
+	material.roughness = texture_constant(vector3_create(1e-4, 1e-4, 1e-4));
 	material.medium = medium_air();
     material.eta = vector3_create(0, 0, 0);
 	material.k = vector3_create(0, 0, 0);
@@ -121,10 +130,11 @@ Material material_refractive(Texture r, float ior, Medium medium)
 	Material material = material_base(r, MATERIAL_REFRACTIVE);
 	material.ior = ior;
 	material.medium = medium;
+    printf("refractive: %f %f\n", material.albedo.constant.c.x, material.medium.absorption.x);
 	return material;
 }
 
-Material material_roughreflec(Texture r, float ior, float roughness)
+Material material_roughreflec(Texture r, float ior, Texture roughness)
 {
 	Material material = material_base(r, MATERIAL_ROUGHREFLECTIVE);
 	material.ior = ior;
@@ -132,7 +142,7 @@ Material material_roughreflec(Texture r, float ior, float roughness)
 	return material;
 }
 
-Material material_roughrefrac(Texture r, float ior, float roughness, Medium m)
+Material material_roughrefrac(Texture r, float ior, Texture roughness, Medium m)
 {
 	Material material = material_base(r, MATERIAL_ROUGHREFRACTIVE);
 	material.ior = ior;
@@ -146,10 +156,11 @@ Material material_conductor(Vector3 eta, Vector3 k)
 	Material material = material_base(texture_constant(vector3_create(0, 0, 0)), MATERIAL_CONDUCTOR);
     material.eta = eta;
 	material.k = k;
+    printf("conductor: %f %f\n", material.eta.x, material.k.x);
 	return material;
 }
 
-Material material_roughconductor(Vector3 eta, Vector3 k, float roughness)
+Material material_roughconductor(Vector3 eta, Vector3 k, Texture roughness)
 {
 	Material material = material_base(texture_constant(vector3_create(0, 0, 0)), MATERIAL_ROUGHCONDUCTOR);
     material.eta = eta;
@@ -162,6 +173,6 @@ Material material_plastic(Texture specular, float ior)
 {
     Material material = material_base(specular, MATERIAL_PLASTIC);
     material.ior = ior;
-    material.roughness = Fresnel::diffuse_fresnel(1.0f / ior, 1000000);
+    material.diffuse_fresnel = Fresnel::diffuse_fresnel(1.0f / ior, 1000000);
     return material;
 }

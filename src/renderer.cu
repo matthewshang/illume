@@ -187,6 +187,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
             Vector3 norm_o = vector3_mul(min.normal, vector3_dot(min.normal, r.d) > 0 ? -1.0f : 1.0f);
             Vector3 new_origin = ray_position_along(r, min.d);
             Vector3 albedo = min.m->albedo.eval(min.uv);
+            float roughness = min.m->roughness.eval(min.uv).x;
 
             if (min.m->type == MATERIAL_EMISSIVE)
             {
@@ -236,7 +237,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
             {
                 Vector3 wi = vector3_mul(r.d, -1.0f);
                 float wiDotN = vector3_dot(wi, min.normal);
-                float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+                float a = roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
                 float u1 = curand_uniform(&states[ray_index]);
                 float u2 = curand_uniform(&states[ray_index]);
@@ -263,7 +264,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
             {
                 Vector3 wi = vector3_mul(r.d, -1.0f);
                 float wiDotN = vector3_dot(wi, min.normal);
-                float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+                float a = roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
                 float u1 = curand_uniform(&states[ray_index]);
                 float u2 = curand_uniform(&states[ray_index]);
@@ -305,7 +306,6 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
             }
             else if (min.m->type == MATERIAL_CONDUCTOR)
             {
-                // albedo used to store eta
                 float cosI = -vector3_dot(r.d, min.normal);
                 if (cosI <= 0)
                 {
@@ -326,7 +326,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
                     ray_statuses[index] = -1;
                     return;
                 }
-                float a = min.m->roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
+                float a = roughness * (1.2f - 0.2f * sqrtf(fabsf(wiDotN)));
 
                 float u1 = curand_uniform(&states[ray_index]);
                 float u2 = curand_uniform(&states[ray_index]);
@@ -365,8 +365,7 @@ void pathtrace_kernel(Vector3* final_colors, Ray* rays, int* ray_statuses, Vecto
                     new_dir = vector3_to_basis(sample_hemisphere_cosine((u1 - F) / (1.0 - F), u2), norm_o);
                     float cosO = vector3_dot(new_dir, min.normal);
                     float Fo = Fresnel::dielectric(cosO, min.m->ior, cosT);
-                    // fresnel integral stored in roughness
-                    Vector3 diff = vector3_div(albedo, 1.0f - min.m->roughness);
+                    Vector3 diff = vector3_div(albedo, 1.0f - min.m->diffuse_fresnel);
                     float inv_eta = 1.0f / min.m->ior;
                     vector3_mul_vector_to(&ray_colors[ray_index], vector3_mul(diff, inv_eta * inv_eta * (1 - Fo)));
                 }

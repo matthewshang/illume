@@ -32,7 +32,8 @@ void JsonUtils::object_from_json(rapidjson::Value& json, float& ret)
 
 void JsonUtils::object_from_json(rapidjson::Value& json, Vector3& ret)
 {
-	ret = vector3_create(json[0].GetFloat(), json[1].GetFloat(), json[2].GetFloat());
+    if (json.IsFloat()) ret = vector3_create(json.GetFloat(), json.GetFloat(), json.GetFloat());
+	else ret = vector3_create(json[0].GetFloat(), json[1].GetFloat(), json[2].GetFloat());
 }
 
 void JsonUtils::object_from_json(rapidjson::Value& json, Vec2f& ret)
