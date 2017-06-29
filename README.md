@@ -4,6 +4,9 @@ Original cornell box with 100,000 samples per pixel.
 
 ## About
 This is a unidirectional brute force pathtracer running on the GPU. 
+
+Essentially what it does is simulate light bouncing around in a virtual scene, calculating a new direction and color at each point based on the material it hit. These colors are put together at the end to produce an image or "render".
+
 ### Features:
 - GPU rendering with CUDA
 - materials: emissive, lambert, mirror, refractive, microfacet reflection and refraction,
@@ -25,6 +28,8 @@ This is a unidirectional brute force pathtracer running on the GPU.
 - rapidjson (JSON scene file parsing)
 
 ## More Renders
+All images are untouched, straight out of this renderer.
+
 ![sss dragon in box](renders/cornellsss-1024x1024-12500spp-50md.png?raw=true "")
 Stanford dragon with orange absorption and foward scattering
 
