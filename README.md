@@ -40,6 +40,9 @@ Rough gold lucy and rough copper Stanford dragon
 ![textures](renders/bunny6-1024x1024-10000spp-10md.png?raw=true "")
 Rough gold stanford bunny lit by HDR environment map. The ground texture is from LuxRender, the cube texture is from Blender, and the environment is from Bernhard Vogl
 
+![materials](renders/materials-3840x2160-32000spp-15md.png?raw=true "")
+Showcase of the materials in illume
+
 ![roughness](renders/spheres-1024x1024-25000spp-25md.png?raw=true "")
 Scene inspired by Photorealizer. Textured colors and roughness, and a rough glass sphere.
 
