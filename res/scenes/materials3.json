@@ -1,0 +1,206 @@
+{
+	"materials":
+	[
+		{
+			"name": "white",
+			"type": "lambert",
+			"albedo": [0.725, 0.71, 0.68]
+		},
+		{
+			"name": "red",
+			"type": "lambert",
+			"albedo": [0.63, 0.065, 0.05]
+		},
+		{
+			"name": "green",
+			"type": "lambert",
+			"albedo": [0.14, 0.45, 0.091]
+		},
+    {
+      "name": "light",
+      "type": "emissive",
+      "albedo": [ 25.5, 18, 6 ]
+    },
+    {
+      "name": "texture",
+      "type": "lambert",
+      "albedo": {
+        "type": "checkerboard",
+        "off_color": 0.4,
+        "on_color": 0.7,
+        "scale": [ 2, 2 ]
+      }
+    },
+    {
+      "name": "roughglass",
+      "type": "roughrefractive",
+      "ior": 1.5,
+      "roughness": {
+        "type": "checkerboard",
+        "off_color": 0.25,
+        "on_color": 0.005,
+        "scale": [ 6, 6 ]
+      },
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "roughglass2",
+      "type": "roughrefractive",
+      "ior": 1.5,
+      "roughness": 0.15,
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "glass",
+      "type": "refractive",
+      "ior": 1.5,
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "bricks",
+      "type": "lambert",
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/brick.png"
+      }
+    },
+    {
+      "name": "wood2",
+      "type": "plastic",
+      "ior": 1.5,
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/WoodFloor.png"
+      }
+    },
+        {
+      "name": "plastic",
+      "type": "plastic",
+          "ior": 1.5,
+          "roughness": 0.05,
+      "albedo": {
+        "type": "checkerboard",
+        "off_color": 0.01,
+        "on_color": 0.98,
+        "scale": [ 6, 6 ]
+      }
+    }
+	],
+	"meshes":
+	[
+		{
+			"file": "res/cube.obj",
+			"name": "box",
+			"bvh_items_per_node": 12
+		},
+		{
+			"file": "res/quad.obj",
+      "name": "quad",
+      "has_texcoords": true,
+			"bvh_items_per_node": 4
+		}
+	],
+	"primitives":
+	[
+    {
+      "type": "sphere",
+      "radius": 125,
+      "center": [ 125, 125, 150.5 ],
+      "material": "roughglass"
+    },
+    {
+      "type": "sphere",
+      "radius": 50,
+      "center": [ 505, 50, 75.5 ],
+      "material": "roughglass2"
+    },
+        {
+      "type": "sphere",
+      "radius": 175,
+      "center": [ 380, 175, 380],
+      "material": "plastic"
+    },
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [277.5, 0, 277.5],
+				"scale": [555, 555, 555],
+				"rotation": [90, 0, 0]
+			},
+			"material": "wood2"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [277.5, 277.5, 555],
+				"scale": [555, 555, 555],
+				"rotation": [0, 0, 0]
+			},
+			"material": "bricks"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [277.5, 554.99, 227.5],
+				"scale": [195, 157.5, 1],
+				"rotation": [90, 0, 0]
+			},
+			"material": "light"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [277.5, 555, 277.5],
+				"scale": [555, 555, 555],
+				"rotation": [90, 0, 0]
+			},
+			"material": "white"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [555, 277.5, 277.5],
+				"scale": [555, 555, 555],
+				"rotation": [0, 90, 0]
+			},
+			"material": "bricks"
+		},
+		{
+			"type": "mesh_instance",
+			"mesh": "quad",
+			"transform":
+			{
+				"translation": [0, 277.5, 277.5],
+				"scale": [555, 555, 555],
+				"rotation": [0, 90, 0]
+			},
+			"material": "bricks"
+		}
+	],
+	"camera":
+	{
+    "transform": {
+      "translation": [ 278, 273, -800 ],
+      "rotation": [ 0, 0, 0 ]
+    },
+    "fov": 39,
+    "depth_of_field": 1,
+    "aperture_radius": 0
+  },
+	"render_settings":
+	{
+		"resolution": [600, 600],
+		"ray_bias": 0.01
+	},
+	"bgcolor": [0, 0, 0]
+}

@@ -1,0 +1,35 @@
+MAINTENANCE
+-albedo as float
+
+-clean up material
+	-unions
+	-switch
+-primtives:
+	-union
+	-add quads, cubes 
+-HANDLE_ERROR -> CUDA_SAFE_CALL
+-png save in imageio
+-aabb default constructor 
+
+NEW
+-scene bvh
+-seed
+-spheres can have transforms
+-float or vec3 in json
+-full obj import
+-relative filepath
+-proper logging
+-commandline option parser
+-rng nextFloat, next2D
+-render checkpoints
+-texture gamma correct
+
+Timings
+-roughglass.json 1024x1024-50spp-25md 61.56s
+-cornell_box.json 1024x1024-50spp-25md 12.77s
+-texture.json 1024x1024-50000spp-10md 5771.49s
+-texture.json 1024x1024-50spp-10md 5.79s
+
+Links
+-https://www.cg.tuwien.ac.at/research/publications/2007/weidlich_2007_almfs/weidlich_2007_almfs-paper.pdf
+-http://www.cs.virginia.edu/~gfx/courses/2007/ImageSynthesis/assignments/envsample.pdf

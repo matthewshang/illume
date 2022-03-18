@@ -1,6 +1,7 @@
 #include "matrix4.h"
 
 #include <math.h>
+#include <stdio.h>
 
 Matrix4 matrix4_create()
 {
@@ -49,6 +50,33 @@ void matrix4_set_translate(Matrix4* m, Vector3 translation)
 		m->m[1][3] = translation.y;
 		m->m[2][3] = translation.z;
 	}
+}
+
+Matrix4 matrix4_lookat(Vector3 pos, Vector3 fwd, Vector3 up)
+{
+    Vector3 f = vector3_normalized(fwd);
+    Vector3 r = vector3_normalized(vector3_cross(up, f));
+    Vector3 u = vector3_normalized(vector3_cross(f, r));
+
+    Matrix4 m;
+    m.m[0][0] = r.x;  m.m[0][1] = u.x;  m.m[0][2] = f.x;  m.m[0][3] = pos.x;
+    m.m[1][0] = r.y;  m.m[1][1] = u.y;  m.m[1][2] = f.y;  m.m[1][3] = pos.y;
+    m.m[2][0] = r.z;  m.m[2][1] = u.z;  m.m[2][2] = f.z;  m.m[2][3] = pos.z;
+    m.m[3][0] = 0;    m.m[3][1] = 0;    m.m[3][2] = 0;    m.m[3][3] = 1;
+    return m;
+}
+
+Matrix4 matrix4_rotateYXZ(Vector3 rot)
+{
+    float s[] = { sinf(rot.x), sinf(rot.y), sinf(rot.z) };
+    float c[] = { cosf(rot.x), cosf(rot.y), cosf(rot.z) };
+
+    Matrix4 m;
+    m.m[0][0] =  c[1]*c[2] - s[1]*s[0]*s[2];  m.m[0][1] = -c[1]*s[2] - s[1]*s[0]*c[2];  m.m[0][2] = -s[1]*c[0];  m.m[0][3] = 0;
+    m.m[1][0] =          s[2] * c[0];         m.m[1][1] =           c[2]*c[0];          m.m[1][2] =    -s[0];   m.m[1][3] = 0;
+    m.m[2][0] =  s[1]*c[2] + c[1]*s[0]*s[2];  m.m[2][1] =  -s[1]*s[2] + c[1]*s[0]*c[2];  m.m[2][2] = c[1]*c[0];  m.m[2][3] = 0;
+    m.m[3][0] =              0;               m.m[3][1] =               0;              m.m[3][2] =     0;      m.m[3][3] = 1;
+    return m;
 }
 
 Matrix4 matrix4_mul(Matrix4 a, Matrix4 b)
@@ -178,4 +206,11 @@ Vector3 matrix4_mul_vector3(Matrix4* m, Vector3 v, float w)
 	return vector3_create(m->m[0][0] * v.x + m->m[0][1] * v.y + m->m[0][2] * v.z + m->m[0][3] * w, 
 						  m->m[1][0] * v.x + m->m[1][1] * v.y + m->m[1][2] * v.z + m->m[1][3] * w,
 						  m->m[2][0] * v.x + m->m[2][1] * v.y + m->m[2][2] * v.z + m->m[2][3] * w);
+}
+
+void matrix4_print(Matrix4& m)
+{
+    printf("[%f %f %f %f]\n[%f %f %f %f]\n[%f %f %f %f]\n[%f %f %f %f]\n", 
+        m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3], m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3], 
+        m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3], m.m[3][0], m.m[3][1], m.m[3][2], m.m[3][3]);
 }

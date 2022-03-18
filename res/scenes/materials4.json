@@ -1,0 +1,177 @@
+{
+	"materials":
+	[
+		{
+			"name": "white",
+			"type": "lambert",
+			"albedo": [0.725, 0.71, 0.68]
+		},
+    {
+      "name": "checkers",
+      "type": "lambert",
+      "albedo": {
+        "type": "checkerboard",
+        "on_color": [ 0.7, 0.7, 0.7 ],
+        "off_color": [ 0.4, 0.4, 0.4 ],
+        "scale": [ 5, 5 ]
+      }
+    },
+    {
+      "name": "earth",
+      "type": "lambert",
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/earth.png"
+      }
+    },
+    {
+      "name": "ground",
+      "type": "lambert",
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/grid.png",
+        "scale": [ 4, 4]
+      }
+    },
+    {
+      "name": "blender",
+      "type": "lambert",
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/test2.png"
+      }
+    },
+    {
+      "name": "mirror",
+      "type": "reflective",
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "roughgold",
+      "type": "roughconductor",
+      "material": "Au",
+      "roughness": 0.08
+    },
+    {
+      "name": "gold",
+      "type": "conductor",
+      "material": "Au"
+    },
+    {
+      "name": "roughglass",
+      "type": "roughrefractive",
+      "ior": 1.5,
+      "roughness": 0.1,
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "glass",
+      "type": "refractive",
+      "ior": 1.5,
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "roughreflec",
+      "type": "roughreflective",
+      "ior": 1.4,
+      "roughness": 0.05,
+      "albedo": [ 0.8, 0.8, 0.8 ]
+    },
+        {
+      "name": "Plastic_Orange",
+      "albedo": [
+        1.0,
+        0.37867626547813416,
+        0.013473397120833397
+      ],
+      "type": "plastic",
+      "ior": 1.5
+    }
+	],
+	"meshes":
+	[
+		{
+			"file": "res/cube.obj",
+			"name": "box",
+			"z_up": 0,
+      "bvh_items_per_node": 12,
+      "has_texcoords": true
+		},
+    {
+      "file": "res/quad.obj",
+      "name": "quad",
+      "z_up": 0,
+      "bvh_items_per_node": 4,
+      "has_texcoords": true
+    },
+    {
+      "file": "res/Mesh012.obj",
+      "name": "mesh",
+      "face_normals": false
+    },
+        {
+      "file": "res/Mesh004.obj",
+      "name": "mesh2",
+      "face_normals": false
+    }
+	],
+  "primitives": [
+    {
+      "type": "mesh_instance",
+      "mesh": "mesh",
+      "transform": {
+        "translation": [ 0, 0, 0 ],
+        "scale": [ 1, 1, 1 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "Plastic_Orange"
+    },
+        {
+      "type": "mesh_instance",
+      "mesh": "mesh2",
+      "transform": {
+        "translation": [ 0, 0, 0 ],
+        "scale": [ 1, 1, 1 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 0, 0, 0 ],
+        "scale": [ 600, 600, 600 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    }
+  ],
+	"camera":
+	{
+    "transform": {
+      "translation": [
+        -0.0029600381385535,
+        0.19830328226089478,
+        0.828150749206543
+      ],
+      "lookat": [
+        0.002896534511819482,
+        0.16660931706428528,
+        0.022717338055372238
+      ]
+    },
+		"fov": 75,
+		"depth_of_field": 220,
+		"aperture_radius": 0
+	},
+  "render_settings": {
+    "resolution": [400, 500 ],
+    "ray_bias": 0.01,
+    "tonemapper": "Uncharted"
+  },
+  "environment_map": {
+    "type": "bitmap",
+    "file": "res/envmap.hdr"
+  }
+}

@@ -50,6 +50,12 @@ void vector3_normalize(Vector3* v)
 	v->z *= invLength;
 }
 
+__device__ __host__ Vector3 vector3_normalized(const Vector3& v)
+{
+    float invLen = 1.0f / vector3_length(v);
+    return vector3_create(v.x * invLen, v.y * invLen, v.z * invLen);
+}
+
 __device__ __host__  
 float vector3_length2(Vector3 v)
 {

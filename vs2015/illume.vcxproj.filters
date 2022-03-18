@@ -232,5 +232,9 @@
     <None Include="..\res\scenes\materials.json">
       <Filter>res\scenes</Filter>
     </None>
+    <None Include="..\res\scenes\texturedspheres.json">
+      <Filter>res\scenes</Filter>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

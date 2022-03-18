@@ -25,11 +25,13 @@ extern "C" {
                       Matrix4  matrix4_from_axis_angle  (Vector3 axis, float angle);
                       Matrix4  matrix4_from_scale       (Vector3 scale);
                       void     matrix4_set_translate    (Matrix4* m, Vector3 translation);
+                      Matrix4  matrix4_lookat           (Vector3 pos, Vector3 fwd, Vector3 up);
+                      Matrix4  matrix4_rotateYXZ        (Vector3 rot);
                       Matrix4  matrix4_mul              (Matrix4 a, Matrix4 b);
                       Matrix4  matrix4_get_transpose    (Matrix4 m);
                       Matrix4  matrix4_get_inverse      (Matrix4 m);
 __device__  __host__  Vector3  matrix4_mul_vector3      (Matrix4* m, Vector3 v, float w);
-
+                      void     matrix4_print            (Matrix4& m);
 #ifdef __cplusplus
 }
 #endif

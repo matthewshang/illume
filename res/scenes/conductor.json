@@ -1,0 +1,177 @@
+{
+  "mediums": [ ],
+  "materials": [
+    {
+      "name": "white",
+      "type": "diffuse",
+      "color": [ 0.725, 0.71, 0.68 ]
+    },
+    {
+      "name": "diff",
+      "type": "diffuse",
+      "color": [ 0.7, 0.7, 0.7 ]
+    },
+    {
+      "name": "gray",
+      "type": "diffuse",
+      "color": [ 0.4, 0.4, 0.4 ]
+    },
+    {
+      "name": "red",
+      "type": "diffuse",
+      "color": [ 0.63, 0.065, 0.05 ]
+    },
+    {
+      "name": "green",
+      "type": "diffuse",
+      "color": [ 0.14, 0.45, 0.091 ]
+    },
+    {
+      "name": "light",
+      "type": "emissive",
+      "color": [ 25.5, 18, 6 ]
+    },
+    {
+      "name": "light2",
+      "type": "emissive",
+      "color": [ 25.5, 18, 12 ]
+    },
+    {
+      "name": "mirror",
+      "type": "specular",
+      "color": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "smoothglass",
+      "type": "refractive",
+      "ior": 1.504,
+      "color": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "roughglass",
+      "type": "rough_glass",
+      "ior": 1.504,
+      "roughness": 0.3025,
+      "color": [ 0.99, 0.99, 0.99 ]
+    },
+    {
+      "name": "conductor",
+      "type": "conductor",
+      "material": "Pb"
+    },
+    {
+      "name": "rough_copper",
+      "type": "rough_conductor",
+      "material": "Al",
+      "roughness": 0.1
+    }
+  ],
+  "meshes": [
+    {
+      "file": "res/cube.obj",
+      "name": "box",
+      "z_up": false,
+      "bvh_items_per_node": 12
+    },
+    {
+      "file": "res/quad.obj",
+      "name": "quad",
+      "z_up": false,
+      "bvh_items_per_node": 4
+    },
+    {
+      "file": "res/mitsuba-inner.obj",
+      "name": "mitsuba-inner"
+    },
+    {
+      "file": "res/mitsuba-outer.obj",
+      "name": "mitsuba-outer"
+    }
+  ],
+  "primitives": [
+    {
+      "type": "mesh_instance",
+      "mesh": "mitsuba-outer",
+      "transform": {
+        "translation": [ 0, 0, 27.75 ],
+        "scale": [ 10, 10, 10 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "rough_copper"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "mitsuba-inner",
+      "transform": {
+        "translation": [ 0, 0, 27.75 ],
+        "scale": [ 10, 10, 10 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "gray"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 0, 0, 27.75 ],
+        "scale": [ 555, 555, 555 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 27.75, 27.75, 27.75 ],
+        "scale": [ 55, 55, 55 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "green"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ -27.75, 27.75, 27.75 ],
+        "scale": [ 55, 55, 55 ],
+        "rotation": [ 0, 90, 0 ]
+      },
+      "material": "red"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 0, 55, 55 ],
+        "scale": [ 110, 110, 55 ],
+        "rotation": [ 0, 0, 0 ]
+      },
+      "material": "white"
+    },
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 0, 55, 27.75 ],
+        "scale": [ 55, 55, 55 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    }
+  ],
+  "camera": {
+    "transform": {
+      "translation": [ 0, 39.3, -40 ],
+      "rotation": [ 24, 0, 0 ]
+    },
+    "fov": 30,
+    "depth_of_field": 1,
+    "aperture_radius": 0
+  },
+  "render_settings": {
+    "resolution": [ 512, 512 ],
+    "ray_bias": 0.0001
+  },
+  "bgcolor": [ 1, 1, 1 ]
+}

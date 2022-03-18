@@ -3,61 +3,91 @@
 	[
 		{
 			"name": "white",
-			"type": "lambert",
-			"albedo": [0.725, 0.71, 0.68]
+			"type": "diffuse",
+			"color": [0.725, 0.71, 0.68]
 		},
 		{
 			"name": "red",
-			"type": "lambert",
-			"albedo": [0.63, 0.065, 0.05]
+			"type": "diffuse",
+			"color": [0.63, 0.065, 0.05]
 		},
 		{
 			"name": "green",
-			"type": "lambert",
-			"albedo": [0.14, 0.45, 0.091]
+			"type": "diffuse",
+			"color": [0.14, 0.45, 0.091]
 		},
-		{
-			"name": "light",
-			"type": "emissive",
-			"albedo": [25.5, 18, 6]
-		}
+    {
+      "name": "light",
+      "type": "emissive",
+      "color": [ 25.5, 18, 6 ]
+    },
+    {
+      "name": "roughgold",
+      "type": "rough_conductor",
+      "material": "Au",
+      "roughness": 0.2
+    },
+    {
+      "name": "roughsilver",
+      "type": "rough_conductor",
+      "material": "Ag",
+      "roughness": 0.1
+    },
+    {
+      "name": "lead",
+      "type": "conductor",
+      "material": "Pb"
+    }
 	],
 	"meshes":
 	[
 		{
 			"file": "res/cube.obj",
 			"name": "box",
+			"z_up": 0,
 			"bvh_items_per_node": 12
 		},
-		{
-			"file": "res/quad.obj",
-			"name": "quad",
-			"bvh_items_per_node": 4
-		}
+    {
+      "file": "res/quad.obj",
+      "name": "quad",
+      "z_up": 0,
+      "bvh_items_per_node": 4
+    },
+    {
+      "file": "res/lucy.obj",
+      "name": "lucy",
+      "flip_normals": true
+    },
+    {
+      "file": "res/dragon2.obj",
+      "name": "dragon",
+      "flip_normals": true,
+      "neg_z": true
+    }
 	],
 	"primitives":
 	[
 		{
 			"type": "mesh_instance",
-			"mesh": "box",
+			"mesh": "dragon",
 			"transform":
 			{
-				"translation": [369.5, 82.5, 147.5],
-				"scale": [165, 165, 165],
-				"rotation": [0, 17.9908, 0]
+				"translation": [369.5, 0, 187.5],
+				"scale": [25, 25, 25],
+				"rotation": [0, -108, 0]
 			},
-			"material": "white"
+			"material": "roughsilver"
 		},
 		{
 			"type": "mesh_instance",
-			"mesh": "box",
+			"mesh": "lucy",
 			"transform":
 			{
-				"translation": [186.5, 165, 377.5],
-				"scale": [165, 330, 165],
+				"translation": [186.5, 0.83576, 377.5],
+				"scale": [-80, 80, 80],
 				"rotation": [0, -18.4886, 0]
 			},
-			"material": "white"
+			"material": "roughgold"
 		},
 		{
 			"type": "mesh_instance",
@@ -81,6 +111,16 @@
 			},
 			"material": "white"
 		},
+    {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 277.5, 555, 277.5 ],
+        "scale": [ 555, 555, 555 ],
+        "rotation": [ 90, 0, 0 ]
+      },
+      "material": "white"
+    },
 		{
 			"type": "mesh_instance",
 			"mesh": "quad",
@@ -91,17 +131,6 @@
 				"rotation": [90, 0, 0]
 			},
 			"material": "light"
-		},
-		{
-			"type": "mesh_instance",
-			"mesh": "quad",
-			"transform":
-			{
-				"translation": [277.5, 555, 277.5],
-				"scale": [555, 555, 555],
-				"rotation": [90, 0, 0]
-			},
-			"material": "white"
 		},
 		{
 			"type": "mesh_instance",
@@ -129,13 +158,12 @@
 	"camera":
 	{
     "transform": {
-      "translation": [ 278, 273, -800 ],
-      "rotation": [ 0, 0, 0 ]
+      "translation": [ 278, 277.5, -800 ]
     },
-    "fov": 39,
-    "depth_of_field": 1,
-    "aperture_radius": 0
-  },
+		"fov": 38,
+		"depth_of_field": 1,
+		"aperture_radius": 0
+	},
 	"render_settings":
 	{
 		"resolution": [1024, 1024],

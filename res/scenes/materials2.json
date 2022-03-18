@@ -1,11 +1,10 @@
 {
-	"materials":
-	[
-		{
-			"name": "white",
-			"type": "lambert",
-			"albedo": [0.725, 0.71, 0.68]
-		},
+  "materials": [
+    {
+      "name": "white",
+      "type": "lambert",
+      "albedo": [ 0.725, 0.71, 0.68 ]
+    },
     {
       "name": "checkers",
       "type": "lambert",
@@ -30,7 +29,7 @@
       "albedo": {
         "type": "bitmap",
         "file": "res/grid.png",
-        "scale": [ 4, 4]
+        "scale": [ 4, 4 ]
       }
     },
     {
@@ -61,7 +60,22 @@
       "name": "roughglass",
       "type": "roughrefractive",
       "ior": 1.5,
-      "roughness": 0.1,
+      "roughness": {
+        "type": "checkerboard",
+        "off_color": 0.005,
+        "on_color": 0.25,
+        "scale": [ 8, 8 ]
+      },
+      "albedo": [ 0.99, 0.99, 0.99 ]
+    },
+        {
+      "name": "roughglass2",
+      "type": "roughrefractive",
+      "ior": 1.5,
+      "roughness": {
+        "type": "bitmap",
+        "file": "res/rough.png"
+      },
       "albedo": [ 0.99, 0.99, 0.99 ]
     },
     {
@@ -75,7 +89,45 @@
       "type": "roughreflective",
       "ior": 1.4,
       "roughness": 0.05,
-      "albedo": [0.8, 0.8, 0.8]
+      "albedo": [ 0.8, 0.8, 0.8 ]
+    },
+    {
+      "name": "woodfloor",
+      "type": "plastic",
+      "ior": 1.5,
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/WoodFloor.png"
+      }
+    },
+    {
+      "name": "orange",
+      "type": "plastic",
+      "ior": 1.49,
+      "albedo": {
+        "type": "constant",
+        "color": [1, 0.3838, 0]
+      }
+    },
+    {
+      "name": "wood",
+      "type": "plastic",
+      "ior": 1.49,
+      "thickness": 6.4,
+      "absorption": [ 0, 0, 0 ],
+      "albedo2": [ 0.9, 0.9, 0.9 ],
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/billardball.png"
+      }
+    },
+        {
+      "name": "wood2",
+      "type": "lambert",
+      "albedo": {
+        "type": "bitmap",
+        "file": "res/WoodFloor.png"
+      }
     }
 	],
 	"meshes":
@@ -96,59 +148,11 @@
     }
 	],
   "primitives": [
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ -75, 12.5, 220 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "white"
-    },
-    {
-      "type": "sphere",
-      "center": [ -75, 12.5, 170 ],
-      "radius": 12.5,
-      "material": "white"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ -25, 12.5, 220 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "mirror"
-    },
-    {
-      "type": "sphere",
-      "center": [ -25, 12.5, 170 ],
-      "radius": 12.5,
-      "material": "mirror"
-    },
         {
       "type": "mesh_instance",
       "mesh": "cube",
       "transform": {
-        "translation": [ 75, 12.5, 220 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "roughreflec"
-    },
-    {
-      "type": "sphere",
-      "center": [ 75, 12.5, 170 ],
-      "radius": 12.5,
-      "material": "roughreflec"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ 75, 12.5, 120 ],
+        "translation": [ -50, 12.5, 220 ],
         "scale": [ 25, 25, 25 ],
         "rotation": [ 0, 0, 0 ]
       },
@@ -156,80 +160,43 @@
     },
     {
       "type": "sphere",
-      "center": [ 75, 12.5, 70 ],
+      "center": [ -50, 12.5, 170 ],
       "radius": 12.5,
       "material": "roughglass"
     },
-    {
+
+            {
+      "type": "mesh_instance",
+      "mesh": "quad",
+      "transform": {
+        "translation": [ 0, 18, 170 ],
+        "scale": [ 50, 50, 50 ],
+        "rotation": [ 45, 0, 0 ]
+      },
+      "material": "roughglass2"
+    },
+            {
       "type": "mesh_instance",
       "mesh": "cube",
       "transform": {
-        "translation": [ -75, 12.5, 120 ],
+        "translation": [ 50, 12.5, 220 ],
         "scale": [ 25, 25, 25 ],
         "rotation": [ 0, 0, 0 ]
       },
-      "material": "glass"
+      "material": "wood"
     },
     {
       "type": "sphere",
-      "center": [ -75, 12.5, 70 ],
+      "center": [ 50, 12.5, 170 ],
       "radius": 12.5,
-      "material": "glass"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ -25, 12.5, 120 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "roughgold"
-    },
-    {
-      "type": "sphere",
-      "center": [ -25, 12.5, 70 ],
-      "radius": 12.5,
-      "material": "roughgold"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ 25, 12.5, 220 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "gold"
-    },
-    {
-      "type": "sphere",
-      "center": [ 25, 12.5, 170 ],
-      "radius": 12.5,
-      "material": "gold"
-    },
-    {
-      "type": "mesh_instance",
-      "mesh": "cube",
-      "transform": {
-        "translation": [ 25, 12.5, 120 ],
-        "scale": [ 25, 25, 25 ],
-        "rotation": [ 0, 0, 0 ]
-      },
-      "material": "checkers"
-    },
-    {
-      "type": "sphere",
-      "center": [ 25, 12.5, 70 ], 
-      "radius": 12.5,
-      "material": "earth"
+      "material": "wood"
     },
     {
       "type": "mesh_instance",
       "mesh": "quad",
       "transform": {
         "translation": [ 0, 0, 277.5 ],
-        "scale": [ 600, 600, 1 ],
+        "scale": [ 600, 600, 555 ],
         "rotation": [ 90, 0, 0 ]
       },
       "material": "ground"
@@ -238,10 +205,10 @@
 	"camera":
 	{
     "transform": {
-      "translation": [ 0, 200, -165 ],
-      "lookat": [ 0, 12.5, 145 ]
+      "translation": [ 0, 150, -150 ],
+      "rotation": [ 22.5, 0, 0 ]
     },
-		"fov": 35,
+		"fov": 30,
 		"depth_of_field": 220,
 		"aperture_radius": 0
 	},

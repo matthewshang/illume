@@ -534,6 +534,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 	int last_progress = -1;
 	float progress_step = 100.0f / (float) m_spp;
 	cudaEvent_t start, stop;
+    long long total_rays = 0;
 	for (int i = 0; i < m_spp; i++)
 	{
 		start_timer(&start, &stop);
@@ -550,6 +551,7 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 			pathtrace_kernel KERNEL_ARGS2(blocks, threads_per_block)
 				(d_final_colors, d_rays, d_ray_statuses, d_ray_colors, d_ray_mediums,
 				 j, device_scene.getScene(), d_states, m_ray_bias, active_pixels);
+            total_rays += active_pixels;
 			compact_pixels(d_ray_statuses, h_ray_statuses, &active_pixels);
 			blocks = (active_pixels + threads_per_block - 1) / threads_per_block;
 		}
@@ -562,6 +564,12 @@ void Renderer::render_to_bitmap(Bitmap* bitmap)
 		
 	}
 	printf("\b\b\b100%%\n");
+
+    float trace_time;
+    end_timer(&render_start, &render_stop, &trace_time);
+    double time = 1e-3 * trace_time;
+    double rays_per_sec = total_rays / time;
+    printf("Rays per sec: %f rays/s\n", rays_per_sec);
 
 	HANDLE_ERROR( cudaFree(d_states) );
 	HANDLE_ERROR( cudaFree(d_rays) );

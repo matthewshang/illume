@@ -41,6 +41,7 @@ MeshInstance mesh_instance_from_json(rapidjson::Value& json, Material m, int mes
 	if (transform != json.MemberEnd())
 	{
 		ret.t = transform_from_json(transform->value);
+        matrix4_print(ret.t.mat);
 	}
 	ret.aabb = aabb_create();
 	mesh_instance_build_aabb(&ret, mesh);
